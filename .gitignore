@@ -1,0 +1,43 @@
+Agent/
+
+# Local design/source material
+Figma/
+
+# Environment files and secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies
+**/node_modules/
+**/vendor/
+composer.exe
+
+# Build output
+**/dist/
+**/dist-test/
+**/build/
+**/public/build/
+**/public/hot
+
+# Logs and runtime/cache output
+**/*.log
+**/database/*.sqlite
+**/storage/logs/
+**/storage/framework/cache/
+**/storage/framework/sessions/
+**/storage/framework/testing/
+**/storage/framework/views/
+**/storage/pail/
+**/.phpunit.result.cache
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

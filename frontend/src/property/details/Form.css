@@ -1,0 +1,14 @@
+.details-form {
+  padding: clamp(24px, 4vw, 44px);
+}
+
+.details-form .form-grid,
+.details-form .form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.details-form .form-error {
+  margin: 0;
+}

@@ -1,0 +1,31 @@
+.image-form {
+  padding: clamp(22px, 4vw, 36px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+  gap: clamp(18px, 4vw, 34px);
+}
+
+.image-form-preview {
+  grid-row: span 2;
+  overflow: hidden;
+  border: 1px solid rgba(143, 170, 102, 0.42);
+  border-radius: 28px;
+  background: rgba(255, 255, 250, 0.66);
+}
+
+.image-form-details,
+.image-form-adjustments {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 820px) {
+  .image-form {
+    grid-template-columns: 1fr;
+  }
+
+  .image-form-preview {
+    grid-row: auto;
+  }
+}

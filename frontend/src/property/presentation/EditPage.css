@@ -1,0 +1,21 @@
+.update-section-shell {
+  .update-section-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 48px;
+    .propertyForm {
+      display: flex;
+      flex-direction: column;
+      grid-column:  span 1;
+    }
+    .imageDropZone {
+      grid-column: span 3;
+    }
+    .propertyAreaEditor {
+      grid-column: span 2;
+    }
+    .propertyDocument {
+       grid-column: span 2;
+    }
+  }
+}

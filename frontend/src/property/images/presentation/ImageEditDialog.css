@@ -1,0 +1,235 @@
+.image-edit-overlay {
+      .image-edit-dialog {
+            .image-edit-header {
+                  .image-edit-close {
+                  
+                  }
+            }
+            .form-error {
+
+            }
+
+            .form-actions {
+
+            }
+
+            .form-submit {
+                  
+            }
+      }
+}
+
+
+
+
+/*
+
+NEDAN ÄR GAMLA KODEN FÖR IMAGEFORM, KANSKE KAN ANVÄNDA DELAR AV DETTA IGEN
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+.form-field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.form-field input,
+.form-field textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: var(--surface);
+  color: var(--text);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-field input:hover,
+.form-field textarea:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.form-field textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+  color: #94a3b8;
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(122, 167, 199, 0.25);
+}
+
+.drop-zone {
+  min-width: 765px;
+  min-height: 600px;
+  padding: 32px;
+  border: 2px dashed rgba(15, 23, 42, 0.15);
+  border-radius: 16px;
+ background: var(--surface);
+  transition: border-color 0.2s ease, background 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.drop-zone:hover {
+  border-color: var(--accent);
+  background: rgba(122, 167, 199, 0.05);
+}
+
+.drop-zone-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.drop-zone-helper {
+  margin: 0;
+  color: var(--muted);
+}
+
+.drop-zone-placeholder {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.image-preview-container {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.image-preview-item {
+  position: relative;
+  border-radius: 5px;
+  overflow: hidden;
+  background: #f1f5f9;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: grab;
+}
+
+.image-preview-item:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 2px rgba(122, 167, 199, 0.4),
+    0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.image-preview-item:active {
+  cursor: grabbing;
+}
+
+.image-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.image-preview-controls {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  display: flex;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.image-action {
+  all: unset;
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.75);
+  color: white;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.image-action:hover {
+  background: rgba(15, 23, 42, 0.9);
+  transform: scale(1.05);
+}
+
+.image-order-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.image-primary-toggle {
+  all: unset;
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.image-primary-toggle:hover {
+  transform: scale(1.03);
+}
+
+.image-primary-toggle.is-active {
+  background: rgba(20, 83, 45, 0.92);
+  color: #fff;
+}
+
+.image-edit {
+  top: 40px;
+  left: 3px;
+}
+
+.image-remove {
+  top: 3px;
+  right: 3px;
+}
+
+@media (max-width: 960px) {
+  .drop-zone {
+    min-width: 100%;
+    min-height: auto;
+  }
+
+  .image-preview-container {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+*/
