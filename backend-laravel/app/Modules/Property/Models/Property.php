@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Property\Models;
 
 use App\Models\Area;
-use App\Models\Document;
+use App\Modules\Document\Models\Document;
 use App\Modules\Image\Models\Image;
 use App\Modules\Property\Enums\ListingStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
@@ -80,9 +81,12 @@ class Property extends Model
         return $this->hasMany(Image::class)->orderBy('sort_order');
     }
 
-    public function documents(): HasMany
+    public function documents(): BelongsToMany
     {
-        return $this->hasMany(Document::class)->orderBy('type');
+        return $this->belongsToMany(Document::class, 'property_documents')
+            ->withPivot(['type', 'title', 'sort_order'])
+            ->withTimestamps()
+            ->orderBy('property_documents.sort_order');
     }
 
     public function primaryImage(): HasOne

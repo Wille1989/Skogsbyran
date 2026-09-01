@@ -6,7 +6,8 @@ namespace App\Presenters;
 
 use App\Infrastructure\Storage\ObjectStorage;
 use App\Models\Area;
-use App\Models\Document;
+use App\Modules\Document\Enums\DocumentVariantName;
+use App\Modules\Document\Models\Document;
 use App\Modules\Image\Enums\ImageVariantName;
 use App\Modules\Image\Models\Image;
 use App\Modules\Property\Models\Property;
@@ -50,7 +51,7 @@ final class PropertyPresenter
     {
         $property->loadMissing([
             'areas',
-            'documents',
+            'documents.variants',
             'images.metadata',
             'images.adjustment',
             'images.variants',
@@ -140,17 +141,29 @@ final class PropertyPresenter
     /**
      * @return array<string, mixed>
      */
-    private function document(Document $document): array
+    public function document(Document $document): array
     {
+        $document->loadMissing('variants');
+
+        $variant = $document->variants->first(
+            static fn ($variant): bool =>
+                $variant->variant === DocumentVariantName::Original
+        ) ?? $document->variants->first(
+            static fn ($variant): bool =>
+                $variant->variant === DocumentVariantName::Preview
+        );
+
+        $pivot = $document->pivot;
+
         return [
-            'propertyId' => (string) $document->property_id,
+            'propertyId' => (string) ($pivot?->property_id ?? ''),
             'documentId' => (string) $document->id,
-            'type' => $document->type,
-            'title' => $document->title,
-            'url' => $document->url,
-            'originalName' => $document->original_name,
+            'type' => $pivot?->type ?? 'document',
+            'title' => $pivot?->title ?? $document->name,
+            'url' => $variant ? $this->objectStorage->url($variant->storage_key) : '',
+            'originalName' => $document->original_filename,
             'mimeType' => $document->mime_type,
-            'sizeBytes' => $document->size_bytes,
+            'sizeBytes' => $variant?->file_size ?? 0,
         ];
     }
 

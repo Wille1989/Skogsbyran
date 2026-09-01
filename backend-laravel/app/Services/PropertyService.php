@@ -27,7 +27,7 @@ final class PropertyService
                 'images.metadata',
                 'images.adjustment',
                 'images.variants',
-                'documents',
+                'documents.variants',
                 'areas',
             ])
             ->where('is_visible', true)
@@ -46,7 +46,7 @@ final class PropertyService
             'images.metadata',
             'images.adjustment',
             'images.variants',
-            'documents',
+            'documents.variants',
             'areas',
         ]);
 
@@ -84,7 +84,7 @@ final class PropertyService
                 'images.metadata',
                 'images.adjustment',
                 'images.variants',
-                'documents',
+                'documents.variants',
                 'areas',
             ]);
         });

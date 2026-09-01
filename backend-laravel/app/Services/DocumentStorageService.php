@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Infrastructure\Storage\ObjectStorage;
+use App\Modules\Document\Enums\DocumentVariantName;
 use Illuminate\Http\UploadedFile;
 use RuntimeException;
 
@@ -51,9 +52,13 @@ final class DocumentStorageService
         );
 
         return [
-            'url' => $this->objectStorage->url($storageKey),
-            'storage_key' => $storageKey,
-            'mime_type' => $contentType,
+            'variants' => [
+                DocumentVariantName::Original->value => [
+                    'storage_key' => $storageKey,
+                    'mime_type' => $contentType,
+                    'file_size' => $file->getSize() ?: null,
+                ],
+            ],
         ];
     }
 
