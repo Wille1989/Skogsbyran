@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Property;
 use App\Models\Image;
+use App\Modules\Property\Models\Property;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
@@ -15,7 +15,7 @@ use RuntimeException;
 final class ImageService
 {
     public function __construct(
-        private readonly SupabaseStorageService $storageService
+        private readonly ImageStorageService $storageService
     ) {
     }
 
@@ -31,11 +31,10 @@ final class ImageService
                         );
                     }
 
-                    $urls = $this->storageService
-                        ->uploadPropertyImage(
-                            $file,
-                            (int) $property->id
-                        );
+                    $urls = $this->storageService->upload(
+                        $file,
+                        (int) $property->id
+                    );
 
                     $details = $imageData['details'];
                     $adjustments = $imageData['adjustments'];
@@ -201,10 +200,9 @@ final class ImageService
                         is_string($image->storage_key)
                         && $image->storage_key !== ''
                     ) {
-                        $this->storageService
-                            ->deletePropertyImage(
-                                $image->storage_key
-                            );
+                        $this->storageService->delete(
+                            $this->decodeStorageKeys($image->storage_key)
+                        );
                     }
 
                     $image->delete();
@@ -250,5 +248,23 @@ final class ImageService
             ->update([
                 'is_primary' => false,
             ]);
+    }
+
+    /**
+     * @return array<int|string, string>
+     */
+    private function decodeStorageKeys(string $storageKey): array
+    {
+        $decoded = json_decode($storageKey, true);
+
+        if (!is_array($decoded)) {
+            return [$storageKey];
+        }
+
+        return array_values(array_filter(
+            $decoded,
+            static fn (mixed $value): bool =>
+                is_string($value) && $value !== ''
+        ));
     }
 }

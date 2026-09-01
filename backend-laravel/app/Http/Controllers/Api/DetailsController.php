@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateDetailsRequest;
-use App\Models\Property;
+use App\Modules\Property\Models\Property;
 use App\Services\DetailsService;
 use Illuminate\Http\Response;
 

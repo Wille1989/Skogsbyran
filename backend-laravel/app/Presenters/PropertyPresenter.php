@@ -7,7 +7,7 @@ namespace App\Presenters;
 use App\Models\Area;
 use App\Models\Document;
 use App\Models\Image;
-use App\Models\Property;
+use App\Modules\Property\Models\Property;
 use Illuminate\Support\Collection;
 
 final class PropertyPresenter
@@ -52,8 +52,11 @@ final class PropertyPresenter
             'details' => [
                 'title' => $property->title,
                 'caption' => $property->caption ?? '',
-                'price' => (string) ($property->price ?? ''),
-                'size' => (string) ($property->size ?? ''),
+                'price' => (string) ($property->price_whole_units ?? $property->price ?? ''),
+                'size' => (string) ($property->size_hectares ?? $property->size ?? ''),
+                'slug' => $property->slug ?? '',
+                'listingStatus' => $property->listing_status?->value ?? 'available',
+                'isVisible' => $property->is_visible ?? true,
             ],
             'images' => $property->images
                 ->map(fn (Image $image): array => $this->image($image))

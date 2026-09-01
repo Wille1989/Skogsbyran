@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Infrastructure\Storage\ObjectStorage;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 final class ImageStorageService
 {
     public function __construct(
         private readonly ImageVariantService $imageVariantService,
-        private readonly SupabaseStorageService $supabaseStorageService,
+        private readonly ObjectStorage $objectStorage,
     ) {
     }
 
@@ -20,14 +20,7 @@ final class ImageStorageService
         $variantFiles = $this->imageVariantService->process($file);
 
         try {
-            if ($this->shouldUseLocalStorage()) {
-                return $this->storeLocally(
-                    $propertyId,
-                    $variantFiles
-                );
-            }
-
-            return $this->storeInSupabase(
+            return $this->store(
                 $propertyId,
                 $variantFiles
             );
@@ -40,22 +33,12 @@ final class ImageStorageService
 
     public function delete(array $storageKeys): void
     {
-        if ($this->shouldUseLocalStorage()) {
-            Storage::disk('public')->delete(
-                array_values($storageKeys)
-            );
-
-            return;
-        }
-
-        foreach ($storageKeys as $storageKey) {
-            $this->supabaseStorageService->delete(
-                $storageKey
-            );
-        }
+        $this->objectStorage->delete(
+            array_values($storageKeys)
+        );
     }
 
-    private function storeInSupabase(int $propertyId, array $variantFiles): array {
+    private function store(int $propertyId, array $variantFiles): array {
         $baseName = uniqid($propertyId . '_', true);
 
         $storageKeys = [];
@@ -63,40 +46,36 @@ final class ImageStorageService
 
         try {
             foreach ($variantFiles as $variant => $path) {
-                $storageKey = sprintf(
-                    'properties/%d/images/%s_%s.webp',
+                $storageKey = $this->createStorageKey(
                     $propertyId,
                     $baseName,
-                    $variant
+                    (string) $variant
                 );
 
-                $binary = file_get_contents($path);
+                $stream = fopen($path, 'rb');
 
-                if ($binary === false) {
+                if ($stream === false) {
                     throw new \RuntimeException(
-                        'Failed to read image variant.'
+                        'Failed to open image variant.'
                     );
                 }
 
-                $urls[$variant] =
-                    $this->supabaseStorageService->upload(
-                        storageKey: $storageKey,
-                        contents: $binary,
-                        contentType: 'image/webp',
+                try {
+                    $this->objectStorage->putStream(
+                        $storageKey,
+                        $stream
                     );
+                } finally {
+                    fclose($stream);
+                }
 
                 $storageKeys[$variant] = $storageKey;
+                $urls[$variant] = $this->objectStorage->url(
+                    $storageKey,
+                );
             }
         } catch (Throwable $exception) {
-            foreach ($storageKeys as $storageKey) {
-                try {
-                    $this->supabaseStorageService->delete(
-                        $storageKey
-                    );
-                } catch (Throwable) {
-                    // Cleanup failure must not hide original exception.
-                }
-            }
+            $this->deleteUploadedVariantsSafely($storageKeys);
 
             throw $exception;
         }
@@ -107,54 +86,33 @@ final class ImageStorageService
         );
     }
 
-    private function storeLocally(int $propertyId, array $variantFiles): array {
-        $baseName = uniqid($propertyId . '_', true);
-
-        $storageKeys = [];
-        $urls = [];
-
-        foreach ($variantFiles as $variant => $path) {
-            $storageKey = sprintf(
-                'properties/%d/images/%s_%s.webp',
-                $propertyId,
-                $baseName,
-                $variant
-            );
-
-            $stream = fopen($path, 'rb');
-
-            if ($stream === false) {
-                throw new \RuntimeException(
-                    'Failed to open image variant.'
-                );
-            }
-
-            try {
-                Storage::disk('public')->put(
-                    $storageKey,
-                    $stream
-                );
-            } finally {
-                fclose($stream);
-            }
-
-            $storageKeys[$variant] = $storageKey;
-            $urls[$variant] = Storage::disk('public')->url(
-                $storageKey
-            );
-        }
-
-        return $this->buildResult(
-            $urls,
-            $storageKeys
+    private function createStorageKey(
+        int $propertyId,
+        string $baseName,
+        string $variant
+    ): string {
+        return sprintf(
+            'properties/%d/images/%s_%s.webp',
+            $propertyId,
+            $baseName,
+            $variant
         );
     }
 
     private function buildResult(array $urls, array $storageKeys): array {
         return [
+            'original_url' => $urls['large'],
             'thumb_url' => $urls['thumb'],
             'medium_url' => $urls['medium'],
             'large_url' => $urls['large'],
+            'storage_key' => json_encode(
+                [
+                    'thumb' => $storageKeys['thumb'],
+                    'medium' => $storageKeys['medium'],
+                    'large' => $storageKeys['large'],
+                ],
+                JSON_THROW_ON_ERROR
+            ),
 
             'storage_keys' => [
                 'thumb' => $storageKeys['thumb'],
@@ -172,9 +130,14 @@ final class ImageStorageService
         }
     }
 
-    private function shouldUseLocalStorage(): bool
+    private function deleteUploadedVariantsSafely(array $storageKeys): void
     {
-        return app()->environment('testing')
-            || !$this->supabaseStorageService->isConfigured();
+        foreach ($storageKeys as $storageKey) {
+            try {
+                $this->objectStorage->delete((string) $storageKey);
+            } catch (Throwable) {
+                // Cleanup failure must not hide original exception.
+            }
+        }
     }
 }

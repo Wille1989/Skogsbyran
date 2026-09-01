@@ -7,7 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAreaRequest;
 use App\Http\Requests\UpdateAreaRequest;
-use App\Models\Property;
+use App\Modules\Property\Models\Property;
 use App\Models\Area;
 use App\Services\AreaService;
 use Illuminate\Http\JsonResponse;

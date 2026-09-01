@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { type FormDetails } from './types';
+import { type FormDetails, type ListingStatus } from './types';
 import './Form.css';
 
 type FormProps = {
@@ -12,8 +12,19 @@ const defaultValues: FormDetails = {
         title: '',
         caption: '',
         price: '',
-        size: ''
+        size: '',
+        slug: '',
+        listingStatus: 'available',
+        isVisible: true
 };
+
+const listingStatusOptions: Array<{ value: ListingStatus; label: string }> = [
+        { value: 'upcoming', label: 'Kommande' },
+        { value: 'available', label: 'Till salu' },
+        { value: 'bidding', label: 'Budgivning' },
+        { value: 'reserved', label: 'Reserverad' },
+        { value: 'sold', label: 'Såld' },
+];
 
 export function DetailsForm({ initialValues, onSubmit }: FormProps) {
         const {register, handleSubmit, reset, formState: { errors }, } = useForm<FormDetails>({defaultValues});
@@ -25,7 +36,7 @@ export function DetailsForm({ initialValues, onSubmit }: FormProps) {
         }, [initialValues, reset]);
 
         return (
-        <form id="details-form" onSubmit={handleSubmit(onSubmit)} className="form details-form">
+        <form id="property-form" onSubmit={handleSubmit(onSubmit)} className="form details-form">
                 <div className="form-grid">
                         <div className="form-column">
                                 <div className="form-field">
@@ -60,6 +71,29 @@ export function DetailsForm({ initialValues, onSubmit }: FormProps) {
                                                 placeholder="Ex. 135"
                                                 {...register("size")}
                                         />
+                                </div>
+
+                                <div className="form-field">
+                                        <label htmlFor="listingStatus">Status</label>
+                                        <select
+                                                id="listingStatus"
+                                                {...register("listingStatus", { required: "Status krävs" })}
+                                        >
+                                                {listingStatusOptions.map((option) => (
+                                                        <option key={option.value} value={option.value}>
+                                                                {option.label}
+                                                        </option>
+                                                ))}
+                                        </select>
+                                </div>
+
+                                <div className="form-field form-field-checkbox">
+                                        <input
+                                                id="isVisible"
+                                                type="checkbox"
+                                                {...register("isVisible")}
+                                        />
+                                        <label htmlFor="isVisible">Synlig publikt</label>
                                 </div>
 
                                 <div className="form-field">

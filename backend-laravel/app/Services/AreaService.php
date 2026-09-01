@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Property;
+use App\Modules\Property\Models\Property;
 use App\Models\Area;
 use Illuminate\Database\Eloquent\Collection;
 use InvalidArgumentException;

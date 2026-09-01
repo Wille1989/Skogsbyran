@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Property;
+use App\Modules\Property\Models\Property;
 use App\Presenters\PropertyPresenter;
 use Illuminate\Support\Facades\DB;
 
@@ -28,6 +28,7 @@ final class PropertyService
                 'documents',
                 'areas',
             ])
+            ->where('is_visible', true)
             ->orderByDesc('id')
             ->get();
 

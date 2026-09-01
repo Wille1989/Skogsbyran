@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Modules\Property\Enums\ListingStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 final class StorePropertyRequest extends FormRequest
 {
@@ -17,6 +19,7 @@ final class StorePropertyRequest extends FormRequest
     {
         $details = $this->decodeJsonArray($this->input('details'));
         $areas = $this->decodeJsonArray($this->input('areas'));
+        $details = $this->normalizeDetails($details);
 
         $images = $this->input('images', []);
 
@@ -66,9 +69,31 @@ final class StorePropertyRequest extends FormRequest
                 'string',
             ],
 
+            'details.price_whole_units' => [
+                'nullable',
+                'integer',
+                'min:0',
+            ],
+
             'details.size' => [
                 'required',
                 'string',
+            ],
+
+            'details.size_hectares' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+
+            'details.listing_status' => [
+                'required',
+                Rule::enum(ListingStatus::class),
+            ],
+
+            'details.is_visible' => [
+                'required',
+                'boolean',
             ],
 
             'images' => [
@@ -202,5 +227,61 @@ final class StorePropertyRequest extends FormRequest
         return is_array($decoded)
             ? $decoded
             : [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $details
+     * @return array<string, mixed>
+     */
+    private function normalizeDetails(array $details): array
+    {
+        $details['listing_status'] = $details['listing_status']
+            ?? $details['listingStatus']
+            ?? ListingStatus::Available->value;
+
+        $details['is_visible'] = $details['is_visible']
+            ?? $details['isVisible']
+            ?? true;
+
+        $details['price_whole_units'] = $details['price_whole_units']
+            ?? $this->wholeCurrencyUnits($details['price'] ?? null);
+
+        $details['size_hectares'] = $details['size_hectares']
+            ?? $this->decimalString($details['size'] ?? null);
+
+        return $details;
+    }
+
+    private function wholeCurrencyUnits(mixed $value): ?int
+    {
+        if (!is_scalar($value)) {
+            return null;
+        }
+
+        $normalized = preg_replace('/[^\d]/', '', (string) $value);
+
+        if ($normalized === null || $normalized === '') {
+            return null;
+        }
+
+        return (int) $normalized;
+    }
+
+    private function decimalString(mixed $value): ?string
+    {
+        if (!is_scalar($value)) {
+            return null;
+        }
+
+        $normalized = str_replace(',', '.', trim((string) $value));
+        $normalized = preg_replace('/\s+/', '', $normalized);
+
+        if ($normalized === null || $normalized === '') {
+            return null;
+        }
+
+        return is_numeric($normalized)
+            ? $normalized
+            : null;
     }
 }

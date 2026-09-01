@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Models\Property;
+use App\Modules\Property\Models\Property;
 use App\Models\PropertyArea;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -115,4 +115,3 @@ class PropertyAreaApiTest extends TestCase
             ->assertNotFound();
     }
 }
-

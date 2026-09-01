@@ -41,12 +41,7 @@ export function ShowPage()
         </button>
 
         <Details
-            details={{
-                title: property.details.title,  
-                caption: property.details.caption,
-                price: property.details.price,
-                size: property.details.size,
-            }}
+            details={property.details}
         />
 
         <Images

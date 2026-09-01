@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\DeleteImagesRequest;
 use App\Http\Requests\StoreImagesRequest;
 use App\Http\Requests\UpdateImagesRequest;
-use App\Models\Property;
+use App\Modules\Property\Models\Property;
 use App\Services\ImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;

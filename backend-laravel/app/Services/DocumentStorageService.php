@@ -4,48 +4,18 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Infrastructure\Storage\ObjectStorage;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 final class DocumentStorageService
 {
     public function __construct(
-        private readonly SupabaseStorageService $supabaseStorageService
+        private readonly ObjectStorage $objectStorage
     ) {
     }
 
     public function upload(UploadedFile $file, int $propertyId, string $type): array {
-        if ($this->shouldUseLocalStorage()) {
-            return $this->storeLocally(
-                $file,
-                $propertyId,
-                $type
-            );
-        }
-
-        return $this->storeInSupabase(
-            $file,
-            $propertyId,
-            $type
-        );
-    }
-
-    public function delete(string $storageKey): void {
-        if ($this->shouldUseLocalStorage()) {
-            Storage::disk('public')->delete(
-                $storageKey
-            );
-
-            return;
-        }
-
-        $this->supabaseStorageService->delete(
-            $storageKey
-        );
-    }
-
-    private function storeInSupabase(UploadedFile $file, int $propertyId, string $type): array {
         $storageKey = $this->createStorageKey(
             $file,
             $propertyId,
@@ -75,63 +45,22 @@ final class DocumentStorageService
             $file->getMimeType()
             ?: 'application/pdf';
 
-        $url = $this->supabaseStorageService->upload(
-            storageKey: $storageKey,
-            contents: $contents,
-            contentType: $contentType,
+        $this->objectStorage->putContents(
+            $storageKey,
+            $contents
         );
 
         return [
-            'url' => $url,
+            'url' => $this->objectStorage->url($storageKey),
             'storage_key' => $storageKey,
+            'mime_type' => $contentType,
         ];
     }
 
-    private function storeLocally(UploadedFile $file, int $propertyId, string $type): array {
-        $storageKey = $this->createStorageKey(
-            $file,
-            $propertyId,
-            $type
+    public function delete(string $storageKey): void {
+        $this->objectStorage->delete(
+            $storageKey
         );
-
-        $path = $file->getRealPath();
-
-        if (
-            !is_string($path)
-            || $path === ''
-        ) {
-            throw new RuntimeException(
-                'Document path is not readable.'
-            );
-        }
-
-        $stream = fopen(
-            $path,
-            'rb'
-        );
-
-        if ($stream === false) {
-            throw new RuntimeException(
-                'Failed to open document.'
-            );
-        }
-
-        try {
-            Storage::disk('public')->put(
-                $storageKey,
-                $stream
-            );
-        } finally {
-            fclose($stream);
-        }
-
-        return [
-            'url' => Storage::disk('public')->url(
-                $storageKey
-            ),
-
-            'storage_key' => $storageKey,
-        ];
     }
 
     private function createStorageKey(UploadedFile $file, int $propertyId, string $type): string {
@@ -154,9 +83,4 @@ final class DocumentStorageService
         );
     }
 
-    private function shouldUseLocalStorage(): bool
-    {
-        return app()->environment('testing')
-            || !$this->supabaseStorageService->isConfigured();
-    }
 }

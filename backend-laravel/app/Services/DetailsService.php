@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Presenters\PropertyPresenter;
-use App\Models\Property;
+use App\Modules\Property\Models\Property;
 
 /**
  * Handle property detail operations and frontend response mapping.
@@ -83,6 +83,7 @@ class DetailsService
     {
         $properties = Property::query()
             ->with(['areas', 'images.metadata', 'documents'])
+            ->where('is_visible', true)
             ->orderByDesc('id')
             ->get();
 

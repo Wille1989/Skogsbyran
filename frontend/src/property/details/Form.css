@@ -12,3 +12,20 @@
 .details-form .form-error {
   margin: 0;
 }
+
+.details-form select {
+  min-height: 42px;
+}
+
+.details-form .form-field-checkbox {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.details-form .form-field-checkbox input {
+  height: 18px;
+  margin: 0;
+  width: 18px;
+}
