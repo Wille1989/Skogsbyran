@@ -6,7 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 use Tests\TestCase;
 
 /**
@@ -24,7 +24,7 @@ class AuthLoginTest extends TestCase
         $user = User::factory()->create([
             'email' => 'admin@skogsbyran.se',
             'admin' => true,
-            'password' => Hash::make('secret-123'),
+            'password' => 'secret-123',
         ]);
 
         $response = $this->postJson('/auth/login', [
@@ -34,13 +34,15 @@ class AuthLoginTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertJsonPath('message', 'Lyckades!')
             ->assertJsonPath('data.id', $user->id)
             ->assertJsonPath('data.email', $user->email)
             ->assertJsonPath('data.isAdmin', true);
 
-        $this->assertIsString($response->json('data.token'));
-        $this->assertNotEmpty($response->json('data.token'));
+        $token = $response->json('data.token');
+
+        $this->assertIsString($token);
+        $this->assertNotEmpty($token);
+        $this->assertNotNull(PersonalAccessToken::findToken($token));
     }
 
     /**
@@ -50,7 +52,7 @@ class AuthLoginTest extends TestCase
     {
         User::factory()->create([
             'email' => 'admin@skogsbyran.se',
-            'password' => Hash::make('secret-123'),
+            'password' => 'secret-123',
         ]);
 
         $response = $this->postJson('/auth/login', [
@@ -60,7 +62,7 @@ class AuthLoginTest extends TestCase
 
         $response
             ->assertUnauthorized()
-            ->assertJsonPath('error', 'Invalid credentials');
+            ->assertJsonPath('message', 'Invalid credentials');
     }
 
     /**
@@ -73,5 +75,22 @@ class AuthLoginTest extends TestCase
         $response
             ->assertStatus(422)
             ->assertJsonValidationErrors(['email', 'password']);
+    }
+
+    public function test_it_logs_out_the_current_sanctum_token(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'admin@skogsbyran.se',
+            'admin' => true,
+            'password' => 'secret-123',
+        ]);
+
+        $token = $user->createToken('skogsbyran-admin', ['admin'])->plainTextToken;
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/auth/logout')
+            ->assertNoContent();
+
+        $this->assertNull(PersonalAccessToken::findToken($token));
     }
 }

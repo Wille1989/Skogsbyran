@@ -10,13 +10,6 @@ use Illuminate\Support\Facades\Hash;
 
 final class AuthService
 {
-    private const TOKEN_TTL_SECONDS = 10_800;
-
-    public function __construct(
-        private readonly JwtService $jwtService
-    ){
-    }
-
     public function login(string $email, string $password): array
     {
         $user = User::query()->where('email', $email)->first();
@@ -25,17 +18,9 @@ final class AuthService
             throw new AuthenticationException('Invalid credentials');
         }
 
-        $issuedAt = time();
-        $expiresAt = $issuedAt + self::TOKEN_TTL_SECONDS;
-
-        $token = $this->jwtService->encode([
-            'iss' => env('JWT_ISSUER'),
-            'iat' => $issuedAt,
-            'exp' => $expiresAt,
-            'userId' => $user->id,
-            'email' => $user->email,
-            'isAdmin' => $user->admin,
-        ]);
+        $token = $user->createToken('skogsbyran-admin', [
+            $user->admin ? 'admin' : 'user',
+        ])->plainTextToken;
 
         return [
             'id' => $user->id,

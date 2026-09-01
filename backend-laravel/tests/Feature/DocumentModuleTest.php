@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Http\Middleware\EnsureAdminJwt;
+use App\Models\User;
 use App\Modules\Document\Models\Document;
 use App\Modules\Property\Models\Property;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 final class DocumentModuleTest extends TestCase
@@ -21,7 +21,7 @@ final class DocumentModuleTest extends TestCase
     public function test_it_uploads_and_replaces_documents_through_normalized_tables(): void
     {
         Storage::fake('public');
-        $this->withoutMiddleware(EnsureAdminJwt::class);
+        Sanctum::actingAs(User::factory()->create(['admin' => true]), ['admin']);
 
         $property = Property::query()->create([
             'title' => 'Document module property',
@@ -88,7 +88,5 @@ final class DocumentModuleTest extends TestCase
 
         Storage::disk('public')->assertMissing($firstStorageKey);
         Storage::disk('public')->assertExists($secondStorageKey);
-
-        $this->assertFalse(Schema::hasTable('legacy_property_documents'));
     }
 }

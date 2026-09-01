@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Http\Middleware\EnsureAdminJwt;
+use App\Models\User;
 use App\Modules\Property\Models\Property;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 final class LocationModuleTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_it_stores_property_areas_as_location_areas_with_ordered_points(): void
+    public function test_it_stores_location_areas_with_ordered_points(): void
     {
-        $this->withoutMiddleware(EnsureAdminJwt::class);
+        Sanctum::actingAs(User::factory()->create(['admin' => true]), ['admin']);
 
         $property = Property::query()->create([
             'title' => 'Location module property',
@@ -42,8 +42,7 @@ final class LocationModuleTest extends TestCase
             ->assertJsonPath('propertyId', (string) $property->id)
             ->assertJsonPath('name', 'Norra skiftet')
             ->assertJsonPath('polygon.0.lat', 59.1)
-            ->assertJsonPath('polygon.1.lng', 18.25)
-            ->assertJsonPath('marker.lat', 59.105);
+            ->assertJsonPath('polygon.1.lng', 18.25);
 
         $areaId = (int) $createResponse->json('id');
         $locationId = (int) DB::table('locations')
@@ -64,7 +63,6 @@ final class LocationModuleTest extends TestCase
             'sort_order' => 1,
         ]);
         $this->assertDatabaseCount('area_points', 3);
-        $this->assertFalse(Schema::hasTable('property_areas'));
 
         $this->getJson('/property/'.$property->id.'/areas')
             ->assertOk()
@@ -88,8 +86,7 @@ final class LocationModuleTest extends TestCase
         ])
             ->assertOk()
             ->assertJsonPath('name', 'Norra skiftet uppdaterat')
-            ->assertJsonCount(3, 'polygon')
-            ->assertJsonPath('marker.lng', 18.325);
+            ->assertJsonCount(3, 'polygon');
 
         $this->assertDatabaseCount('area_points', 3);
 

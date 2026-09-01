@@ -42,17 +42,13 @@ class AreaService
     public function create(Property $property, array $validated): array
     {
         $polygon = $validated['polygon'];
-        $squareMeters = $this->calculateAreaSquareMeters($polygon);
         $location = $this->locationForProperty($property, $validated['marker']);
 
-        $area = DB::transaction(function () use ($location, $validated, $polygon, $squareMeters): Area {
+        $area = DB::transaction(function () use ($location, $validated, $polygon): Area {
             $area = Area::query()->create([
                 'location_id' => $location->id,
                 'name' => $validated['name'],
                 'sort_order' => $this->nextSortOrder($location),
-                'marker_lat' => $validated['marker']['lat'],
-                'marker_lng' => $validated['marker']['lng'],
-                'area_square_meters' => $squareMeters,
             ]);
 
             $this->replacePoints($area, $polygon);
@@ -90,9 +86,6 @@ class AreaService
         $area = DB::transaction(function () use ($area, $validated, $polygon): Area {
             $area->fill([
                 'name' => $validated['name'],
-                'marker_lat' => $validated['marker']['lat'],
-                'marker_lng' => $validated['marker']['lng'],
-                'area_square_meters' => $this->calculateAreaSquareMeters($polygon),
             ]);
             $area->save();
 
@@ -142,10 +135,7 @@ class AreaService
             'propertyId' => (string) ($area->location?->property_id ?? ''),
             'name' => $area->name,
             'polygon' => $polygon,
-            'marker' => [
-                'lat' => $area->marker_lat ?? ($polygon[0]['lat'] ?? 0),
-                'lng' => $area->marker_lng ?? ($polygon[0]['lng'] ?? 0),
-            ],
+            'marker' => $this->marker($polygon),
             'areaSquareMeters' => round($areaSquareMeters, 2),
             'areaHectares' => round($areaSquareMeters / 10000, 4),
             'createdAt' => $area->created_at?->toISOString(),
@@ -210,11 +200,26 @@ class AreaService
 
     private function areaSquareMeters(Area $area): float
     {
-        if ($area->area_square_meters !== null) {
-            return (float) $area->area_square_meters;
+        return $this->calculateAreaSquareMeters($this->polygon($area));
+    }
+
+    /**
+     * @param  array<int, array<string, float>>  $polygon
+     * @return array{lat: float, lng: float}
+     */
+    private function marker(array $polygon): array
+    {
+        if ($polygon === []) {
+            return [
+                'lat' => 0.0,
+                'lng' => 0.0,
+            ];
         }
 
-        return $this->calculateAreaSquareMeters($this->polygon($area));
+        return [
+            'lat' => array_sum(array_column($polygon, 'lat')) / count($polygon),
+            'lng' => array_sum(array_column($polygon, 'lng')) / count($polygon),
+        ];
     }
 
     /**

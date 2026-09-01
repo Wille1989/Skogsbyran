@@ -16,18 +16,12 @@ final class Area extends Model
         'location_id',
         'name',
         'sort_order',
-        'marker_lat',
-        'marker_lng',
-        'area_square_meters',
     ];
 
     protected function casts(): array
     {
         return [
             'sort_order' => 'integer',
-            'marker_lat' => 'float',
-            'marker_lng' => 'float',
-            'area_square_meters' => 'float',
         ];
     }
 

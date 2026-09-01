@@ -7,10 +7,6 @@ type AuthUser = {
     isAdmin: boolean;
 };
 
-type TokenPayload = {
-    exp?: number;
-};
-
 export function getStoredAuthSession(): AuthSession {
     if (typeof window === "undefined") {
         return {
@@ -53,7 +49,7 @@ function parseAuthUser(
 }
 
 export function isAuthenticated(session: AuthSession): boolean {
-    return isSessionTokenCurrent(session.token);
+    return typeof session.token === "string" && session.token.length > 0;
 }
 
 export function isAdminSession(session: AuthSession): boolean {
@@ -81,42 +77,4 @@ export function buildAuthHeaders(headers: HeadersInit = {}): HeadersInit {
         ...baseHeaders,
         Authorization: `Bearer ${token}`,
     };
-}
-
-function isSessionTokenCurrent(token: string | null): boolean {
-    const payload = parseTokenPayload(token);
-
-    if (!payload || typeof payload.exp !== "number") {
-        return false;
-    }
-
-    return payload.exp > Math.floor(Date.now() / 1000);
-}
-
-function parseTokenPayload(token: string | null): TokenPayload | null {
-    if (!token) {
-        return null;
-    }
-
-    const [, payload] = token.split(".");
-
-    if (!payload) {
-        return null;
-    }
-
-    try {
-        const normalizedPayload = payload
-            .replace(/-/g, "+")
-            .replace(/_/g, "/")
-            .padEnd(Math.ceil(payload.length / 4) * 4, "=");
-        const parsed: unknown = JSON.parse(atob(normalizedPayload));
-
-        if (typeof parsed !== "object" || parsed === null) {
-            return null;
-        }
-
-        return parsed as TokenPayload;
-    } catch {
-        return null;
-    }
 }

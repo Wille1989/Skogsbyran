@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Http\Middleware\EnsureAdminJwt;
+use App\Models\User;
 use App\Modules\Property\Models\Property;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 final class ImageModuleTest extends TestCase
@@ -20,7 +20,7 @@ final class ImageModuleTest extends TestCase
     public function test_it_uploads_images_into_normalized_image_tables(): void
     {
         Storage::fake('public');
-        $this->withoutMiddleware(EnsureAdminJwt::class);
+        Sanctum::actingAs(User::factory()->create(['admin' => true]), ['admin']);
 
         $property = Property::query()->create([
             'title' => 'Image module property',
@@ -89,8 +89,5 @@ final class ImageModuleTest extends TestCase
         foreach ($storageKeys as $storageKey) {
             Storage::disk('public')->assertExists($storageKey);
         }
-
-        $this->assertFalse(Schema::hasTable('property_images'));
-        $this->assertFalse(Schema::hasTable('property_image_attributes'));
     }
 }

@@ -1,5 +1,6 @@
 import type { User, AuthResponse } from "./userTypes";
 import { baseURL } from '../../shared/data/baseURL';
+import { buildAuthHeaders } from "./authSession";
 
 export function AuthService() {
 
@@ -22,5 +23,24 @@ export function AuthService() {
         return user.data;
     }
 
-    return { loginUser }
+    async function logoutUser(): Promise<void> {
+        const response = await fetch(`${baseURL}/auth/logout`, {
+            method: 'POST',
+            headers: buildAuthHeaders(),
+        });
+
+        if (!response.ok && response.status !== 401) {
+            const body: unknown = await response.json().catch(() => ({}));
+            const message = typeof body === "object"
+                && body !== null
+                && "message" in body
+                && typeof body.message === "string"
+                ? body.message
+                : 'Något gick fel vid utloggning';
+
+            throw new Error(message);
+        }
+    }
+
+    return { loginUser, logoutUser }
 }

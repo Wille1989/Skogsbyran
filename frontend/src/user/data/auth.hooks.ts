@@ -13,7 +13,7 @@ function getErrorMessage(error: unknown, fallbackMessage: string) {
 }
 
 export function useAuth() {
-    const { loginUser } = AuthService();
+    const { loginUser, logoutUser } = AuthService();
     const navigate = useNavigate();
 
     const [form, setForm] = useState<User>({
@@ -62,6 +62,8 @@ export function useAuth() {
             setLoading(true);
             setErrorMessage(null);
             setSuccessMessage(null);
+
+            await logoutUser();
 
             localStorage.removeItem('token');
             localStorage.removeItem('authUser');

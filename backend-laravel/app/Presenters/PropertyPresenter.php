@@ -176,17 +176,14 @@ final class PropertyPresenter
         $area->loadMissing(['location', 'points']);
 
         $polygon = $this->polygon($area);
-        $areaSquareMeters = (float) ($area->area_square_meters ?? 0);
+        $areaSquareMeters = $this->calculateAreaSquareMeters($polygon);
 
         return [
             'id' => (string) $area->id,
             'propertyId' => (string) ($area->location?->property_id ?? ''),
             'name' => $area->name,
             'polygon' => $polygon,
-            'marker' => [
-                'lat' => $area->marker_lat ?? ($polygon[0]['lat'] ?? 0),
-                'lng' => $area->marker_lng ?? ($polygon[0]['lng'] ?? 0),
-            ],
+            'marker' => $this->marker($polygon),
             'areaSquareMeters' => round($areaSquareMeters, 2),
             'areaHectares' => round($areaSquareMeters / 10000, 4),
             'createdAt' => $area->created_at?->toISOString(),
@@ -206,5 +203,59 @@ final class PropertyPresenter
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * @param  array<int, array<string, float>>  $polygon
+     * @return array{lat: float, lng: float}
+     */
+    private function marker(array $polygon): array
+    {
+        if ($polygon === []) {
+            return [
+                'lat' => 0.0,
+                'lng' => 0.0,
+            ];
+        }
+
+        return [
+            'lat' => array_sum(array_column($polygon, 'lat')) / count($polygon),
+            'lng' => array_sum(array_column($polygon, 'lng')) / count($polygon),
+        ];
+    }
+
+    /**
+     * @param  array<int, array<string, float>>  $polygon
+     */
+    private function calculateAreaSquareMeters(array $polygon): float
+    {
+        $count = count($polygon);
+
+        if ($count < 3) {
+            return 0;
+        }
+
+        $earthRadius = 6378137.0;
+        $averageLatRadians = deg2rad(array_sum(array_column($polygon, 'lat')) / $count);
+
+        $projected = array_map(function (array $point) use ($earthRadius, $averageLatRadians): array {
+            $lat = deg2rad((float) $point['lat']);
+            $lng = deg2rad((float) $point['lng']);
+
+            return [
+                'x' => $earthRadius * $lng * cos($averageLatRadians),
+                'y' => $earthRadius * $lat,
+            ];
+        }, $polygon);
+
+        $area = 0.0;
+
+        for ($index = 0; $index < $count; $index++) {
+            $next = ($index + 1) % $count;
+            $area += ($projected[$index]['x'] * $projected[$next]['y'])
+                - ($projected[$next]['x'] * $projected[$index]['y']);
+        }
+
+        return abs($area) / 2;
     }
 }
