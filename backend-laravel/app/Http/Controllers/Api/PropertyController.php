@@ -26,17 +26,17 @@ class PropertyController extends Controller
 
     public function show(Property $property): JsonResponse
     {
-        return response()->json($this->propertyService->findById($property));
+        return response()->json($this->propertyService->find($property));
     }
 
     public function store(StorePropertyRequest $request): JsonResponse
     {
-        $property = $this->propertyService->create($request->validated(), $request);
+        $property = $this->propertyService->create($request->validated());
 
         return response()->json($property, 201);
     }
 
-    public function destroy(string $propertyId): JsonResponse
+    public function destroy(Property $property): JsonResponse
     {
         $this->propertyService->delete($property);
 

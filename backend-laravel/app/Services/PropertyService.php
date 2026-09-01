@@ -24,14 +24,14 @@ final class PropertyService
     {
         $properties = Property::query()
             ->with([
-                'images',
+                'images.metadata',
                 'documents',
                 'areas',
             ])
             ->orderByDesc('id')
             ->get();
 
-        return $this->propertyPresenter->collectionToLegacyListWrapped($properties);
+        return $this->propertyPresenter->collectionWrapped($properties);
     }
 
     /**
@@ -40,12 +40,12 @@ final class PropertyService
     public function find(Property $property): array
     {
         $property->loadMissing([
-            'images',
+            'images.metadata',
             'documents',
             'areas',
         ]);
 
-        return $this->propertyPresenter->toLegacyWrapped($property);
+        return $this->propertyPresenter->wrapped($property);
     }
 
     /**
@@ -76,13 +76,13 @@ final class PropertyService
             }
 
             return $property->load([
-                'images',
+                'images.metadata',
                 'documents',
                 'areas',
             ]);
         });
 
-        return $this->propertyPresenter->toLegacyWrapped($property);
+        return $this->propertyPresenter->wrapped($property);
     }
 
     public function delete(Property $property): void

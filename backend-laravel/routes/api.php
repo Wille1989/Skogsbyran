@@ -25,7 +25,7 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 Route::get('/properties', [PropertyController::class, 'index']);
 Route::get('/property/{property}', [PropertyController::class, 'show']);
 Route::post('/property', [PropertyController::class, 'store']);
-Route::delete('/property/{property]', [PropertyController::class, 'destroy']);
+Route::delete('/property/{property}', [PropertyController::class, 'destroy']);
 
 /*
 |--------------------------------------------------------------------------

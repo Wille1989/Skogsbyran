@@ -10,7 +10,7 @@ use App\Models\Property;
 /**
  * Handle property detail operations and frontend response mapping.
  */
-class PropertyDetailsService
+class DetailsService
 {
     public function __construct(private readonly PropertyPresenter $propertyPresenter)
     {
@@ -61,7 +61,7 @@ class PropertyDetailsService
         ]);
         $property->save();
 
-        return $this->propertyPresenter->toLegacyWrapped($property);
+        return $this->propertyPresenter->wrapped($property);
     }
 
     /**
@@ -71,7 +71,7 @@ class PropertyDetailsService
      */
     public function show(Property $property): array
     {
-        return $this->propertyPresenter->toLegacyWrapped($property);
+        return $this->propertyPresenter->wrapped($property);
     }
 
     /**
@@ -82,10 +82,10 @@ class PropertyDetailsService
     public function index(): array
     {
         $properties = Property::query()
-            ->with(['area', 'images.metadata'])
+            ->with(['areas', 'images.metadata', 'documents'])
             ->orderByDesc('id')
             ->get();
 
-        return $this->propertyPresenter->collectionToLegacyWrapped($properties);
+        return $this->propertyPresenter->collectionWrapped($properties);
     }
 }

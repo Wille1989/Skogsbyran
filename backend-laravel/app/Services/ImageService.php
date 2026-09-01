@@ -40,7 +40,7 @@ final class ImageService
                     $details = $imageData['details'];
                     $adjustments = $imageData['adjustments'];
 
-                    Image::query()->create([
+                    $image = Image::query()->create([
                         'property_id' => $property->id,
 
                         'position' => (int) $imageData['position'],
@@ -51,10 +51,11 @@ final class ImageService
                         'medium_url' => $urls['medium_url'],
                         'large_url' => $urls['large_url'],
                         'storage_key' => $urls['storage_key'] ?? null,
+                    ]);
 
+                    $image->metadata()->create([
                         'caption' => $details['caption'],
-                        'alt_text' => $details['altText'],
-
+                        'alt' => $details['altText'],
                         'brightness' => (float) $adjustments['brightness'],
                         'saturation' => (float) $adjustments['saturation'],
                         'contrast' => (float) $adjustments['contrast'],
@@ -96,15 +97,16 @@ final class ImageService
                         throw (new ModelNotFoundException())->setModel(Image::class, [$imageId]);
                     }
 
-                    $updates = [];
+                    $imageUpdates = [];
+                    $metadataUpdates = [];
 
                     if (array_key_exists('position', $patch)) {
-                        $updates['position'] =
+                        $imageUpdates['position'] =
                             (int) $patch['position'];
                     }
 
                     if (array_key_exists('isPrimary', $patch)) {
-                        $updates['is_primary'] =
+                        $imageUpdates['is_primary'] =
                             (bool) $patch['isPrimary'];
                     }
 
@@ -112,12 +114,12 @@ final class ImageService
                         $details = $patch['details'];
 
                         if (array_key_exists('caption', $details)) {
-                            $updates['caption'] =
+                            $metadataUpdates['caption'] =
                                 $details['caption'];
                         }
 
                         if (array_key_exists('altText', $details)) {
-                            $updates['alt_text'] =
+                            $metadataUpdates['alt'] =
                                 $details['altText'];
                         }
                     }
@@ -131,7 +133,7 @@ final class ImageService
                                 $adjustments
                             )
                         ) {
-                            $updates['brightness'] =
+                            $metadataUpdates['brightness'] =
                                 (float) $adjustments['brightness'];
                         }
 
@@ -141,7 +143,7 @@ final class ImageService
                                 $adjustments
                             )
                         ) {
-                            $updates['saturation'] =
+                            $metadataUpdates['saturation'] =
                                 (float) $adjustments['saturation'];
                         }
 
@@ -151,26 +153,31 @@ final class ImageService
                                 $adjustments
                             )
                         ) {
-                            $updates['contrast'] =
+                            $metadataUpdates['contrast'] =
                                 (float) $adjustments['contrast'];
                         }
 
                         if (
                             array_key_exists('gamma', $adjustments)
                         ) {
-                            $updates['gamma'] =
+                            $metadataUpdates['gamma'] =
                                 (float) $adjustments['gamma'];
                         }
                     }
 
-                    if ($updates === []) {
-                        continue;
+                    if ($imageUpdates !== []) {
+                        $image->fill($imageUpdates);
+
+                        if ($image->isDirty()) {
+                            $image->save();
+                        }
                     }
 
-                    $image->fill($updates);
-
-                    if ($image->isDirty()) {
-                        $image->save();
+                    if ($metadataUpdates !== []) {
+                        $image->metadata()->updateOrCreate(
+                            ['image_id' => $image->id],
+                            $metadataUpdates
+                        );
                     }
                 }
 

@@ -4,288 +4,176 @@ declare(strict_types=1);
 
 namespace App\Presenters;
 
-use App\Models\Property;
+use App\Models\Area;
 use App\Models\Document;
 use App\Models\Image;
+use App\Models\Property;
 use Illuminate\Support\Collection;
 
-/**
- * Build ready-to-use property payloads from Eloquent models.
- *
- */
-class PropertyPresenter
+final class PropertyPresenter
 {
     /**
-     * Build the modern API representation for one property.
-     *
-     * @return array<string, mixed>
+     * @param  Collection<int, Property>  $properties
+     * @return array<string, array<int, array<string, mixed>>>
      */
-    public function toApi(Property $property): array
+    public function collectionWrapped(Collection $properties): array
     {
-        $property->loadMissing(['areas', 'images', 'documents']);
-
-        $area = $property->areas->first();
-
         return [
-            'id' => $property->id,
-            'title' => $property->title,
-            'caption' => $property->caption,
-            'price' => $property->price,
-            'size' => $property->size,
-            'boundaries' => $area ? [
-                'id' => $area->id,
-                'polygon' => $area->area_json,
-            ] : null,
-            'images' => $property->images
-                ->map(fn (Image $image): array => $this->imageToApi($image))
+            'properties' => $properties
+                ->map(fn (Property $property): array => $this->property($property))
                 ->values()
                 ->all(),
-            'documents' => $this->documentsToApi($property),
         ];
     }
 
     /**
-     * Build the legacy wrapper representation for one property.
-     *
      * @return array<string, array<string, mixed>>
      */
-    public function toLegacyWrapped(Property $property): array
+    public function wrapped(Property $property): array
     {
         return [
-            'property' => $this->toLegacy($property),
+            'property' => $this->property($property),
         ];
     }
 
     /**
-     * Build the legacy wrapper representation for a collection.
-     *
-     * @param  Collection<int, Property>  $properties
-     * @return array<string, array<int, array<string, mixed>>>
-     */
-    public function collectionToLegacyWrapped(Collection $properties): array
-    {
-        return [
-            'properties' => $properties
-                ->map(fn (Property $property): array => $this->toLegacy($property))
-                ->values()
-                ->all(),
-        ];
-    }
-
-    /**
-     * Build the lightweight list wrapper used by the property index.
-     *
-     * @param  Collection<int, Property>  $properties
-     * @return array<string, array<int, array<string, mixed>>>
-     */
-    public function collectionToLegacyListWrapped(Collection $properties): array
-    {
-        return [
-            'properties' => $properties
-                ->map(fn (Property $property): array => $this->toLegacyListItem($property))
-                ->values()
-                ->all(),
-        ];
-    }
-
-    /**
-     * Build the legacy representation for one property.
-     *
      * @return array<string, mixed>
      */
-    public function toLegacy(Property $property): array
+    public function property(Property $property): array
     {
-        $property->loadMissing(['areas', 'images', 'documents']);
-
-        $area = $property->areas->first();
+        $property->loadMissing([
+            'areas',
+            'documents',
+            'images.metadata',
+        ]);
 
         return [
-            'propertyID' => (string) $property->id,
-            'title' => $property->title,
-            'caption' => $property->caption,
-            'price' => (string) ($property->price ?? ''),
-            'size' => (string) ($property->size ?? ''),
-            'boundaries' => $area ? [
-                'boundariesID' => (string) $area->id,
-                'propertyID' => (string) $property->id,
-                'polygon' => $area->area_json,
-                'marker' => [
-                    'lat' => $area->marker_lat,
-                    'lng' => $area->marker_lng,
-                ],
-            ] : null,
+            'propertyId' => (string) $property->id,
+            'details' => [
+                'title' => $property->title,
+                'caption' => $property->caption ?? '',
+                'price' => (string) ($property->price ?? ''),
+                'size' => (string) ($property->size ?? ''),
+            ],
             'images' => $property->images
-                ->map(fn (Image $image): array => $this->imageToLegacy($image))
+                ->map(fn (Image $image): array => $this->image($image))
                 ->values()
                 ->all(),
-            'documents' => $this->documentsToLegacy($property),
+            'documents' => $property->documents
+                ->map(fn (Document $document): array => $this->document($document))
+                ->values()
+                ->all(),
+            'areas' => $property->areas
+                ->map(fn (Area $area): array => $this->area($area))
+                ->values()
+                ->all(),
         ];
     }
 
     /**
-     * Build the API representation for one image.
-     *
      * @return array<string, mixed>
      */
-    public function imageToApi(Image $image): array
+    public function image(Image $image): array
     {
+        $image->loadMissing('metadata');
+
+        $metadata = $image->metadata;
+        $fallbackUrl = $image->medium_url ?: $image->large_url ?: $image->original_url;
+
         return [
-            'uiId' => 'image-'.$image->id,
-            'id' => $image->id,
             'imageId' => (string) $image->id,
-            'property_id' => $image->property_id,
-            'url' => $image->medium_url ?: $image->large_url ?: $image->original_url,
-            'original_url' => $image->original_url,
-            'thumb_url' => $image->thumb_url ?: $image->original_url,
-            'medium_url' => $image->medium_url ?: $image->large_url ?: $image->original_url,
-            'large_url' => $image->large_url ?: $image->original_url,
-            'thumb_path' => $image->thumb_url ?: $image->original_url,
-            'medium_path' => $image->medium_url ?: $image->large_url ?: $image->original_url,
-            'large_path' => $image->large_url ?: $image->original_url,
+            'urls' => [
+                'thumbnail' => $image->thumb_url ?: $fallbackUrl,
+                'medium' => $image->medium_url ?: $fallbackUrl,
+                'large' => $image->large_url ?: $fallbackUrl,
+            ],
             'position' => $image->position,
-            'is_primary' => $image->is_primary,
             'isPrimary' => $image->is_primary,
+            'details' => [
+                'caption' => $metadata?->caption ?? '',
+                'altText' => $metadata?->alt ?? '',
+            ],
+            'adjustments' => [
+                'brightness' => $metadata?->brightness ?? 1,
+                'saturation' => $metadata?->saturation ?? 1,
+                'contrast' => $metadata?->contrast ?? 1,
+                'gamma' => $metadata?->gamma ?? 1,
+            ],
             'createdAt' => $image->created_at?->toISOString(),
             'updatedAt' => $image->updated_at?->toISOString(),
-            'attributes' => [
-                'caption' => $image->caption ?? '',
-                'alt' => $image->alt_text ?? '',
-                'brightness' => $image->brightness ?? 1,
-                'gamma' => $image->gamma ?? 1,
-                'contrast' => $image->contrast ?? 1,
-                'saturation' => $image->saturation ?? 1,
-            ],
         ];
     }
 
     /**
-     * Build the lightweight list representation for one property.
-     *
      * @return array<string, mixed>
      */
-    public function toLegacyListItem(Property $property): array
+    private function document(Document $document): array
     {
-        $property->loadMissing(['images', 'documents']);
-
-        $images = $property->images->values();
-        $primaryIndex = $images->search(
-            fn (Image $image): bool => $image->is_primary
-        );
-
-        if ($primaryIndex === false) {
-            $primaryIndex = 0;
-        }
-
-        $listImages = $images->slice($primaryIndex, 3)->values();
-
         return [
-            'propertyID' => (string) $property->id,
-            'title' => $property->title,
-            'caption' => $property->caption,
-            'price' => (string) ($property->price ?? ''),
-            'size' => (string) ($property->size ?? ''),
-            'boundaries' => null,
-            'images' => $listImages
-                ->map(fn (Image $image): array => $this->imageToLegacy($image))
-                ->all(),
-            'documents' => $this->documentsToLegacy($property),
-        ];
-    }
-
-    /**
-     * Build the API representation for the typed property documents.
-     *
-     * @return array<string, array<string, mixed>|null>
-     */
-    private function documentsToApi(Property $property): array
-    {
-        $property->loadMissing('documents');
-
-        return $this->buildDocumentSlots($property->documents, fn (Document $document): array => [
-            'id' => $document->id,
-            'type' => $document->type,
-            'title' => $document->title,
-            'url' => $document->url,
-            'original_name' => $document->original_name,
-            'mime_type' => $document->mime_type,
-            'size_bytes' => $document->size_bytes,
-            'created_at' => $document->created_at?->toISOString(),
-            'updated_at' => $document->updated_at?->toISOString(),
-        ]);
-    }
-
-    /**
-     * Build the legacy representation for the typed property documents.
-     *
-     * @return array<string, array<string, mixed>|null>
-     */
-    private function documentsToLegacy(Property $property): array
-    {
-        $property->loadMissing('documents');
-
-        return $this->buildDocumentSlots($property->documents, fn (Document $document): array => [
-            'documentID' => (string) $document->id,
-            'propertyID' => (string) $document->property_id,
+            'propertyId' => (string) $document->property_id,
+            'documentId' => (string) $document->id,
             'type' => $document->type,
             'title' => $document->title,
             'url' => $document->url,
             'originalName' => $document->original_name,
             'mimeType' => $document->mime_type,
             'sizeBytes' => $document->size_bytes,
-        ]);
-    }
-
-    /**
-     * @param  Collection<int, Document>  $documents
-     * @param  callable(Document): array<string, mixed>  $mapper
-     * @return array<string, array<string, mixed>|null>
-     */
-    private function buildDocumentSlots(Collection $documents, callable $mapper): array
-    {
-        $slots = [
-            Document::TYPE_BID_FORM => null,
-            Document::TYPE_PROSPECT => null,
-            Document::TYPE_PROPERTY_MAP => null,
         ];
-
-        foreach ($documents as $document) {
-            if (! array_key_exists($document->type, $slots)) {
-                continue;
-            }
-
-            $slots[$document->type] = $mapper($document);
-        }
-
-        return $slots;
     }
 
     /**
-     * Build the legacy representation for one image.
-     *
      * @return array<string, mixed>
      */
-    public function imageToLegacy(Image $image): array
+    private function area(Area $area): array
     {
+        $polygon = $this->decodeAreaJson($area);
+
         return [
-            'imageID' => (string) $image->id,
-            'propertyID' => (string) $image->property_id,
-            'url' => $image->medium_url ?: $image->large_url ?: $image->original_url,
-            'thumbUrl' => $image->thumb_url ?: $image->original_url,
-            'mediumUrl' => $image->medium_url ?: $image->large_url ?: $image->original_url,
-            'largeUrl' => $image->large_url ?: $image->original_url,
-            'originalUrl' => $image->original_url,
-            'position' => $image->position,
-            'isPrimary' => $image->is_primary,
-            'imageAttributes' => [
-                'imageAttributesID' => (string) $image->id,
-                'imageID' => (string) $image->id,
-                'caption' => $image->caption ?? '',
-                'alt' => $image->alt_text ?? '',
-                'brightness' => $image->brightness ?? 1,
-                'gamma' => $image->gamma ?? 1,
-                'contrast' => $image->contrast ?? 1,
-                'saturation' => $image->saturation ?? 1,
+            'id' => (string) $area->id,
+            'propertyId' => (string) $area->property_id,
+            'name' => $area->name,
+            'polygon' => $polygon,
+            'marker' => [
+                'lat' => $area->marker_lat ?? ($polygon[0]['lat'] ?? 0),
+                'lng' => $area->marker_lng ?? ($polygon[0]['lng'] ?? 0),
             ],
+            'areaSquareMeters' => round((float) $area->area_square_meters, 2),
+            'areaHectares' => round(((float) $area->area_square_meters) / 10000, 4),
+            'createdAt' => $area->created_at?->toISOString(),
+            'updatedAt' => $area->updated_at?->toISOString(),
         ];
+    }
+
+    /**
+     * @return array<int, array<string, float>>
+     */
+    private function decodeAreaJson(Area $area): array
+    {
+        $polygon = json_decode($area->area_json, true);
+
+        if (! is_array($polygon)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            array_map(
+                static function (mixed $point): ?array {
+                    if (
+                        ! is_array($point)
+                        || ! isset($point['lat'], $point['lng'])
+                        || ! is_numeric($point['lat'])
+                        || ! is_numeric($point['lng'])
+                    ) {
+                        return null;
+                    }
+
+                    return [
+                        'lat' => (float) $point['lat'],
+                        'lng' => (float) $point['lng'],
+                    ];
+                },
+                $polygon
+            )
+        ));
     }
 }

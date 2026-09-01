@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 final class Image extends Model
 {
@@ -24,14 +25,6 @@ final class Image extends Model
         'medium_url',
         'large_url',
         'storage_key',
-
-        'caption',
-        'alt_text',
-
-        'brightness',
-        'contrast',
-        'saturation',
-        'gamma',
     ];
 
     protected function casts(): array
@@ -39,16 +32,16 @@ final class Image extends Model
         return [
             'position' => 'integer',
             'is_primary' => 'boolean',
-
-            'brightness' => 'float',
-            'contrast' => 'float',
-            'saturation' => 'float',
-            'gamma' => 'float',
         ];
     }
 
     public function property(): BelongsTo
     {
         return $this->belongsTo(Property::class);
+    }
+
+    public function metadata(): HasOne
+    {
+        return $this->hasOne(ImageAttribute::class);
     }
 }
