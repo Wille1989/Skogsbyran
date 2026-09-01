@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Presenters;
 
 use App\Infrastructure\Storage\ObjectStorage;
-use App\Models\Area;
 use App\Modules\Document\Enums\DocumentVariantName;
 use App\Modules\Document\Models\Document;
 use App\Modules\Image\Enums\ImageVariantName;
 use App\Modules\Image\Models\Image;
+use App\Modules\Location\Models\Area;
 use App\Modules\Property\Models\Property;
 use Illuminate\Support\Collection;
 
@@ -50,7 +50,8 @@ final class PropertyPresenter
     public function property(Property $property): array
     {
         $property->loadMissing([
-            'areas',
+            'areas.location',
+            'areas.points',
             'documents.variants',
             'images.metadata',
             'images.adjustment',
@@ -172,19 +173,22 @@ final class PropertyPresenter
      */
     private function area(Area $area): array
     {
-        $polygon = $this->decodeAreaJson($area);
+        $area->loadMissing(['location', 'points']);
+
+        $polygon = $this->polygon($area);
+        $areaSquareMeters = (float) ($area->area_square_meters ?? 0);
 
         return [
             'id' => (string) $area->id,
-            'propertyId' => (string) $area->property_id,
+            'propertyId' => (string) ($area->location?->property_id ?? ''),
             'name' => $area->name,
             'polygon' => $polygon,
             'marker' => [
                 'lat' => $area->marker_lat ?? ($polygon[0]['lat'] ?? 0),
                 'lng' => $area->marker_lng ?? ($polygon[0]['lng'] ?? 0),
             ],
-            'areaSquareMeters' => round((float) $area->area_square_meters, 2),
-            'areaHectares' => round(((float) $area->area_square_meters) / 10000, 4),
+            'areaSquareMeters' => round($areaSquareMeters, 2),
+            'areaHectares' => round($areaSquareMeters / 10000, 4),
             'createdAt' => $area->created_at?->toISOString(),
             'updatedAt' => $area->updated_at?->toISOString(),
         ];
@@ -193,33 +197,14 @@ final class PropertyPresenter
     /**
      * @return array<int, array<string, float>>
      */
-    private function decodeAreaJson(Area $area): array
+    private function polygon(Area $area): array
     {
-        $polygon = json_decode($area->area_json, true);
-
-        if (! is_array($polygon)) {
-            return [];
-        }
-
-        return array_values(array_filter(
-            array_map(
-                static function (mixed $point): ?array {
-                    if (
-                        ! is_array($point)
-                        || ! isset($point['lat'], $point['lng'])
-                        || ! is_numeric($point['lat'])
-                        || ! is_numeric($point['lng'])
-                    ) {
-                        return null;
-                    }
-
-                    return [
-                        'lat' => (float) $point['lat'],
-                        'lng' => (float) $point['lng'],
-                    ];
-                },
-                $polygon
-            )
-        ));
+        return $area->points
+            ->map(static fn ($point): array => [
+                'lat' => (float) $point->latitude,
+                'lng' => (float) $point->longitude,
+            ])
+            ->values()
+            ->all();
     }
 }

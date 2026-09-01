@@ -28,7 +28,8 @@ final class PropertyService
                 'images.adjustment',
                 'images.variants',
                 'documents.variants',
-                'areas',
+                'areas.location',
+                'areas.points',
             ])
             ->where('is_visible', true)
             ->orderByDesc('id')
@@ -47,7 +48,8 @@ final class PropertyService
             'images.adjustment',
             'images.variants',
             'documents.variants',
-            'areas',
+            'areas.location',
+            'areas.points',
         ]);
 
         return $this->propertyPresenter->wrapped($property);
@@ -85,7 +87,8 @@ final class PropertyService
                 'images.adjustment',
                 'images.variants',
                 'documents.variants',
-                'areas',
+                'areas.location',
+                'areas.points',
             ]);
         });
 

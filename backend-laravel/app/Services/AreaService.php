@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Modules\Location\Models\Area;
+use App\Modules\Location\Models\AreaPoint;
+use App\Modules\Location\Models\Location;
 use App\Modules\Property\Models\Property;
-use App\Models\Area;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
-
 
 class AreaService
 {
@@ -19,11 +20,15 @@ class AreaService
      */
     public function listForProperty(Property $property): array
     {
-        $areas = $property->areas()->get();
+        $areas = $property->areas()
+            ->with(['location', 'points'])
+            ->get();
 
         return [
             'propertyId' => (string) $property->id,
-            'totalAreaSquareMeters' => round($areas->sum('area_square_meters'), 2),
+            'totalAreaSquareMeters' => round($areas->sum(
+                fn (Area $area): float => $this->areaSquareMeters($area)
+            ), 2),
             'areas' => $areas->map(fn (Area $area): array => $this->mapArea($area))->values()->all(),
         ];
     }
@@ -38,15 +43,22 @@ class AreaService
     {
         $polygon = $validated['polygon'];
         $squareMeters = $this->calculateAreaSquareMeters($polygon);
+        $location = $this->locationForProperty($property, $validated['marker']);
 
-        $area = Area::query()->create([
-            'property_id' => $property->id,
-            'name' => $validated['name'],
-            'area_json' => json_encode($polygon, JSON_THROW_ON_ERROR),
-            'marker_lat' => $validated['marker']['lat'],
-            'marker_lng' => $validated['marker']['lng'],
-            'area_square_meters' => $squareMeters,
-        ]);
+        $area = DB::transaction(function () use ($location, $validated, $polygon, $squareMeters): Area {
+            $area = Area::query()->create([
+                'location_id' => $location->id,
+                'name' => $validated['name'],
+                'sort_order' => $this->nextSortOrder($location),
+                'marker_lat' => $validated['marker']['lat'],
+                'marker_lng' => $validated['marker']['lng'],
+                'area_square_meters' => $squareMeters,
+            ]);
+
+            $this->replacePoints($area, $polygon);
+
+            return $area->fresh(['location', 'points']) ?? $area;
+        });
 
         return $this->mapArea($area);
     }
@@ -75,14 +87,19 @@ class AreaService
 
         $polygon = $validated['polygon'];
 
-        $area->fill([
-            'name' => $validated['name'],
-            'area_json' => json_encode($polygon, JSON_THROW_ON_ERROR),
-            'marker_lat' => $validated['marker']['lat'],
-            'marker_lng' => $validated['marker']['lng'],
-            'area_square_meters' => $this->calculateAreaSquareMeters($polygon),
-        ]);
-        $area->save();
+        $area = DB::transaction(function () use ($area, $validated, $polygon): Area {
+            $area->fill([
+                'name' => $validated['name'],
+                'marker_lat' => $validated['marker']['lat'],
+                'marker_lng' => $validated['marker']['lng'],
+                'area_square_meters' => $this->calculateAreaSquareMeters($polygon),
+            ]);
+            $area->save();
+
+            $this->replacePoints($area, $polygon);
+
+            return $area->fresh(['location', 'points']) ?? $area;
+        });
 
         return $this->mapArea($area);
     }
@@ -101,7 +118,9 @@ class AreaService
      */
     private function assertAreaBelongsToProperty(Property $property, Area $area): void
     {
-        if ($area->property_id !== $property->id) {
+        $area->loadMissing('location');
+
+        if ($area->location?->property_id !== $property->id) {
             throw new InvalidArgumentException('Area does not belong to the property.');
         }
     }
@@ -113,22 +132,89 @@ class AreaService
      */
     private function mapArea(Area $area): array
     {
-        $polygon = json_decode($area->area_json, true, 512, JSON_THROW_ON_ERROR);
+        $area->loadMissing(['location', 'points']);
+
+        $polygon = $this->polygon($area);
+        $areaSquareMeters = $this->areaSquareMeters($area);
 
         return [
             'id' => (string) $area->id,
-            'propertyId' => (string) $area->property_id,
+            'propertyId' => (string) ($area->location?->property_id ?? ''),
             'name' => $area->name,
             'polygon' => $polygon,
             'marker' => [
-                'lat' => $area->marker_lat,
-                'lng' => $area->marker_lng,
+                'lat' => $area->marker_lat ?? ($polygon[0]['lat'] ?? 0),
+                'lng' => $area->marker_lng ?? ($polygon[0]['lng'] ?? 0),
             ],
-            'areaSquareMeters' => round((float) $area->area_square_meters, 2),
-            'areaHectares' => round(((float) $area->area_square_meters) / 10000, 4),
+            'areaSquareMeters' => round($areaSquareMeters, 2),
+            'areaHectares' => round($areaSquareMeters / 10000, 4),
             'createdAt' => $area->created_at?->toISOString(),
             'updatedAt' => $area->updated_at?->toISOString(),
         ];
+    }
+
+    /**
+     * @param  array{lat: float|int, lng: float|int}  $marker
+     */
+    private function locationForProperty(Property $property, array $marker): Location
+    {
+        return Location::query()->firstOrCreate(
+            ['property_id' => $property->id],
+            [
+                'country_code' => 'SE',
+                'latitude' => $marker['lat'],
+                'longitude' => $marker['lng'],
+            ]
+        );
+    }
+
+    private function nextSortOrder(Location $location): int
+    {
+        $maxSortOrder = Area::query()
+            ->where('location_id', $location->id)
+            ->max('sort_order');
+
+        return $maxSortOrder === null ? 0 : ((int) $maxSortOrder) + 1;
+    }
+
+    /**
+     * @param  array<int, array{lat: float|int, lng: float|int}>  $polygon
+     */
+    private function replacePoints(Area $area, array $polygon): void
+    {
+        $area->points()->delete();
+
+        foreach ($this->withoutClosingPoint($polygon) as $index => $point) {
+            AreaPoint::query()->create([
+                'area_id' => $area->id,
+                'latitude' => $point['lat'],
+                'longitude' => $point['lng'],
+                'sort_order' => $index,
+            ]);
+        }
+    }
+
+    /**
+     * @return array<int, array<string, float>>
+     */
+    private function polygon(Area $area): array
+    {
+        return $area->points
+            ->map(static fn (AreaPoint $point): array => [
+                'lat' => (float) $point->latitude,
+                'lng' => (float) $point->longitude,
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function areaSquareMeters(Area $area): float
+    {
+        if ($area->area_square_meters !== null) {
+            return (float) $area->area_square_meters;
+        }
+
+        return $this->calculateAreaSquareMeters($this->polygon($area));
     }
 
     /**
@@ -138,6 +224,7 @@ class AreaService
      */
     private function calculateAreaSquareMeters(array $polygon): float
     {
+        $polygon = $this->withoutClosingPoint($polygon);
         $count = count($polygon);
 
         if ($count < 3) {
@@ -169,5 +256,21 @@ class AreaService
         }
 
         return abs($area) / 2;
+    }
+
+    /**
+     * @param  array<int, array{lat: float|int, lng: float|int}>  $polygon
+     * @return array<int, array{lat: float|int, lng: float|int}>
+     */
+    private function withoutClosingPoint(array $polygon): array
+    {
+        $first = $polygon[0] ?? null;
+        $last = $polygon[array_key_last($polygon)] ?? null;
+
+        if ($first !== null && $last !== null && $first == $last && count($polygon) > 1) {
+            array_pop($polygon);
+        }
+
+        return array_values($polygon);
     }
 }

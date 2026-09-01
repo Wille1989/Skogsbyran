@@ -2,23 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Models;
+namespace App\Modules\Location\Models;
 
-use App\Modules\Property\Models\Property;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Area extends Model
 {
-    use HasFactory;
-
-    protected $table = 'property_areas';
+    protected $table = 'location_areas';
 
     protected $fillable = [
-        'property_id',
+        'location_id',
         'name',
-        'area_json',
+        'sort_order',
         'marker_lat',
         'marker_lng',
         'area_square_meters',
@@ -27,14 +24,20 @@ final class Area extends Model
     protected function casts(): array
     {
         return [
+            'sort_order' => 'integer',
             'marker_lat' => 'float',
             'marker_lng' => 'float',
             'area_square_meters' => 'float',
         ];
     }
 
-    public function property(): BelongsTo
+    public function location(): BelongsTo
     {
-        return $this->belongsTo(Property::class);
+        return $this->belongsTo(Location::class);
+    }
+
+    public function points(): HasMany
+    {
+        return $this->hasMany(AreaPoint::class)->orderBy('sort_order');
     }
 }

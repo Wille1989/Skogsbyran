@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace App\Modules\Property\Models;
 
-use App\Models\Area;
 use App\Modules\Document\Models\Document;
 use App\Modules\Image\Models\Image;
+use App\Modules\Location\Models\Area;
+use App\Modules\Location\Models\Location;
 use App\Modules\Property\Enums\ListingStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
@@ -71,9 +73,21 @@ class Property extends Model
         return $slug;
     }
 
-    public function areas(): HasMany
+    public function location(): HasOne
     {
-        return $this->hasMany(Area::class)->orderBy('id');
+        return $this->hasOne(Location::class);
+    }
+
+    public function areas(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Area::class,
+            Location::class,
+            'property_id',
+            'location_id',
+            'id',
+            'id'
+        )->orderBy('location_areas.sort_order');
     }
 
     public function images(): HasMany
