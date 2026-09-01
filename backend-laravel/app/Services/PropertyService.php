@@ -25,6 +25,8 @@ final class PropertyService
         $properties = Property::query()
             ->with([
                 'images.metadata',
+                'images.adjustment',
+                'images.variants',
                 'documents',
                 'areas',
             ])
@@ -42,6 +44,8 @@ final class PropertyService
     {
         $property->loadMissing([
             'images.metadata',
+            'images.adjustment',
+            'images.variants',
             'documents',
             'areas',
         ]);
@@ -78,6 +82,8 @@ final class PropertyService
 
             return $property->load([
                 'images.metadata',
+                'images.adjustment',
+                'images.variants',
                 'documents',
                 'areas',
             ]);

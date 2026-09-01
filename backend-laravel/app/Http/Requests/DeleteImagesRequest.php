@@ -32,8 +32,8 @@ final class DeleteImagesRequest extends FormRequest
                 'distinct',
 
                 $property instanceof Property
-                    ? Rule::exists('property_images', 'id')->where('property_id', $property->getKey())
-                    : Rule::exists('property_images', 'id'),
+                    ? Rule::exists('images', 'id')->where('property_id', $property->getKey())
+                    : Rule::exists('images', 'id'),
             ],
         ];
     }

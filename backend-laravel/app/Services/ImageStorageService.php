@@ -42,7 +42,6 @@ final class ImageStorageService
         $baseName = uniqid($propertyId . '_', true);
 
         $storageKeys = [];
-        $urls = [];
 
         try {
             foreach ($variantFiles as $variant => $path) {
@@ -70,9 +69,6 @@ final class ImageStorageService
                 }
 
                 $storageKeys[$variant] = $storageKey;
-                $urls[$variant] = $this->objectStorage->url(
-                    $storageKey,
-                );
             }
         } catch (Throwable $exception) {
             $this->deleteUploadedVariantsSafely($storageKeys);
@@ -81,8 +77,8 @@ final class ImageStorageService
         }
 
         return $this->buildResult(
-            $urls,
-            $storageKeys
+            $storageKeys,
+            $variantFiles
         );
     }
 
@@ -99,26 +95,38 @@ final class ImageStorageService
         );
     }
 
-    private function buildResult(array $urls, array $storageKeys): array {
+    private function buildResult(array $storageKeys, array $variantFiles): array {
         return [
-            'original_url' => $urls['large'],
-            'thumb_url' => $urls['thumb'],
-            'medium_url' => $urls['medium'],
-            'large_url' => $urls['large'],
-            'storage_key' => json_encode(
-                [
-                    'thumb' => $storageKeys['thumb'],
-                    'medium' => $storageKeys['medium'],
-                    'large' => $storageKeys['large'],
-                ],
-                JSON_THROW_ON_ERROR
-            ),
-
-            'storage_keys' => [
-                'thumb' => $storageKeys['thumb'],
-                'medium' => $storageKeys['medium'],
-                'large' => $storageKeys['large'],
+            'variants' => [
+                'thumb' => $this->variantPayload(
+                    $storageKeys['thumb'],
+                    $variantFiles['thumb']
+                ),
+                'medium' => $this->variantPayload(
+                    $storageKeys['medium'],
+                    $variantFiles['medium']
+                ),
+                'large' => $this->variantPayload(
+                    $storageKeys['large'],
+                    $variantFiles['large']
+                ),
             ],
+        ];
+    }
+
+    /**
+     * @return array{storage_key: string, width: int|null, height: int|null, file_size: int|null, mime_type: string}
+     */
+    private function variantPayload(string $storageKey, string $path): array
+    {
+        $size = getimagesize($path);
+
+        return [
+            'storage_key' => $storageKey,
+            'width' => is_array($size) ? $size[0] : null,
+            'height' => is_array($size) ? $size[1] : null,
+            'file_size' => is_file($path) ? filesize($path) ?: null : null,
+            'mime_type' => 'image/webp',
         ];
     }
 

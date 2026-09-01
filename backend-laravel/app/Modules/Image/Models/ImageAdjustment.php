@@ -2,35 +2,34 @@
 
 declare(strict_types=1);
 
-namespace App\Models;
+namespace App\Modules\Image\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-final class ImageAttribute extends Model
+final class ImageAdjustment extends Model
 {
     use HasFactory;
 
-    protected $table = 'property_image_attributes';
+    protected $primaryKey = 'image_id';
+    public $incrementing = false;
 
     protected $fillable = [
         'image_id',
-        'caption',
-        'alt',
         'brightness',
-        'gamma',
         'contrast',
         'saturation',
+        'gamma',
     ];
 
     protected function casts(): array
     {
         return [
             'brightness' => 'float',
-            'gamma' => 'float',
             'contrast' => 'float',
             'saturation' => 'float',
+            'gamma' => 'float',
         ];
     }
 

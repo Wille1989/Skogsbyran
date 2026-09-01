@@ -6,7 +6,7 @@ namespace App\Modules\Property\Models;
 
 use App\Models\Area;
 use App\Models\Document;
-use App\Models\Image;
+use App\Modules\Image\Models\Image;
 use App\Modules\Property\Enums\ListingStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -77,7 +77,7 @@ class Property extends Model
 
     public function images(): HasMany
     {
-        return $this->hasMany(Image::class)->orderBy('position');
+        return $this->hasMany(Image::class)->orderBy('sort_order');
     }
 
     public function documents(): HasMany

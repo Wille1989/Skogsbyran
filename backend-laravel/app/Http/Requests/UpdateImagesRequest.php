@@ -25,7 +25,7 @@ final class UpdateImagesRequest extends FormRequest
             'images.*.imageId' => [
                 'required',
                 'integer',
-                'exists:property_images,id',
+                'exists:images,id',
             ],
 
             'images.*.position' => [

@@ -82,7 +82,7 @@ class DetailsService
     public function index(): array
     {
         $properties = Property::query()
-            ->with(['areas', 'images.metadata', 'documents'])
+            ->with(['areas', 'images.metadata', 'images.adjustment', 'images.variants', 'documents'])
             ->where('is_visible', true)
             ->orderByDesc('id')
             ->get();

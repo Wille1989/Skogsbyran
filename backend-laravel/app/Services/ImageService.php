@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Image;
+use App\Modules\Image\Models\Image;
 use App\Modules\Property\Models\Property;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -41,31 +41,39 @@ final class ImageService
 
                     $image = Image::query()->create([
                         'property_id' => $property->id,
-
-                        'position' => (int) $imageData['position'],
+                        'sort_order' => (int) $imageData['position'],
                         'is_primary' => (bool) $imageData['isPrimary'],
-
-                        'original_url' => $urls['original_url'],
-                        'thumb_url' => $urls['thumb_url'],
-                        'medium_url' => $urls['medium_url'],
-                        'large_url' => $urls['large_url'],
-                        'storage_key' => $urls['storage_key'] ?? null,
                     ]);
 
                     $image->metadata()->create([
                         'caption' => $details['caption'],
-                        'alt' => $details['altText'],
+                        'alt_text' => $details['altText'],
+                    ]);
+
+                    $image->adjustment()->create([
                         'brightness' => (float) $adjustments['brightness'],
                         'saturation' => (float) $adjustments['saturation'],
                         'contrast' => (float) $adjustments['contrast'],
                         'gamma' => (float) $adjustments['gamma'],
                     ]);
+
+                    foreach ($urls['variants'] as $variant => $variantData) {
+                        $image->variants()->create([
+                            'variant' => $variant,
+                            'storage_key' => $variantData['storage_key'],
+                            'width' => $variantData['width'],
+                            'height' => $variantData['height'],
+                            'file_size' => $variantData['file_size'],
+                            'mime_type' => $variantData['mime_type'],
+                        ]);
+                    }
                 }
 
                 $this->ensureSinglePrimaryImage($property);
 
                 return $property
                     ->images()
+                    ->with(['metadata', 'adjustment', 'variants'])
                     ->get();
             }
         );
@@ -98,9 +106,10 @@ final class ImageService
 
                     $imageUpdates = [];
                     $metadataUpdates = [];
+                    $adjustmentUpdates = [];
 
                     if (array_key_exists('position', $patch)) {
-                        $imageUpdates['position'] =
+                        $imageUpdates['sort_order'] =
                             (int) $patch['position'];
                     }
 
@@ -118,7 +127,7 @@ final class ImageService
                         }
 
                         if (array_key_exists('altText', $details)) {
-                            $metadataUpdates['alt'] =
+                            $metadataUpdates['alt_text'] =
                                 $details['altText'];
                         }
                     }
@@ -132,7 +141,7 @@ final class ImageService
                                 $adjustments
                             )
                         ) {
-                            $metadataUpdates['brightness'] =
+                            $adjustmentUpdates['brightness'] =
                                 (float) $adjustments['brightness'];
                         }
 
@@ -142,7 +151,7 @@ final class ImageService
                                 $adjustments
                             )
                         ) {
-                            $metadataUpdates['saturation'] =
+                            $adjustmentUpdates['saturation'] =
                                 (float) $adjustments['saturation'];
                         }
 
@@ -152,14 +161,14 @@ final class ImageService
                                 $adjustments
                             )
                         ) {
-                            $metadataUpdates['contrast'] =
+                            $adjustmentUpdates['contrast'] =
                                 (float) $adjustments['contrast'];
                         }
 
                         if (
                             array_key_exists('gamma', $adjustments)
                         ) {
-                            $metadataUpdates['gamma'] =
+                            $adjustmentUpdates['gamma'] =
                                 (float) $adjustments['gamma'];
                         }
                     }
@@ -178,11 +187,20 @@ final class ImageService
                             $metadataUpdates
                         );
                     }
+
+                    if ($adjustmentUpdates !== []) {
+                        $image->adjustment()->updateOrCreate(
+                            ['image_id' => $image->id],
+                            $adjustmentUpdates
+                        );
+                    }
                 }
 
                 $this->ensureSinglePrimaryImage($property);
 
-                return $property->images()->get();
+                return $property->images()
+                    ->with(['metadata', 'adjustment', 'variants'])
+                    ->get();
             }
         );
     }
@@ -196,12 +214,17 @@ final class ImageService
                     ->get();
 
                 foreach ($images as $image) {
-                    if (
-                        is_string($image->storage_key)
-                        && $image->storage_key !== ''
-                    ) {
+                    $storageKeys = $image->variants()
+                        ->pluck('storage_key')
+                        ->filter(static fn (mixed $value): bool =>
+                            is_string($value) && $value !== ''
+                        )
+                        ->values()
+                        ->all();
+
+                    if ($storageKeys !== []) {
                         $this->storageService->delete(
-                            $this->decodeStorageKeys($image->storage_key)
+                            $storageKeys
                         );
                     }
 
@@ -216,7 +239,7 @@ final class ImageService
     private function ensureSinglePrimaryImage(Property $property): void {
         $images = Image::query()
             ->where('property_id', $property->id)
-            ->orderBy('position')
+            ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
 
@@ -250,21 +273,4 @@ final class ImageService
             ]);
     }
 
-    /**
-     * @return array<int|string, string>
-     */
-    private function decodeStorageKeys(string $storageKey): array
-    {
-        $decoded = json_decode($storageKey, true);
-
-        if (!is_array($decoded)) {
-            return [$storageKey];
-        }
-
-        return array_values(array_filter(
-            $decoded,
-            static fn (mixed $value): bool =>
-                is_string($value) && $value !== ''
-        ));
-    }
 }

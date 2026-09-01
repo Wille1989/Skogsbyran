@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace App\Presenters;
 
+use App\Infrastructure\Storage\ObjectStorage;
 use App\Models\Area;
 use App\Models\Document;
-use App\Models\Image;
+use App\Modules\Image\Enums\ImageVariantName;
+use App\Modules\Image\Models\Image;
 use App\Modules\Property\Models\Property;
 use Illuminate\Support\Collection;
 
 final class PropertyPresenter
 {
+    public function __construct(
+        private readonly ObjectStorage $objectStorage,
+    ) {
+    }
+
     /**
      * @param  Collection<int, Property>  $properties
      * @return array<string, array<int, array<string, mixed>>>
@@ -45,6 +52,8 @@ final class PropertyPresenter
             'areas',
             'documents',
             'images.metadata',
+            'images.adjustment',
+            'images.variants',
         ]);
 
         return [
@@ -78,33 +87,54 @@ final class PropertyPresenter
      */
     public function image(Image $image): array
     {
-        $image->loadMissing('metadata');
+        $image->loadMissing(['metadata', 'adjustment', 'variants']);
 
         $metadata = $image->metadata;
-        $fallbackUrl = $image->medium_url ?: $image->large_url ?: $image->original_url;
+        $adjustment = $image->adjustment;
+        $urls = $this->imageVariantUrls($image);
+        $fallbackUrl = $urls[ImageVariantName::Medium->value]
+            ?? $urls[ImageVariantName::Large->value]
+            ?? $urls[ImageVariantName::Thumb->value]
+            ?? '';
 
         return [
             'imageId' => (string) $image->id,
             'urls' => [
-                'thumbnail' => $image->thumb_url ?: $fallbackUrl,
-                'medium' => $image->medium_url ?: $fallbackUrl,
-                'large' => $image->large_url ?: $fallbackUrl,
+                'thumbnail' => $urls[ImageVariantName::Thumb->value] ?? $fallbackUrl,
+                'medium' => $urls[ImageVariantName::Medium->value] ?? $fallbackUrl,
+                'large' => $urls[ImageVariantName::Large->value] ?? $fallbackUrl,
             ],
-            'position' => $image->position,
+            'position' => $image->sort_order,
             'isPrimary' => $image->is_primary,
             'details' => [
                 'caption' => $metadata?->caption ?? '',
-                'altText' => $metadata?->alt ?? '',
+                'altText' => $metadata?->alt_text ?? '',
             ],
             'adjustments' => [
-                'brightness' => $metadata?->brightness ?? 1,
-                'saturation' => $metadata?->saturation ?? 1,
-                'contrast' => $metadata?->contrast ?? 1,
-                'gamma' => $metadata?->gamma ?? 1,
+                'brightness' => $adjustment?->brightness ?? 1,
+                'saturation' => $adjustment?->saturation ?? 1,
+                'contrast' => $adjustment?->contrast ?? 1,
+                'gamma' => $adjustment?->gamma ?? 1,
             ],
             'createdAt' => $image->created_at?->toISOString(),
             'updatedAt' => $image->updated_at?->toISOString(),
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function imageVariantUrls(Image $image): array
+    {
+        $urls = [];
+
+        foreach ($image->variants as $variant) {
+            $urls[$variant->variant->value] = $this->objectStorage->url(
+                $variant->storage_key
+            );
+        }
+
+        return $urls;
     }
 
     /**

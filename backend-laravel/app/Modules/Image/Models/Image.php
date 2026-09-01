@@ -2,36 +2,29 @@
 
 declare(strict_types=1);
 
-namespace App\Models;
+namespace App\Modules\Image\Models;
 
 use App\Modules\Property\Models\Property;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 final class Image extends Model
 {
     use HasFactory;
 
-    protected $table = 'property_images';
-
     protected $fillable = [
         'property_id',
-        'position',
+        'sort_order',
         'is_primary',
-
-        'original_url',
-        'thumb_url',
-        'medium_url',
-        'large_url',
-        'storage_key',
     ];
 
     protected function casts(): array
     {
         return [
-            'position' => 'integer',
+            'sort_order' => 'integer',
             'is_primary' => 'boolean',
         ];
     }
@@ -43,6 +36,16 @@ final class Image extends Model
 
     public function metadata(): HasOne
     {
-        return $this->hasOne(ImageAttribute::class);
+        return $this->hasOne(ImageMetadata::class);
+    }
+
+    public function adjustment(): HasOne
+    {
+        return $this->hasOne(ImageAdjustment::class);
+    }
+
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ImageVariant::class);
     }
 }
