@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-final class PropertyDocument extends Model
+final class Document extends Model
 {
     use HasFactory;
+
+    protected $table = 'property_documents';
 
     public const TYPE_BID_FORM = 'bid_form';
     public const TYPE_PROSPECT = 'prospect';

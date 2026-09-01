@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Property;
-use App\Models\PropertyArea;
+use App\Models\Area;
 use Illuminate\Database\Eloquent\Collection;
 use InvalidArgumentException;
 
 
-class PropertyAreaService
+class AreaService
 {
     /**
      * Return all areas for one property.
@@ -24,7 +24,7 @@ class PropertyAreaService
         return [
             'propertyId' => (string) $property->id,
             'totalAreaSquareMeters' => round($areas->sum('area_square_meters'), 2),
-            'areas' => $areas->map(fn (PropertyArea $area): array => $this->mapArea($area))->values()->all(),
+            'areas' => $areas->map(fn (Area $area): array => $this->mapArea($area))->values()->all(),
         ];
     }
 
@@ -39,7 +39,7 @@ class PropertyAreaService
         $polygon = $validated['polygon'];
         $squareMeters = $this->calculateAreaSquareMeters($polygon);
 
-        $area = PropertyArea::query()->create([
+        $area = Area::query()->create([
             'property_id' => $property->id,
             'name' => $validated['name'],
             'area_json' => json_encode($polygon, JSON_THROW_ON_ERROR),
@@ -56,7 +56,7 @@ class PropertyAreaService
      *
      * @return array<string, mixed>
      */
-    public function show(Property $property, PropertyArea $area): array
+    public function show(Property $property, Area $area): array
     {
         $this->assertAreaBelongsToProperty($property, $area);
 
@@ -69,7 +69,7 @@ class PropertyAreaService
      * @param  array<string, mixed>  $validated
      * @return array<string, mixed>
      */
-    public function replace(Property $property, PropertyArea $area, array $validated): array
+    public function replace(Property $property, Area $area, array $validated): array
     {
         $this->assertAreaBelongsToProperty($property, $area);
 
@@ -90,7 +90,7 @@ class PropertyAreaService
     /**
      * Delete one stored area.
      */
-    public function delete(Property $property, PropertyArea $area): void
+    public function delete(Property $property, Area $area): void
     {
         $this->assertAreaBelongsToProperty($property, $area);
         $area->delete();
@@ -99,7 +99,7 @@ class PropertyAreaService
     /**
      * Ensure an area belongs to the requested property.
      */
-    private function assertAreaBelongsToProperty(Property $property, PropertyArea $area): void
+    private function assertAreaBelongsToProperty(Property $property, Area $area): void
     {
         if ($area->property_id !== $property->id) {
             throw new InvalidArgumentException('Area does not belong to the property.');
@@ -111,7 +111,7 @@ class PropertyAreaService
      *
      * @return array<string, mixed>
      */
-    private function mapArea(PropertyArea $area): array
+    private function mapArea(Area $area): array
     {
         $polygon = json_decode($area->area_json, true, 512, JSON_THROW_ON_ERROR);
 
@@ -171,4 +171,3 @@ class PropertyAreaService
         return abs($area) / 2;
     }
 }
-

@@ -9,14 +9,14 @@ use App\Http\Requests\DeleteImagesRequest;
 use App\Http\Requests\StoreImagesRequest;
 use App\Http\Requests\UpdateImagesRequest;
 use App\Models\Property;
-use App\Services\PropertyImageService;
+use App\Services\ImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
 final class ImageController extends Controller
 {
     public function __construct(
-        private readonly PropertyImageService $imageService
+        private readonly ImageService $imageService
     ) {
     }
 

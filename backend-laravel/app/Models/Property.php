@@ -45,7 +45,7 @@ class Property extends Model
 
     public function primaryImage(): HasOne
     {
-        return $this->hasOne(PropertyImage::class)
+        return $this->hasOne(Image::class)
             ->where('is_primary', true);
     }
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Property;
-use App\Models\PropertyImage;
+use App\Models\Image;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
@@ -40,7 +40,7 @@ final class ImageService
                     $details = $imageData['details'];
                     $adjustments = $imageData['adjustments'];
 
-                    PropertyImage::query()->create([
+                    Image::query()->create([
                         'property_id' => $property->id,
 
                         'position' => (int) $imageData['position'],
@@ -82,7 +82,7 @@ final class ImageService
                     $patches
                 );
 
-                $images = PropertyImage::query()
+                $images = Image::query()
                     ->where('property_id', $property->id)
                     ->whereIn('id', $imageIds)
                     ->get()
@@ -92,8 +92,8 @@ final class ImageService
                     $imageId = (int) $patch['imageId'];
                     $image = $images->get($imageId);
 
-                    if (!$image instanceof PropertyImage) {
-                        throw (new ModelNotFoundException())->setModel(PropertyImage::class, [$imageId]);
+                    if (!$image instanceof Image) {
+                        throw (new ModelNotFoundException())->setModel(Image::class, [$imageId]);
                     }
 
                     $updates = [];
@@ -184,7 +184,7 @@ final class ImageService
     public function delete(Property $property, array $validated): void {
         DB::transaction(
             function () use ($property, $validated): void {
-                $images = PropertyImage::query()
+                $images = Image::query()
                     ->where('property_id', $property->id)
                     ->whereIn('id', $validated['imageIds'])
                     ->get();
@@ -209,7 +209,7 @@ final class ImageService
     }
 
     private function ensureSinglePrimaryImage(Property $property): void {
-        $images = PropertyImage::query()
+        $images = Image::query()
             ->where('property_id', $property->id)
             ->orderBy('position')
             ->orderBy('id')
@@ -224,10 +224,10 @@ final class ImageService
             true
         );
 
-        if (!$primary instanceof PropertyImage) {
+        if (!$primary instanceof Image) {
             $primary = $images->first();
 
-            if (!$primary instanceof PropertyImage) {
+            if (!$primary instanceof Image) {
                 return;
             }
 
@@ -236,7 +236,7 @@ final class ImageService
             ])->save();
         }
 
-        PropertyImage::query()
+        Image::query()
             ->where('property_id', $property->id)
             ->whereKeyNot($primary->id)
             ->where('is_primary', true)

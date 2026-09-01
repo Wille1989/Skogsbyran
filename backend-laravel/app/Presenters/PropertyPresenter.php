@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Presenters;
 
 use App\Models\Property;
-use App\Models\PropertyDocument;
-use App\Models\PropertyImage;
+use App\Models\Document;
+use App\Models\Image;
 use Illuminate\Support\Collection;
 
 /**
@@ -22,7 +22,9 @@ class PropertyPresenter
      */
     public function toApi(Property $property): array
     {
-        $property->loadMissing(['area', 'images.metadata', 'documents']);
+        $property->loadMissing(['areas', 'images', 'documents']);
+
+        $area = $property->areas->first();
 
         return [
             'id' => $property->id,
@@ -30,12 +32,12 @@ class PropertyPresenter
             'caption' => $property->caption,
             'price' => $property->price,
             'size' => $property->size,
-            'boundaries' => $property->area ? [
-                'id' => $property->area->id,
-                'polygon' => $property->area->area_json,
+            'boundaries' => $area ? [
+                'id' => $area->id,
+                'polygon' => $area->area_json,
             ] : null,
             'images' => $property->images
-                ->map(fn (PropertyImage $image): array => $this->imageToApi($image))
+                ->map(fn (Image $image): array => $this->imageToApi($image))
                 ->values()
                 ->all(),
             'documents' => $this->documentsToApi($property),
@@ -93,7 +95,9 @@ class PropertyPresenter
      */
     public function toLegacy(Property $property): array
     {
-        $property->loadMissing(['area', 'images.metadata', 'documents']);
+        $property->loadMissing(['areas', 'images', 'documents']);
+
+        $area = $property->areas->first();
 
         return [
             'propertyID' => (string) $property->id,
@@ -101,17 +105,17 @@ class PropertyPresenter
             'caption' => $property->caption,
             'price' => (string) ($property->price ?? ''),
             'size' => (string) ($property->size ?? ''),
-            'boundaries' => $property->area ? [
-                'boundariesID' => (string) $property->area->id,
+            'boundaries' => $area ? [
+                'boundariesID' => (string) $area->id,
                 'propertyID' => (string) $property->id,
-                'polygon' => $property->area->area_json,
+                'polygon' => $area->area_json,
                 'marker' => [
-                    'lat' => $property->area->marker_lat,
-                    'lng' => $property->area->marker_lng,
+                    'lat' => $area->marker_lat,
+                    'lng' => $area->marker_lng,
                 ],
             ] : null,
             'images' => $property->images
-                ->map(fn (PropertyImage $image): array => $this->imageToLegacy($image))
+                ->map(fn (Image $image): array => $this->imageToLegacy($image))
                 ->values()
                 ->all(),
             'documents' => $this->documentsToLegacy($property),
@@ -123,10 +127,8 @@ class PropertyPresenter
      *
      * @return array<string, mixed>
      */
-    public function imageToApi(PropertyImage $image): array
+    public function imageToApi(Image $image): array
     {
-        $image->loadMissing('metadata');
-
         return [
             'uiId' => 'image-'.$image->id,
             'id' => $image->id,
@@ -146,12 +148,12 @@ class PropertyPresenter
             'createdAt' => $image->created_at?->toISOString(),
             'updatedAt' => $image->updated_at?->toISOString(),
             'attributes' => [
-                'caption' => $image->metadata?->caption ?? '',
-                'alt' => $image->metadata?->alt ?? '',
-                'brightness' => $image->metadata?->brightness ?? 1,
-                'gamma' => $image->metadata?->gamma ?? 1,
-                'contrast' => $image->metadata?->contrast ?? 1,
-                'saturation' => $image->metadata?->saturation ?? 1,
+                'caption' => $image->caption ?? '',
+                'alt' => $image->alt_text ?? '',
+                'brightness' => $image->brightness ?? 1,
+                'gamma' => $image->gamma ?? 1,
+                'contrast' => $image->contrast ?? 1,
+                'saturation' => $image->saturation ?? 1,
             ],
         ];
     }
@@ -163,11 +165,11 @@ class PropertyPresenter
      */
     public function toLegacyListItem(Property $property): array
     {
-        $property->loadMissing(['images.metadata', 'documents']);
+        $property->loadMissing(['images', 'documents']);
 
         $images = $property->images->values();
         $primaryIndex = $images->search(
-            fn (PropertyImage $image): bool => $image->is_primary
+            fn (Image $image): bool => $image->is_primary
         );
 
         if ($primaryIndex === false) {
@@ -184,7 +186,7 @@ class PropertyPresenter
             'size' => (string) ($property->size ?? ''),
             'boundaries' => null,
             'images' => $listImages
-                ->map(fn (PropertyImage $image): array => $this->imageToLegacy($image))
+                ->map(fn (Image $image): array => $this->imageToLegacy($image))
                 ->all(),
             'documents' => $this->documentsToLegacy($property),
         ];
@@ -199,7 +201,7 @@ class PropertyPresenter
     {
         $property->loadMissing('documents');
 
-        return $this->buildDocumentSlots($property->documents, fn (PropertyDocument $document): array => [
+        return $this->buildDocumentSlots($property->documents, fn (Document $document): array => [
             'id' => $document->id,
             'type' => $document->type,
             'title' => $document->title,
@@ -221,7 +223,7 @@ class PropertyPresenter
     {
         $property->loadMissing('documents');
 
-        return $this->buildDocumentSlots($property->documents, fn (PropertyDocument $document): array => [
+        return $this->buildDocumentSlots($property->documents, fn (Document $document): array => [
             'documentID' => (string) $document->id,
             'propertyID' => (string) $document->property_id,
             'type' => $document->type,
@@ -234,16 +236,16 @@ class PropertyPresenter
     }
 
     /**
-     * @param  Collection<int, PropertyDocument>  $documents
-     * @param  callable(PropertyDocument): array<string, mixed>  $mapper
+     * @param  Collection<int, Document>  $documents
+     * @param  callable(Document): array<string, mixed>  $mapper
      * @return array<string, array<string, mixed>|null>
      */
     private function buildDocumentSlots(Collection $documents, callable $mapper): array
     {
         $slots = [
-            PropertyDocument::TYPE_BID_FORM => null,
-            PropertyDocument::TYPE_PROSPECT => null,
-            PropertyDocument::TYPE_PROPERTY_MAP => null,
+            Document::TYPE_BID_FORM => null,
+            Document::TYPE_PROSPECT => null,
+            Document::TYPE_PROPERTY_MAP => null,
         ];
 
         foreach ($documents as $document) {
@@ -262,10 +264,8 @@ class PropertyPresenter
      *
      * @return array<string, mixed>
      */
-    public function imageToLegacy(PropertyImage $image): array
+    public function imageToLegacy(Image $image): array
     {
-        $image->loadMissing('metadata');
-
         return [
             'imageID' => (string) $image->id,
             'propertyID' => (string) $image->property_id,
@@ -277,14 +277,14 @@ class PropertyPresenter
             'position' => $image->position,
             'isPrimary' => $image->is_primary,
             'imageAttributes' => [
-                'imageAttributesID' => (string) ($image->metadata?->id ?? ''),
+                'imageAttributesID' => (string) $image->id,
                 'imageID' => (string) $image->id,
-                'caption' => $image->metadata?->caption ?? '',
-                'alt' => $image->metadata?->alt ?? '',
-                'brightness' => $image->metadata?->brightness ?? 1,
-                'gamma' => $image->metadata?->gamma ?? 1,
-                'contrast' => $image->metadata?->contrast ?? 1,
-                'saturation' => $image->metadata?->saturation ?? 1,
+                'caption' => $image->caption ?? '',
+                'alt' => $image->alt_text ?? '',
+                'brightness' => $image->brightness ?? 1,
+                'gamma' => $image->gamma ?? 1,
+                'contrast' => $image->contrast ?? 1,
+                'saturation' => $image->saturation ?? 1,
             ],
         ];
     }

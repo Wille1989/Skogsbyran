@@ -13,10 +13,10 @@ use App\Services\AreaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
-final class PropertyAreaController extends Controller
+final class AreaController extends Controller
 {
     public function __construct(
-        private readonly PropertyAreaService $areaService
+        private readonly AreaService $areaService
     ) {
     }
 

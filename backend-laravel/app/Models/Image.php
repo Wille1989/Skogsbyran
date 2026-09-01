@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-final class PropertyImage extends Model
+final class Image extends Model
 {
     use HasFactory;
+
+    protected $table = 'property_images';
 
     protected $fillable = [
         'property_id',

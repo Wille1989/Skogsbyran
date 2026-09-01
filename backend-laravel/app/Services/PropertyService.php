@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Property;
-use Illuminate\Database\Eloquent\Collection;
+use App\Presenters\PropertyPresenter;
 use Illuminate\Support\Facades\DB;
 
 final class PropertyService
@@ -13,12 +13,16 @@ final class PropertyService
     public function __construct(
         private readonly ImageService $imageService,
         private readonly AreaService $areaService,
+        private readonly PropertyPresenter $propertyPresenter,
     ) {
     }
 
-    public function collection(): Collection
+    /**
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    public function collection(): array
     {
-        return Property::query()
+        $properties = Property::query()
             ->with([
                 'images',
                 'documents',
@@ -26,9 +30,14 @@ final class PropertyService
             ])
             ->orderByDesc('id')
             ->get();
+
+        return $this->propertyPresenter->collectionToLegacyListWrapped($properties);
     }
 
-    public function find(Property $property): Property
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    public function find(Property $property): array
     {
         $property->loadMissing([
             'images',
@@ -36,12 +45,16 @@ final class PropertyService
             'areas',
         ]);
 
-        return $property;
+        return $this->propertyPresenter->toLegacyWrapped($property);
     }
 
-    public function create(array $validated): Property
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, array<string, mixed>>
+     */
+    public function create(array $validated): array
     {
-        return DB::transaction(function () use ($validated): Property {
+        $property = DB::transaction(function () use ($validated): Property {
             $property = Property::query()->create(
                 $validated['details']
             );
@@ -68,6 +81,8 @@ final class PropertyService
                 'areas',
             ]);
         });
+
+        return $this->propertyPresenter->toLegacyWrapped($property);
     }
 
     public function delete(Property $property): void

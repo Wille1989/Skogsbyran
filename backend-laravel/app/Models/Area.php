@@ -8,14 +8,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-final class PropertyArea extends Model
+final class Area extends Model
 {
     use HasFactory;
+
+    protected $table = 'property_areas';
 
     protected $fillable = [
         'property_id',
         'name',
-        'polygon',
+        'area_json',
         'marker_lat',
         'marker_lng',
         'area_square_meters',
@@ -24,7 +26,6 @@ final class PropertyArea extends Model
     protected function casts(): array
     {
         return [
-            'polygon' => 'array',
             'marker_lat' => 'float',
             'marker_lng' => 'float',
             'area_square_meters' => 'float',

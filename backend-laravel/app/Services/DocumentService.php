@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Property;
-use App\Models\PropertyDocument;
+use App\Models\Document;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
-final class PropertyDocumentService
+final class DocumentService
 {
     public function __construct(
         private readonly DocumentStorageService $storageService
@@ -19,7 +19,7 @@ final class PropertyDocumentService
     }
 
 
-    public function store(Property $property, array $validated): PropertyDocument {
+    public function store(Property $property, array $validated): Document {
         $file = $validated['file'];
         $type = $validated['type'];
 
@@ -36,8 +36,8 @@ final class PropertyDocumentService
                     $file,
                     $type,
                     $upload
-                ): PropertyDocument {
-                    return PropertyDocument::query()->create([
+                ): Document {
+                    return Document::query()->create([
                         'property_id' => $property->id,
                         'type' => $type,
                         'title' => $this->resolveTitle($type),
@@ -58,7 +58,7 @@ final class PropertyDocumentService
         }
     }
 
-    public function update(Property $property, PropertyDocument $document, array $validated): PropertyDocument {
+    public function update(Property $property, Document $document, array $validated): Document {
         $this->ensureDocumentBelongsToProperty(
             $property,
             $document
@@ -113,7 +113,7 @@ final class PropertyDocumentService
         return $document->refresh();
     }
 
-    public function delete(Property $property, PropertyDocument $document): void {
+    public function delete(Property $property, Document $document): void {
         $this->ensureDocumentBelongsToProperty(
             $property,
             $document
@@ -137,7 +137,7 @@ final class PropertyDocumentService
         }
     }
 
-    private function ensureDocumentBelongsToProperty(Property $property, PropertyDocument $document): void {
+    private function ensureDocumentBelongsToProperty(Property $property, Document $document): void {
         if (
             (int) $document->property_id
             === (int) $property->id
@@ -147,7 +147,7 @@ final class PropertyDocumentService
 
         throw (new ModelNotFoundException())
             ->setModel(
-                PropertyDocument::class,
+                Document::class,
                 [$document->id]
             );
     }
@@ -164,9 +164,9 @@ final class PropertyDocumentService
 
     private function resolveTitle(string $type): string {
         return match ($type) {
-            PropertyDocument::TYPE_BID_FORM => 'Anbudsblankett',
-            PropertyDocument::TYPE_PROSPECT => 'Prospekt',
-            PropertyDocument::TYPE_PROPERTY_MAP => 'Fastighetskarta',
+            Document::TYPE_BID_FORM => 'Anbudsblankett',
+            Document::TYPE_PROSPECT => 'Prospekt',
+            Document::TYPE_PROPERTY_MAP => 'Fastighetskarta',
             default => 'Dokument',
         };
     }
