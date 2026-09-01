@@ -9,6 +9,7 @@ use App\Http\Requests\LoginRequest;
 use App\Services\AuthService;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 final class AuthController extends Controller
 {
@@ -27,7 +28,7 @@ final class AuthController extends Controller
         } catch (AuthenticationException) {
             return response()->json([
                 'message' => 'Invalid credentials',
-            ], response::HTTP_UNAUTHORIZED);
+            ], Response::HTTP_UNAUTHORIZED);
         }
 
         return response()->json([

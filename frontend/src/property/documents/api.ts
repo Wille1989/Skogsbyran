@@ -16,7 +16,7 @@ function buildDocumentFormData(file: File, type: DocumentType): FormData {
 }
 
 export function uploadDocument(propertyId: string, type: DocumentType, file: File): Promise<DocumentItem> {
-    return apiFetch<DocumentItem>(`${baseURL}/${propertyId}/document/upload`,
+    return apiFetch<DocumentItem>(`${baseURL}/property/${propertyId}/documents`,
         {
             method: "POST",
             headers: buildAuthHeaders(),
@@ -26,7 +26,7 @@ export function uploadDocument(propertyId: string, type: DocumentType, file: Fil
 }
 
 export function deleteDocument(propertyId: string, documentId: string): Promise<void> {
-    return apiFetch<void>(`${baseURL}/${propertyId}/document/${documentId}/delete`, 
+    return apiFetch<void>(`${baseURL}/property/${propertyId}/documents/${documentId}`,
         {
             method: "DELETE",
             headers: buildAuthHeaders(),

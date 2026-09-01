@@ -13,7 +13,7 @@ export function buildUploadFormData(images: NewImageFile[]): FormData {
       const formData = new FormData();
 
       images.forEach((image, index) => {
-            formData.append(`images[${index}][File]`, image.file);
+            formData.append(`images[${index}][file]`, image.file);
             formData.append(`images[${index}][position]`, String(image.position));
             formData.append(`images[${index}][isPrimary]`, image.isPrimary ? "1" : "0" );
             formData.append(`images[${index}][details]`, JSON.stringify(image.details));
@@ -24,7 +24,7 @@ export function buildUploadFormData(images: NewImageFile[]): FormData {
 }
 
 export function uploadImages({propertyId, images}: UploadImagesInput): Promise<ImageFile[]> {
-      return apiFetch<ImageFile[]>(`${baseURL}/${propertyId}/images`, {
+      return apiFetch<ImageFile[]>(`${baseURL}/property/${propertyId}/images`, {
             method: "POST",
             headers: buildAuthHeaders(),
             body: buildUploadFormData(images)
@@ -32,17 +32,17 @@ export function uploadImages({propertyId, images}: UploadImagesInput): Promise<I
 }
 
 export function updateImages({propertyId, images}: UpdateImagesInput): Promise<ImageFile[]>  {
-      return apiFetch<ImageFile[]>(`${baseURL}/${propertyId}/images`, {
+      return apiFetch<ImageFile[]>(`${baseURL}/property/${propertyId}/images`, {
             method: "PATCH",
-            headers: buildAuthHeaders({"Content-Type": "application-json"}),
-            body: JSON.stringify(images)
+            headers: buildAuthHeaders({"Content-Type": "application/json"}),
+            body: JSON.stringify({ images })
       })
 }
 
 export function deleteImages({propertyId, imageIds}: DeleteImagesInput): Promise<void> {
-      return apiFetch<void>(`${baseURL}/${propertyId}/images`, {
+      return apiFetch<void>(`${baseURL}/property/${propertyId}/images`, {
             method: "DELETE",
-            headers: buildAuthHeaders({"Content-Type": "application-json"}),
-            body: JSON.stringify(imageIds)
+            headers: buildAuthHeaders({"Content-Type": "application/json"}),
+            body: JSON.stringify({ imageIds })
       });
 }
