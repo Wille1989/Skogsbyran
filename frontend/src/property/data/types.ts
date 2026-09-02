@@ -4,10 +4,16 @@ import type { NewImageFile } from "../images/data/types";
 import type { PropertyLocationPayload } from "../location/types";
 import type { PropertyAreaPayload } from "../map/data/types";
 
+export type CreatePropertyProgress = {
+    percent: number;
+    label: string;
+};
+
 export type CreatePropertyInput = {
     details: FormDetails;
     images: NewImageFile[];
     areas: PropertyAreaPayload[];
     location: PropertyLocationPayload | null;
     documents: PendingDocument[];
+    onProgress?: (progress: CreatePropertyProgress) => void;
 };

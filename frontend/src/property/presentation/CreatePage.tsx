@@ -12,6 +12,7 @@ import { PendingDocuments } from "../documents/PendingDocuments.tsx";
 import { type PendingDocument } from "../documents/types.ts";
 import { LocationEditor } from "../location/LocationEditor.tsx";
 import { buildLocationPayload, createDefaultLocationDraft, type PropertyLocationDraft } from "../location/types.ts";
+import { type CreatePropertyProgress } from "../data/types.ts";
 import "./CreatePage.css";
 
 export function CreatePage() {
@@ -21,8 +22,14 @@ export function CreatePage() {
   const [areaDrafts, setAreaDrafts] = useState<PropertyAreaDraft[]>([createDefaultAreaDraft()]);
   const [documents, setDocuments] = useState<PendingDocument[]>([]);
   const [location, setLocation] = useState<PropertyLocationDraft>(createDefaultLocationDraft);
+  const [saveProgress, setSaveProgress] = useState<CreatePropertyProgress | null>(null);
 
   const handleSubmit = (details: FormDetails): void => {
+    setSaveProgress({
+      percent: 0,
+      label: "Förbereder sparning...",
+    });
+
     const imageChanges = imageFiles.buildChanges();
     const areas = areaDrafts.flatMap((areaDraft) => {
       const area = buildAreaPayload(areaDraft);
@@ -37,6 +44,7 @@ export function CreatePage() {
         areas,
         location: buildLocationPayload(location),
         documents,
+        onProgress: setSaveProgress,
       },
       {
         onSuccess: () => {
@@ -46,6 +54,12 @@ export function CreatePage() {
           setLocation(createDefaultLocationDraft());
 
           navigate("/");
+        },
+        onError: () => {
+          setSaveProgress((currentProgress) => ({
+            percent: currentProgress?.percent ?? 0,
+            label: "Sparningen avbröts. Kontrollera felmeddelandet och försök igen.",
+          }));
         },
       }
     );
@@ -123,6 +137,26 @@ export function CreatePage() {
         ) : null}
       
         <div className="form-actions">
+          {saveProgress ? (
+            <div
+              className={`create-progress ${createProperty.isPending ? "is-active" : "is-idle"}`}
+              role="status"
+              aria-live="polite"
+            >
+              <div className="create-progress-copy">
+                <strong>{saveProgress.percent}%</strong>
+                <span>{saveProgress.label}</span>
+              </div>
+
+              <div className="create-progress-track" aria-hidden="true">
+                <div
+                  className="create-progress-value"
+                  style={{ width: `${saveProgress.percent}%` }}
+                />
+              </div>
+            </div>
+          ) : null}
+
           <button
             type="submit"
             form="property-form"
