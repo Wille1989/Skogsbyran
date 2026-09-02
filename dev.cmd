@@ -10,8 +10,8 @@ if not exist "%PHP_EXE%" (
   exit /b 1
 )
 
-if not exist "%ROOT%backend-laravel\artisan" (
-  echo Laravel-backenden hittades inte i backend-laravel.
+if not exist "%ROOT%backend\artisan" (
+  echo Laravel-backenden hittades inte i backend.
   exit /b 1
 )
 
@@ -20,7 +20,7 @@ if not exist "%ROOT%frontend\package.json" (
   exit /b 1
 )
 
-start "Skogsbyran Backend" powershell -NoExit -Command "Set-Location '%ROOT%backend-laravel'; & '%PHP_EXE%' artisan serve --host=127.0.0.1 --port=8020"
+start "Skogsbyran Backend" powershell -NoExit -Command "Set-Location '%ROOT%backend'; & '%PHP_EXE%' artisan serve --host=127.0.0.1 --port=8020"
 start "Skogsbyran Frontend" powershell -NoExit -Command "Set-Location '%ROOT%frontend'; npm.cmd run dev"
 
 echo Backend och frontend startas nu i varsitt fonster.
