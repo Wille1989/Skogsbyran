@@ -15,12 +15,28 @@ function buildDocumentFormData(file: File, type: DocumentType): FormData {
     return formData;
 }
 
-export function uploadDocument(propertyId: string, type: DocumentType, file: File): Promise<DocumentItem> {
+function buildNamedDocumentFormData(file: File, title?: string, type?: DocumentType): FormData {
+    const formData = new FormData();
+
+    formData.append("document", file);
+
+    if (title) {
+        formData.append("title", title);
+    }
+
+    if (type) {
+        formData.append("type", type);
+    }
+
+    return formData;
+}
+
+export function uploadDocument(propertyId: string, type: DocumentType | undefined, file: File, title?: string): Promise<DocumentItem> {
     return apiFetch<DocumentItem>(`${baseURL}/property/${propertyId}/documents`,
         {
             method: "POST",
             headers: buildAuthHeaders(),
-            body: buildDocumentFormData(file, type)
+            body: type && !title ? buildDocumentFormData(file, type) : buildNamedDocumentFormData(file, title, type)
         }
     );
 }

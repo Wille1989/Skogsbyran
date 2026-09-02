@@ -35,8 +35,15 @@ final class UpdateDocumentRequest extends FormRequest
 
             'type' => [
                 'sometimes',
+                'nullable',
                 'string',
                 Rule::in(Document::TYPES),
+            ],
+
+            'title' => [
+                'nullable',
+                'string',
+                'max:120',
             ],
         ];
     }

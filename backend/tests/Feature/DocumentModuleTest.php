@@ -19,6 +19,61 @@ final class DocumentModuleTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_it_uploads_multiple_named_documents_without_legacy_type(): void
+    {
+        Storage::fake(ObjectStorage::DOCUMENTS_DISK);
+        Storage::disk(ObjectStorage::DOCUMENTS_DISK)->buildTemporaryUrlsUsing(
+            fn (string $path): string => 'https://temporary-documents.test/'.$path
+        );
+        Sanctum::actingAs(User::factory()->create(['admin' => true]), ['admin']);
+
+        $property = Property::query()->create([
+            'title' => 'Named document property',
+            'caption' => 'Multiple PDFs',
+        ]);
+
+        $firstResponse = $this->post('/property/'.$property->id.'/documents', [
+            'title' => 'Skogsbruksplan',
+            'document' => UploadedFile::fake()->create(
+                'skogsbruksplan.pdf',
+                256,
+                'application/pdf'
+            ),
+        ]);
+
+        $secondResponse = $this->post('/property/'.$property->id.'/documents', [
+            'title' => 'Servitut',
+            'document' => UploadedFile::fake()->create(
+                'servitut.pdf',
+                128,
+                'application/pdf'
+            ),
+        ]);
+
+        $firstResponse
+            ->assertCreated()
+            ->assertJsonPath('type', 'document')
+            ->assertJsonPath('title', 'Skogsbruksplan');
+
+        $secondResponse
+            ->assertCreated()
+            ->assertJsonPath('type', 'document')
+            ->assertJsonPath('title', 'Servitut');
+
+        $this->assertDatabaseCount('documents', 2);
+        $this->assertDatabaseCount('property_documents', 2);
+        $this->assertDatabaseHas('property_documents', [
+            'property_id' => $property->id,
+            'type' => null,
+            'title' => 'Skogsbruksplan',
+        ]);
+        $this->assertDatabaseHas('property_documents', [
+            'property_id' => $property->id,
+            'type' => null,
+            'title' => 'Servitut',
+        ]);
+    }
+
     public function test_it_uploads_and_replaces_documents_through_normalized_tables(): void
     {
         Storage::fake(ObjectStorage::DOCUMENTS_DISK);

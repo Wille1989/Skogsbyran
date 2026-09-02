@@ -10,6 +10,8 @@ use App\Modules\Document\Models\Document;
 use App\Modules\Image\Enums\ImageVariantName;
 use App\Modules\Image\Models\Image;
 use App\Modules\Location\Models\Area;
+use App\Modules\Location\Models\Location;
+use App\Modules\Location\Models\PointOfInterest;
 use App\Modules\Property\Models\Property;
 use Illuminate\Support\Collection;
 
@@ -58,6 +60,7 @@ final class PropertyPresenter
             'images.metadata',
             'images.adjustment',
             'images.variants',
+            'location.pois',
         ]);
 
         return [
@@ -83,6 +86,46 @@ final class PropertyPresenter
                 ->map(fn (Area $area): array => $this->area($area))
                 ->values()
                 ->all(),
+            'location' => $property->location
+                ? $this->location($property->location)
+                : null,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function location(Location $location): array
+    {
+        $location->loadMissing('pois');
+
+        return [
+            'address' => $location->address ?? '',
+            'postalCode' => $location->postal_code ?? '',
+            'city' => $location->city ?? '',
+            'municipality' => $location->municipality ?? '',
+            'countryCode' => $location->country_code,
+            'latitude' => $location->latitude,
+            'longitude' => $location->longitude,
+            'googlePlaceId' => $location->google_place_id ?? '',
+            'pois' => $location->pois
+                ->map(fn (PointOfInterest $poi): array => $this->poi($poi))
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function poi(PointOfInterest $poi): array
+    {
+        return [
+            'id' => (string) $poi->id,
+            'name' => $poi->name,
+            'description' => $poi->description ?? '',
+            'latitude' => $poi->latitude,
+            'longitude' => $poi->longitude,
         ];
     }
 

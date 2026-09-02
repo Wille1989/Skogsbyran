@@ -12,9 +12,10 @@ export function useUploadDocumentMutation() {
         mutationFn: ({
             propertyId,
             type,
+            title,
             file,
         }: UploadDocumentInput) =>
-            uploadDocument(propertyId, type, file),
+            uploadDocument(propertyId, type, file, title),
 
         onSuccess: (_data, variables) => {
             void queryClient.invalidateQueries({

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AreaController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\DetailsController;
 use App\Http\Controllers\Api\ImageController;
+use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\PropertyController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +45,13 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function (): void {
     |--------------------------------------------------------------------------
     */
     Route::patch('/property/{property}/details', [DetailsController::class, 'update']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Location
+    |--------------------------------------------------------------------------
+    */
+    Route::put('/property/{property}/location', [LocationController::class, 'update']);
 
     /*
     |--------------------------------------------------------------------------

@@ -16,7 +16,7 @@ final class DocumentStorageService
     ) {
     }
 
-    public function upload(UploadedFile $file, int $propertyId, string $type): array {
+    public function upload(UploadedFile $file, int $propertyId, ?string $type): array {
         $storageKey = $this->createStorageKey(
             $file,
             $propertyId,
@@ -70,7 +70,7 @@ final class DocumentStorageService
         );
     }
 
-    private function createStorageKey(UploadedFile $file, int $propertyId, string $type): string {
+    private function createStorageKey(UploadedFile $file, int $propertyId, ?string $type): string {
         $extension = strtolower(
             $file->getClientOriginalExtension()
             ?: 'pdf'
@@ -84,7 +84,7 @@ final class DocumentStorageService
         return sprintf(
             'properties/%d/documents/%s/%s.%s',
             $propertyId,
-            $type,
+            $type ?: 'general',
             $fileName,
             $extension
         );

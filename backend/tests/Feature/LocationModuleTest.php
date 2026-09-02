@@ -15,6 +15,64 @@ final class LocationModuleTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_it_replaces_property_location_and_pois(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['admin' => true]), ['admin']);
+
+        $property = Property::query()->create([
+            'title' => 'Location POI property',
+            'caption' => 'Location and points of interest',
+        ]);
+
+        $this->putJson('/property/'.$property->id.'/location', [
+            'address' => 'Skogsvägen 12',
+            'postalCode' => '791 31',
+            'city' => 'Falun',
+            'municipality' => 'Falun',
+            'countryCode' => 'SE',
+            'latitude' => 60.6065,
+            'longitude' => 15.6355,
+            'googlePlaceId' => 'google-place-123',
+            'pois' => [
+                [
+                    'name' => 'Badplats',
+                    'description' => 'Ungefär 3 km från fastigheten.',
+                    'latitude' => 60.61,
+                    'longitude' => 15.64,
+                ],
+            ],
+        ])
+            ->assertOk()
+            ->assertJsonPath('address', 'Skogsvägen 12')
+            ->assertJsonPath('postalCode', '791 31')
+            ->assertJsonPath('googlePlaceId', 'google-place-123')
+            ->assertJsonPath('pois.0.name', 'Badplats');
+
+        $this->assertDatabaseHas('locations', [
+            'property_id' => $property->id,
+            'address' => 'Skogsvägen 12',
+            'postal_code' => '791 31',
+            'city' => 'Falun',
+            'google_place_id' => 'google-place-123',
+        ]);
+        $this->assertDatabaseHas('location_pois', [
+            'name' => 'Badplats',
+            'description' => 'Ungefär 3 km från fastigheten.',
+        ]);
+
+        $this->putJson('/property/'.$property->id.'/location', [
+            'address' => 'Ny adress 4',
+            'countryCode' => 'SE',
+            'pois' => [],
+        ])->assertOk()->assertJsonCount(0, 'pois');
+
+        $this->assertDatabaseHas('locations', [
+            'property_id' => $property->id,
+            'address' => 'Ny adress 4',
+        ]);
+        $this->assertDatabaseCount('location_pois', 0);
+    }
+
     public function test_it_stores_location_areas_with_ordered_points(): void
     {
         Sanctum::actingAs(User::factory()->create(['admin' => true]), ['admin']);

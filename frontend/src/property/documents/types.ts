@@ -6,9 +6,16 @@ export const documentTypes = [
 
 export type DocumentType = (typeof documentTypes)[number];
 
+export type PendingDocument = {
+      uiId: string;
+      title: string;
+      file: File;
+};
+
 export type UploadDocumentInput = {
       propertyId: string;
-      type: DocumentType;
+      type?: DocumentType;
+      title?: string;
       file: File;
 };
 
@@ -20,7 +27,7 @@ export type DeleteDocumentInput = {
 export type DocumentItem = {
       propertyId: string;
       documentId: string;
-      type: DocumentType;
+      type: DocumentType | "document";
       title: string;
       url: string;
       originalName: string;

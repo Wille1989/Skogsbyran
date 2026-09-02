@@ -73,10 +73,10 @@ export function PropertyAreaEditor({
     });
   };
 
-  const onAddPolygonPoint = (point: Coordinates): void => {
+  const onPolygonChange = (polygon: Coordinates[]): void => {
     onChange({
       ...value,
-      polygon: [...value.polygon, point],
+      polygon,
     });
   };
 
@@ -123,7 +123,7 @@ export function PropertyAreaEditor({
           polygon={value.polygon}
           marker={value.marker}
           mode={mode}
-          onAddPolygonPoint={onAddPolygonPoint}
+          onPolygonChange={onPolygonChange}
           onSetMarker={onSetMarker}
           readOnly
         />
@@ -153,7 +153,7 @@ export function PropertyAreaEditor({
             polygon={value.polygon}
             marker={value.marker}
             mode={mode}
-            onAddPolygonPoint={onAddPolygonPoint}
+            onPolygonChange={onPolygonChange}
             onSetMarker={onSetMarker}
             readOnly={false}
           />

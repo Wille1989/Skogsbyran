@@ -1,124 +1,31 @@
+import { useEffect, useId, useRef, useState } from "react";
+import {
+  TerraDraw,
+  TerraDrawPolygonMode,
+  TerraDrawSelectMode,
+  type GeoJSONStoreFeatures,
+} from "terra-draw";
+import { TerraDrawGoogleMapsAdapter } from "terra-draw-google-maps-adapter";
 import { type Coordinates } from "../data/types";
-import { useEffect, useRef, useState } from "react";
+import { googleMapsMapId, loadGoogleMaps } from "../data/googleMapsLoader";
 import "./googleMap.css";
 
 type PropertyAreaMapProps = {
   polygon: Coordinates[];
   marker: Coordinates | null;
   mode: "polygon" | "marker";
-  onAddPolygonPoint: (point: Coordinates) => void;
+  onPolygonChange: (polygon: Coordinates[]) => void;
   onSetMarker: (marker: Coordinates) => void;
   readOnly?: boolean;
 };
-
-type GoogleMapsLibrary = {
-  Map: new (element: HTMLElement, options: Record<string, unknown>) => GoogleMapInstance;
-  Marker: new (options: Record<string, unknown>) => GoogleMarkerInstance;
-  Polygon: new (options: Record<string, unknown>) => GooglePolygonInstance;
-  Polyline: new (options: Record<string, unknown>) => GooglePolylineInstance;
-  LatLngBounds: new () => GoogleLatLngBoundsInstance;
-};
-
-type GoogleMapMouseEvent = {
-  latLng?: {
-    lat: () => number;
-    lng: () => number;
-  } | null;
-};
-
-type GoogleMapInstance = {
-  addListener: (eventName: string, handler: (event: GoogleMapMouseEvent) => void) => GoogleMapsListener;
-  fitBounds: (bounds: GoogleLatLngBoundsInstance) => void;
-  panTo: (position: Coordinates) => void;
-  setZoom: (zoom: number) => void;
-};
-
-type GoogleMapsListener = {
-  remove: () => void;
-};
-
-type GoogleOverlay = {
-  setMap: (map: GoogleMapInstance | null) => void;
-};
-
-type GoogleMarkerInstance = GoogleOverlay & {
-  setPosition: (position: Coordinates) => void;
-};
-
-type GooglePolygonInstance = GoogleOverlay;
-type GooglePolylineInstance = GoogleOverlay;
-
-type GoogleLatLngBoundsInstance = {
-  extend: (point: Coordinates) => void;
-};
-
-declare global {
-  interface Window {
-    google?: {
-      maps: GoogleMapsLibrary;
-    };
-  }
-}
 
 const DEFAULT_CENTER: Coordinates = {
   lat: 59.3293,
   lng: 18.0686,
 };
 
-const mapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-let googleMapsLoader: Promise<GoogleMapsLibrary> | null = null;
-
-function roundCoordinate(value: number) {
+function roundCoordinate(value: number): number {
   return Math.round(value * 1000000) / 1000000;
-}
-
-function getGoogleMapsLibrary(): Promise<GoogleMapsLibrary> {
-  if (window.google?.maps) {
-    return Promise.resolve(window.google.maps);
-  }
-
-  if (!mapsApiKey) {
-    return Promise.reject(new Error("Google Maps API key saknas i frontendens miljovariabler."));
-  }
-
-  if (googleMapsLoader) {
-    return googleMapsLoader;
-  }
-
-  googleMapsLoader = new Promise<GoogleMapsLibrary>((resolve, reject) => {
-    const existingScript = document.querySelector<HTMLScriptElement>('script[data-google-maps-loader="true"]');
-
-    if (existingScript) {
-      existingScript.addEventListener("load", () => {
-        if (window.google?.maps) {
-          resolve(window.google.maps);
-          return;
-        }
-
-        reject(new Error("Google Maps laddades men kartbiblioteket hittades inte."));
-      });
-      existingScript.addEventListener("error", () => reject(new Error("Google Maps-skriptet kunde inte laddas.")));
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${mapsApiKey}`;
-    script.async = true;
-    script.defer = true;
-    script.dataset.googleMapsLoader = "true";
-    script.onload = () => {
-      if (window.google?.maps) {
-        resolve(window.google.maps);
-        return;
-      }
-
-      reject(new Error("Google Maps laddades men kartbiblioteket hittades inte."));
-    };
-    script.onerror = () => reject(new Error("Google Maps-skriptet kunde inte laddas."));
-    document.head.appendChild(script);
-  });
-
-  return googleMapsLoader;
 }
 
 function getMapCenter(polygon: Coordinates[], marker: Coordinates | null): Coordinates {
@@ -133,82 +40,169 @@ function getMapCenter(polygon: Coordinates[], marker: Coordinates | null): Coord
   return DEFAULT_CENTER;
 }
 
+function toPolygonFeature(polygon: Coordinates[]): GeoJSONStoreFeatures | null {
+  if (polygon.length < 3) {
+    return null;
+  }
+
+  const ring = polygon.map((point) => [point.lng, point.lat]);
+  ring.push([polygon[0].lng, polygon[0].lat]);
+
+  return {
+    id: "property-area-draft",
+    type: "Feature",
+    geometry: {
+      type: "Polygon",
+      coordinates: [ring],
+    },
+    properties: {
+      mode: "polygon",
+    },
+  } as GeoJSONStoreFeatures;
+}
+
+function extractPolygon(features: GeoJSONStoreFeatures[]): Coordinates[] {
+  const feature = features.find((candidate) => candidate.geometry.type === "Polygon");
+
+  if (!feature || feature.geometry.type !== "Polygon") {
+    return [];
+  }
+
+  const ring: unknown[] = feature.geometry.coordinates[0] ?? [];
+  const openRing: Array<[number, number]> = ring
+    .slice(0, -1)
+    .filter((coordinate): coordinate is [number, number] =>
+      Array.isArray(coordinate) &&
+      coordinate.length >= 2 &&
+      typeof coordinate[0] === "number" &&
+      typeof coordinate[1] === "number",
+    );
+
+  return openRing.map(([lng, lat]) => ({
+    lat: roundCoordinate(lat),
+    lng: roundCoordinate(lng),
+  }));
+}
+
 export function PropertyAreaMap({
   polygon,
   marker,
   mode,
-  onAddPolygonPoint,
+  onPolygonChange,
   onSetMarker,
   readOnly = false,
 }: PropertyAreaMapProps) {
+  const mapElementId = useId().replace(/:/g, "");
   const mapElementRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<GoogleMapInstance | null>(null);
-  const mapsRef = useRef<GoogleMapsLibrary | null>(null);
-  const markerRef = useRef<GoogleMarkerInstance | null>(null);
-  const polygonRef = useRef<GooglePolygonInstance | null>(null);
-  const polylineRef = useRef<GooglePolylineInstance | null>(null);
-  const clickListenerRef = useRef<GoogleMapsListener | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const polygonOverlayRef = useRef<google.maps.Polygon | null>(null);
+  const drawRef = useRef<TerraDraw | null>(null);
+  const clickListenerRef = useRef<google.maps.MapsEventListener | null>(null);
   const modeRef = useRef(mode);
-  const addPolygonPointRef = useRef(onAddPolygonPoint);
-  const setMarkerRef = useRef(onSetMarker);
+  const onPolygonChangeRef = useRef(onPolygonChange);
+  const onSetMarkerRef = useRef(onSetMarker);
   const initialCenterRef = useRef(getMapCenter(polygon, marker));
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     modeRef.current = mode;
-    addPolygonPointRef.current = onAddPolygonPoint;
-    setMarkerRef.current = onSetMarker;
-  }, [mode, onAddPolygonPoint, onSetMarker]);
+    onPolygonChangeRef.current = onPolygonChange;
+    onSetMarkerRef.current = onSetMarker;
+    drawRef.current?.setMode(mode === "polygon" ? "polygon" : "select");
+  }, [mode, onPolygonChange, onSetMarker]);
 
   useEffect(() => {
     let isCancelled = false;
 
-    async function setupMap() {
+    async function setupMap(): Promise<void> {
       if (!mapElementRef.current || mapRef.current) {
         return;
       }
 
       try {
-        const maps = await getGoogleMapsLibrary();
+        const googleMaps = await loadGoogleMaps();
 
         if (isCancelled || !mapElementRef.current) {
           return;
         }
 
-        mapsRef.current = maps;
-        mapRef.current = new maps.Map(mapElementRef.current, {
+        const map = new googleMaps.maps.Map(mapElementRef.current, {
           center: initialCenterRef.current,
-          zoom: 6,
+          zoom: 7,
+          mapId: googleMapsMapId,
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,
           zoomControl: true,
-          draggable: !readOnly,
           clickableIcons: !readOnly,
-          disableDoubleClickZoom: readOnly,
-          keyboadshortcuts: !readOnly,
-          gestureHandling: readOnly ?  "none" : "auto",
+          gestureHandling: readOnly ? "none" : "auto",
           cameraControl: false,
         });
 
+        mapRef.current = map;
+
         if (!readOnly) {
-          clickListenerRef.current = mapRef.current.addListener("click", (event) => {
-            if (!event.latLng) {
+          clickListenerRef.current = map.addListener("click", (event: google.maps.MapMouseEvent) => {
+            if (modeRef.current !== "marker" || !event.latLng) {
               return;
             }
 
-            const point = {
+            onSetMarkerRef.current({
               lat: roundCoordinate(event.latLng.lat()),
               lng: roundCoordinate(event.latLng.lng()),
-            };
+            });
+          });
 
-            if (modeRef.current === "marker") {
-              setMarkerRef.current(point);
+          map.addListener("projection_changed", () => {
+            if (drawRef.current || isCancelled) {
               return;
             }
 
-            addPolygonPointRef.current(point);
+            const draw = new TerraDraw({
+              adapter: new TerraDrawGoogleMapsAdapter({
+                lib: googleMaps.maps,
+                map,
+                coordinatePrecision: 7,
+              }),
+              modes: [
+                new TerraDrawPolygonMode({
+                  editable: true,
+                  showCoordinatePoints: true,
+                }),
+                new TerraDrawSelectMode({
+                  flags: {
+                    polygon: {
+                      feature: {
+                        draggable: true,
+                        coordinates: {
+                          draggable: true,
+                          midpoints: true,
+                          deletable: true,
+                        },
+                      },
+                    },
+                  },
+                }),
+              ],
+            });
+
+            drawRef.current = draw;
+            draw.start();
+            draw.on("ready", () => {
+              const initialFeature = toPolygonFeature(polygon);
+
+              if (initialFeature) {
+                draw.addFeatures([initialFeature]);
+                draw.setMode("select");
+              } else {
+                draw.setMode(modeRef.current === "polygon" ? "polygon" : "select");
+              }
+            });
+            draw.on("change", () => {
+              onPolygonChangeRef.current(extractPolygon(draw.getSnapshot()));
+            });
           });
         }
 
@@ -226,41 +220,48 @@ export function PropertyAreaMap({
       isCancelled = true;
       clickListenerRef.current?.remove();
       clickListenerRef.current = null;
-      markerRef.current?.setMap(null);
-      polygonRef.current?.setMap(null);
-      polylineRef.current?.setMap(null);
+      if (markerRef.current) {
+        markerRef.current.map = null;
+      }
       markerRef.current = null;
-      polygonRef.current = null;
-      polylineRef.current = null;
+      polygonOverlayRef.current?.setMap(null);
+      polygonOverlayRef.current = null;
+      drawRef.current?.stop();
+      drawRef.current = null;
       mapRef.current = null;
-      mapsRef.current = null;
       setIsReady(false);
     };
-  }, [readOnly]);
+  }, [mapElementId, polygon, readOnly]);
 
   useEffect(() => {
-    const maps = mapsRef.current;
     const map = mapRef.current;
 
-    if (!maps || !map) {
+    if (!map || !isReady) {
       return;
     }
 
-    markerRef.current?.setMap(null);
-    polygonRef.current?.setMap(null);
-    polylineRef.current?.setMap(null);
+    if (markerRef.current) {
+      markerRef.current.map = null;
+    }
+    markerRef.current = null;
 
     if (marker) {
-      markerRef.current = new maps.Marker({
+      markerRef.current = new google.maps.marker.AdvancedMarkerElement({
         map,
         position: marker,
+        title: "Fastighetspunkt",
       });
-    } else {
-      markerRef.current = null;
     }
 
+    if (!readOnly) {
+      return;
+    }
+
+    polygonOverlayRef.current?.setMap(null);
+    polygonOverlayRef.current = null;
+
     if (polygon.length >= 3) {
-      polygonRef.current = new maps.Polygon({
+      polygonOverlayRef.current = new google.maps.Polygon({
         map,
         paths: polygon,
         strokeColor: "#14532d",
@@ -269,22 +270,17 @@ export function PropertyAreaMap({
         fillColor: "#14532d",
         fillOpacity: 0.18,
       });
-      polylineRef.current = null;
-    } else if (polygon.length >= 2) {
-      polylineRef.current = new maps.Polyline({
-        map,
-        path: polygon,
-        strokeColor: "#14532d",
-        strokeOpacity: 1,
-        strokeWeight: 3,
-      });
-      polygonRef.current = null;
-    } else {
-      polygonRef.current = null;
-      polylineRef.current = null;
+    }
+  }, [isReady, marker, polygon, readOnly]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map || !isReady) {
+      return;
     }
 
-    const bounds = new maps.LatLngBounds();
+    const bounds = new google.maps.LatLngBounds();
     let hasBounds = false;
 
     polygon.forEach((point) => {
@@ -304,7 +300,7 @@ export function PropertyAreaMap({
 
     map.panTo(DEFAULT_CENTER);
     map.setZoom(7);
-  }, [marker, polygon]);
+  }, [isReady, marker, polygon]);
 
   if (loadError) {
     return (
@@ -318,14 +314,15 @@ export function PropertyAreaMap({
     <div className="mock-map-shell">
       {!readOnly ? (
         <div className="mock-map-banner">
-          Google Maps aktiv. Klicka i kartan for att {mode === "marker" ? "satta markoren" : "rita polygonen"}.
+          Google Maps och Terra Draw ar aktiva. Rita polygonen i kartan eller satt punktmarkoren.
         </div>
       ) : null}
       <div
+        id={mapElementId}
         ref={mapElementRef}
         className={`mock-map google-map ${readOnly ? "is-readonly" : ""} ${isReady ? "is-ready" : "is-loading"}`}
         role="img"
-        aria-label="Google-karta för fastighetsområden"
+        aria-label="Google-karta for fastighetsomraden"
       />
     </div>
   );

@@ -22,7 +22,8 @@ final class DocumentService
 
     public function store(Property $property, array $validated): Document {
         $file = $validated['file'];
-        $type = $validated['type'];
+        $type = $validated['type'] ?? null;
+        $title = $this->resolveTitle($type, $validated['title'] ?? null, $file);
 
         $upload = $this->storageService->upload(
             $file,
@@ -30,7 +31,9 @@ final class DocumentService
             $type
         );
 
-        $previousDocument = $this->documentForLegacyType($property, $type);
+        $previousDocument = $type !== null
+            ? $this->documentForLegacyType($property, $type)
+            : null;
 
         try {
             $document = DB::transaction(
@@ -38,6 +41,7 @@ final class DocumentService
                     $property,
                     $file,
                     $type,
+                    $title,
                     $upload,
                     $previousDocument
                 ): Document {
@@ -46,7 +50,7 @@ final class DocumentService
                     }
 
                     $document = Document::query()->create([
-                        'name' => $this->resolveTitle($type),
+                        'name' => $title,
                         'original_filename' => $file->getClientOriginalName(),
                         'mime_type' => $file->getMimeType() ?: 'application/pdf',
                         'page_count' => null,
@@ -63,8 +67,8 @@ final class DocumentService
 
                     $property->documents()->attach($document->id, [
                         'type' => $type,
-                        'title' => $this->resolveTitle($type),
-                        'sort_order' => $this->legacySortOrder($type),
+                        'title' => $title,
+                        'sort_order' => $this->sortOrder($property, $type),
                     ]);
 
                     return $this->freshPropertyDocument($property, $document);
@@ -94,6 +98,7 @@ final class DocumentService
         $file = $validated['file'];
         $propertyDocument = $this->freshPropertyDocument($property, $document);
         $type = $validated['type'] ?? $this->legacyType($propertyDocument);
+        $title = $this->resolveTitle($type, $validated['title'] ?? null, $file);
 
         $upload = $this->storageService->upload(
             $file,
@@ -108,12 +113,13 @@ final class DocumentService
                     $document,
                     $file,
                     $type,
+                    $title,
                     $upload
                 ): Document {
                     $property->documents()->detach($document->id);
 
                     $replacement = Document::query()->create([
-                        'name' => $this->resolveTitle($type),
+                        'name' => $title,
                         'original_filename' => $file->getClientOriginalName(),
                         'mime_type' => $file->getMimeType() ?: 'application/pdf',
                         'page_count' => null,
@@ -130,8 +136,8 @@ final class DocumentService
 
                     $property->documents()->attach($replacement->id, [
                         'type' => $type,
-                        'title' => $this->resolveTitle($type),
-                        'sort_order' => $this->legacySortOrder($type),
+                        'title' => $title,
+                        'sort_order' => $this->sortOrder($property, $type),
                     ]);
 
                     return $this->freshPropertyDocument($property, $replacement);
@@ -192,12 +198,16 @@ final class DocumentService
         }
     }
 
-    private function resolveTitle(string $type): string {
+    private function resolveTitle(?string $type, mixed $title, UploadedFile $file): string {
+        if (is_string($title) && trim($title) !== '') {
+            return trim($title);
+        }
+
         return match ($type) {
             Document::TYPE_BID_FORM => 'Anbudsblankett',
             Document::TYPE_PROSPECT => 'Prospekt',
             Document::TYPE_PROPERTY_MAP => 'Fastighetskarta',
-            default => 'Dokument',
+            default => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) ?: 'Dokument',
         };
     }
 
@@ -263,13 +273,26 @@ final class DocumentService
         ));
     }
 
-    private function legacyType(Document $document): string
+    private function legacyType(Document $document): ?string
     {
         $type = $document->pivot?->type ?? null;
 
         return is_string($type) && $type !== ''
             ? $type
-            : Document::TYPE_PROSPECT;
+            : null;
+    }
+
+    private function sortOrder(Property $property, ?string $type): int
+    {
+        if ($type !== null) {
+            return $this->legacySortOrder($type);
+        }
+
+        $maxSortOrder = $property->documents()->max('property_documents.sort_order');
+
+        return $maxSortOrder === null
+            ? 100
+            : ((int) $maxSortOrder) + 10;
     }
 
     private function legacySortOrder(string $type): int

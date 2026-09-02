@@ -27,9 +27,15 @@ final class StoreDocumentRequest extends FormRequest
     {
         return [
             'type' => [
-                'required',
+                'nullable',
                 'string',
                 Rule::in(Document::TYPES),
+            ],
+
+            'title' => [
+                'nullable',
+                'string',
+                'max:120',
             ],
 
             'file' => [

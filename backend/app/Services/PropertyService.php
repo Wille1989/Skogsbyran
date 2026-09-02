@@ -30,6 +30,7 @@ final class PropertyService
                 'documents.variants',
                 'areas.location',
                 'areas.points',
+                'location.pois',
             ])
             ->where('is_visible', true)
             ->orderByDesc('id')
@@ -50,6 +51,7 @@ final class PropertyService
             'documents.variants',
             'areas.location',
             'areas.points',
+            'location.pois',
         ]);
 
         return $this->propertyPresenter->wrapped($property);
@@ -89,6 +91,7 @@ final class PropertyService
                 'documents.variants',
                 'areas.location',
                 'areas.points',
+                'location.pois',
             ]);
         });
 

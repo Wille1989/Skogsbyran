@@ -1,0 +1,30 @@
+.pending-documents,
+.pending-documents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pending-document-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(180px, 0.8fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.pending-document-card span {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .pending-document-card {
+    grid-template-columns: 1fr;
+  }
+}
