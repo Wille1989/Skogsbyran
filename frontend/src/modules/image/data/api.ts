@@ -1,6 +1,5 @@
 import { baseURL } from "@/shared/data/baseURL.ts";
 import {  apiFetch } from "@/shared/data/apiFetch.ts";
-import { buildAuthHeaders } from "@/modules/auth/data/authSession.ts";
 import {
       type DeleteImagesInput,
       type ImageFile,
@@ -26,7 +25,6 @@ export function buildUploadFormData(images: NewImageFile[]): FormData {
 export function uploadImages({propertyId, images}: UploadImagesInput): Promise<ImageFile[]> {
       return apiFetch<ImageFile[]>(`${baseURL}/property/${propertyId}/images`, {
             method: "POST",
-            headers: buildAuthHeaders(),
             body: buildUploadFormData(images)
       })
 }
@@ -34,7 +32,7 @@ export function uploadImages({propertyId, images}: UploadImagesInput): Promise<I
 export function updateImages({propertyId, images}: UpdateImagesInput): Promise<ImageFile[]>  {
       return apiFetch<ImageFile[]>(`${baseURL}/property/${propertyId}/images`, {
             method: "PATCH",
-            headers: buildAuthHeaders({"Content-Type": "application/json"}),
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ images })
       })
 }
@@ -42,7 +40,7 @@ export function updateImages({propertyId, images}: UpdateImagesInput): Promise<I
 export function deleteImages({propertyId, imageIds}: DeleteImagesInput): Promise<void> {
       return apiFetch<void>(`${baseURL}/property/${propertyId}/images`, {
             method: "DELETE",
-            headers: buildAuthHeaders({"Content-Type": "application/json"}),
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ imageIds })
       });
 }

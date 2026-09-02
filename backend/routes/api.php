@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\Route;
 | Auth
 |--------------------------------------------------------------------------
 */
-Route::post('/auth/login', [AuthController::class, 'login']);
-Route::middleware('auth:sanctum')->group(function (): void {
+Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('auth:web')->group(function (): void {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 });
@@ -35,7 +35,7 @@ Route::get('/property/{property}', [PropertyController::class, 'show']);
 | Details
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth:sanctum', 'admin'])->group(function (): void {
+Route::middleware(['auth:web', 'admin'])->group(function (): void {
     Route::post('/property', [PropertyController::class, 'store']);
     Route::delete('/property/{property}', [PropertyController::class, 'destroy']);
 

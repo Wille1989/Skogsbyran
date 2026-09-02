@@ -1,6 +1,5 @@
 import { baseURL } from "@/shared/data/baseURL.ts";
 import { apiFetch } from "@/shared/data/apiFetch.ts";
-import { buildAuthHeaders } from "@/modules/auth/data/authSession.ts";
 import  {
       type DocumentItem,
       type DocumentType,
@@ -35,7 +34,6 @@ export function uploadDocument(propertyId: string, type: DocumentType | undefine
     return apiFetch<DocumentItem>(`${baseURL}/property/${propertyId}/documents`,
         {
             method: "POST",
-            headers: buildAuthHeaders(),
             body: type && !title ? buildDocumentFormData(file, type) : buildNamedDocumentFormData(file, title, type)
         }
     );
@@ -45,7 +43,6 @@ export function deleteDocument(propertyId: string, documentId: string): Promise<
     return apiFetch<void>(`${baseURL}/property/${propertyId}/documents/${documentId}`,
         {
             method: "DELETE",
-            headers: buildAuthHeaders(),
         }
     );
 }
@@ -54,9 +51,9 @@ export function updateDocumentTitle(propertyId: string, documentId: string, titl
     return apiFetch<DocumentItem>(`${baseURL}/property/${propertyId}/documents/${documentId}`,
         {
             method: "PUT",
-            headers: buildAuthHeaders({
+            headers: {
                 "Content-Type": "application/json",
-            }),
+            },
             body: JSON.stringify({ title }),
         }
     );

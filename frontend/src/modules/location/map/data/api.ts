@@ -1,6 +1,5 @@
 import { baseURL } from "@/shared/data/baseURL";
 import { apiFetch } from "@/shared/data/apiFetch";
-import { buildAuthHeaders } from "@/modules/auth/data/authSession";
 import {
     type PropertyAreaCollection,
     type PropertyArea,
@@ -30,9 +29,9 @@ export function createArea(propertyId: string, payload: PropertyAreaPayload): Pr
         `${baseURL}/property/${propertyId}/area`,
         {
             method: "POST",
-            headers: buildAuthHeaders({
+            headers: {
                 "Content-Type": "application/json",
-            }),
+            },
             body: JSON.stringify(payload),
         }
     );
@@ -43,9 +42,9 @@ export function updateArea(propertyId: string, areaId: string, payload: Property
         `${baseURL}/property/${propertyId}/area/${areaId}/update`,
         {
             method: "PUT",
-            headers: buildAuthHeaders({
+            headers: {
                 "Content-Type": "application/json",
-            }),
+            },
             body: JSON.stringify(payload),
         }
     );
@@ -56,7 +55,6 @@ export function deleteArea(propertyId: string, areaId: string): Promise<void> {
         `${baseURL}/property/${propertyId}/area/${areaId}/delete`,
         {
             method: "DELETE",
-            headers: buildAuthHeaders(),
         }
     );
 }

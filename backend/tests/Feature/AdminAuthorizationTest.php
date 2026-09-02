@@ -7,7 +7,6 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Modules\Property\Models\Property;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 final class AdminAuthorizationTest extends TestCase
@@ -26,7 +25,7 @@ final class AdminAuthorizationTest extends TestCase
 
     public function test_admin_routes_reject_non_admin_users(): void
     {
-        Sanctum::actingAs(User::factory()->create(['admin' => false]));
+        $this->actingAs(User::factory()->create(['admin' => false]));
 
         $property = Property::query()->create([
             'title' => 'Protected property',
@@ -39,7 +38,7 @@ final class AdminAuthorizationTest extends TestCase
 
     public function test_admin_routes_allow_admin_users(): void
     {
-        Sanctum::actingAs(User::factory()->create(['admin' => true]), ['admin']);
+        $this->actingAs(User::factory()->create(['admin' => true]));
 
         $property = Property::query()->create([
             'title' => 'Protected property',
@@ -49,20 +48,14 @@ final class AdminAuthorizationTest extends TestCase
             ->assertNoContent();
     }
 
-    public function test_admin_routes_allow_real_admin_bearer_tokens(): void
+    public function test_admin_routes_do_not_accept_bearer_tokens(): void
     {
-        $user = User::factory()->create([
-            'admin' => true,
-        ]);
-
         $property = Property::query()->create([
             'title' => 'Protected property',
         ]);
 
-        $token = $user->createToken('skogsbyran-admin', ['admin'])->plainTextToken;
-
-        $this->withHeader('Authorization', 'Bearer '.$token)
+        $this->withHeader('Authorization', 'Bearer obsolete-token')
             ->deleteJson('/property/'.$property->id)
-            ->assertNoContent();
+            ->assertUnauthorized();
     }
 }

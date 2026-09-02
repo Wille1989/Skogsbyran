@@ -1,6 +1,5 @@
 import type { User, AuthResponse, AuthUser } from "./userTypes";
 import { baseURL } from '@/shared/data/baseURL';
-import { buildAuthHeaders } from "./authSession";
 import { apiFetch, ApiError } from "@/shared/data/apiFetch";
 
 type AuthEnvelope<T> = {
@@ -8,12 +7,18 @@ type AuthEnvelope<T> = {
 };
 
 export function AuthService() {
+    async function initializeCsrf(): Promise<void> {
+        await apiFetch<void>(`${baseURL}/sanctum/csrf-cookie`, {
+            method: "GET",
+        });
+    }
 
     async function loginUser(form: User): Promise<AuthResponse> {
-        const response = await apiFetch<AuthEnvelope<AuthResponse>>(`${baseURL}/auth/login`, {
+        await initializeCsrf();
+
+        const response = await apiFetch<AuthEnvelope<AuthResponse>>(`${baseURL}/login`, {
             method: 'POST',
             headers: {
-                Accept: 'application/json',
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(form)
@@ -26,7 +31,6 @@ export function AuthService() {
         try {
             await apiFetch<void>(`${baseURL}/auth/logout`, {
                 method: 'POST',
-                headers: buildAuthHeaders(),
             });
         } catch (error) {
             if (error instanceof ApiError && error.status === 401) {
@@ -41,7 +45,6 @@ export function AuthService() {
         try {
             const response = await apiFetch<AuthEnvelope<AuthUser>>(`${baseURL}/auth/me`, {
                 method: "GET",
-                headers: buildAuthHeaders(),
             });
 
             return response.data;

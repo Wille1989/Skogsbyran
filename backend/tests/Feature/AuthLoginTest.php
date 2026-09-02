@@ -6,7 +6,6 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\PersonalAccessToken;
 use Tests\TestCase;
 
 /**
@@ -17,7 +16,17 @@ class AuthLoginTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Ensure a valid user can log in and receive the expected payload.
+     * Ensure the SPA can initialize Sanctum's CSRF cookie.
+     */
+    public function test_it_initializes_the_sanctum_csrf_cookie(): void
+    {
+        $this->get('/sanctum/csrf-cookie')
+            ->assertNoContent()
+            ->assertCookie('XSRF-TOKEN');
+    }
+
+    /**
+     * Ensure a valid user can log in with a session cookie and receive the expected payload.
      */
     public function test_it_logs_in_a_user_with_valid_credentials(): void
     {
@@ -27,7 +36,7 @@ class AuthLoginTest extends TestCase
             'password' => 'secret-123',
         ]);
 
-        $response = $this->postJson('/auth/login', [
+        $response = $this->postJson('/login', [
             'email' => 'admin@skogsbyran.se',
             'password' => 'secret-123',
         ]);
@@ -36,13 +45,10 @@ class AuthLoginTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.id', $user->id)
             ->assertJsonPath('data.email', $user->email)
-            ->assertJsonPath('data.isAdmin', true);
+            ->assertJsonPath('data.isAdmin', true)
+            ->assertJsonMissingPath('data.token');
 
-        $token = $response->json('data.token');
-
-        $this->assertIsString($token);
-        $this->assertNotEmpty($token);
-        $this->assertNotNull(PersonalAccessToken::findToken($token));
+        $this->assertAuthenticatedAs($user);
     }
 
     /**
@@ -55,7 +61,7 @@ class AuthLoginTest extends TestCase
             'password' => 'secret-123',
         ]);
 
-        $response = $this->postJson('/auth/login', [
+        $response = $this->postJson('/login', [
             'email' => 'admin@skogsbyran.se',
             'password' => 'wrong-password',
         ]);
@@ -70,14 +76,14 @@ class AuthLoginTest extends TestCase
      */
     public function test_it_validates_required_login_fields(): void
     {
-        $response = $this->postJson('/auth/login', []);
+        $response = $this->postJson('/login', []);
 
         $response
             ->assertStatus(422)
             ->assertJsonValidationErrors(['email', 'password']);
     }
 
-    public function test_it_logs_out_the_current_sanctum_token(): void
+    public function test_it_returns_the_current_user_for_an_authenticated_session(): void
     {
         $user = User::factory()->create([
             'email' => 'admin@skogsbyran.se',
@@ -85,26 +91,7 @@ class AuthLoginTest extends TestCase
             'password' => 'secret-123',
         ]);
 
-        $token = $user->createToken('skogsbyran-admin', ['admin'])->plainTextToken;
-
-        $this->withHeader('Authorization', 'Bearer '.$token)
-            ->postJson('/auth/logout')
-            ->assertNoContent();
-
-        $this->assertNull(PersonalAccessToken::findToken($token));
-    }
-
-    public function test_it_returns_the_current_user_for_a_real_bearer_token(): void
-    {
-        $user = User::factory()->create([
-            'email' => 'admin@skogsbyran.se',
-            'admin' => true,
-            'password' => 'secret-123',
-        ]);
-
-        $token = $user->createToken('skogsbyran-admin', ['admin'])->plainTextToken;
-
-        $this->withHeader('Authorization', 'Bearer '.$token)
+        $this->actingAs($user)
             ->getJson('/auth/me')
             ->assertOk()
             ->assertJsonPath('data.id', $user->id)
@@ -112,7 +99,7 @@ class AuthLoginTest extends TestCase
             ->assertJsonPath('data.isAdmin', true);
     }
 
-    public function test_a_logged_out_bearer_token_can_no_longer_authenticate(): void
+    public function test_it_logs_out_the_authenticated_session(): void
     {
         $user = User::factory()->create([
             'email' => 'admin@skogsbyran.se',
@@ -120,16 +107,10 @@ class AuthLoginTest extends TestCase
             'password' => 'secret-123',
         ]);
 
-        $token = $user->createToken('skogsbyran-admin', ['admin'])->plainTextToken;
-
-        $this->withHeader('Authorization', 'Bearer '.$token)
+        $this->actingAs($user)
             ->postJson('/auth/logout')
             ->assertNoContent();
 
-        $this->app['auth']->forgetGuards();
-
-        $this->withHeader('Authorization', 'Bearer '.$token)
-            ->getJson('/auth/me')
-            ->assertUnauthorized();
+        $this->assertGuest();
     }
 }

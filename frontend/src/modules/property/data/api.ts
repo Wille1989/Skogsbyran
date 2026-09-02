@@ -4,7 +4,6 @@ import {
     type ResponseGetProperty,
     type ResponseGetProperties } from "@/modules/property/data/types";
 import { type CreatePropertyInput } from "./types";
-import { buildAuthHeaders } from "@/modules/auth/data/authSession";
 
 export function getById(propertyId: string): Promise<ResponseGetProperty> {
     return apiFetch<ResponseGetProperty>(`${baseURL}/property/${propertyId}`,
@@ -65,7 +64,6 @@ export function create(input: CreatePropertyInput): Promise<ResponseGetProperty>
     return apiFetch<ResponseGetProperty>(`${baseURL}/property`,
         {
             method: "POST",
-            headers: buildAuthHeaders(),
             body: formData,
         }
     );
@@ -75,7 +73,6 @@ export function remove(propertyId: string): Promise<void> {
     return apiFetch<void>(`${baseURL}/property/${propertyId}`,
         {
             method: "DELETE",
-            headers: buildAuthHeaders()
         }
     );
 }

@@ -2,7 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { AuthService } from './authService';
-import type { AuthUser, User } from './userTypes';
+import type { User } from './userTypes';
 
 export const authQueryKeys = {
     currentUser: ["auth", "currentUser"] as const,
@@ -54,16 +54,16 @@ export function useAuth() {
             setErrorMessage(null);
             setSuccessMessage(null);
 
-            const userData = await loginUser(form);
-            localStorage.setItem('token', userData.token);
+            await loginUser(form);
+            const authUser = await queryClient.fetchQuery({
+                queryKey: authQueryKeys.currentUser,
+                queryFn: getCurrentUser,
+                staleTime: 0,
+            });
 
-            const authUser: AuthUser = {
-                id: userData.id,
-                email: userData.email,
-                isAdmin: userData.isAdmin,
-            };
-
-            queryClient.setQueryData(authQueryKeys.currentUser, authUser);
+            if (authUser === null) {
+                throw new Error('Inloggningen kunde inte bekräftas');
+            }
 
             setSuccessMessage('Du loggas in!');
             await delay(1000);
@@ -83,7 +83,7 @@ export function useAuth() {
 
             await logoutUser();
 
-            localStorage.removeItem('token');
+            queryClient.clear();
             queryClient.setQueryData(authQueryKeys.currentUser, null);
 
             setSuccessMessage('Du loggas ut!');

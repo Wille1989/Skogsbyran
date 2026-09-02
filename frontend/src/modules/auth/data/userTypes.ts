@@ -9,6 +9,4 @@ export type AuthUser = {
   isAdmin: boolean;
 };
 
-export type AuthResponse = AuthUser & {
-  token: string;
-};
+export type AuthResponse = AuthUser;
