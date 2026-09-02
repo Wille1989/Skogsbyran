@@ -24,6 +24,12 @@ export type DeleteDocumentInput = {
       documentId: string;
 };
 
+export type UpdateDocumentInput = {
+      propertyId: string;
+      documentId: string;
+      title: string;
+};
+
 export type DocumentItem = {
       propertyId: string;
       documentId: string;

@@ -93,4 +93,43 @@ class AuthLoginTest extends TestCase
 
         $this->assertNull(PersonalAccessToken::findToken($token));
     }
+
+    public function test_it_returns_the_current_user_for_a_real_bearer_token(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'admin@skogsbyran.se',
+            'admin' => true,
+            'password' => 'secret-123',
+        ]);
+
+        $token = $user->createToken('skogsbyran-admin', ['admin'])->plainTextToken;
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/auth/me')
+            ->assertOk()
+            ->assertJsonPath('data.id', $user->id)
+            ->assertJsonPath('data.email', $user->email)
+            ->assertJsonPath('data.isAdmin', true);
+    }
+
+    public function test_a_logged_out_bearer_token_can_no_longer_authenticate(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'admin@skogsbyran.se',
+            'admin' => true,
+            'password' => 'secret-123',
+        ]);
+
+        $token = $user->createToken('skogsbyran-admin', ['admin'])->plainTextToken;
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/auth/logout')
+            ->assertNoContent();
+
+        $this->app['auth']->forgetGuards();
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/auth/me')
+            ->assertUnauthorized();
+    }
 }

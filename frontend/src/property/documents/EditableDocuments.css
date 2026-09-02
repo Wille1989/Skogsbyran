@@ -1,0 +1,36 @@
+.editable-documents,
+.editable-document-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.editable-document-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto;
+  gap: 18px;
+  align-items: end;
+  padding: 18px;
+  border: 1px solid rgba(137, 163, 96, 0.42);
+  border-radius: 4px;
+  background: rgba(255, 255, 250, 0.58);
+}
+
+.editable-document-link {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  color: #143d32;
+  font-weight: 800;
+}
+
+.editable-document-link:hover,
+.editable-document-link:focus-visible {
+  color: var(--accent);
+}
+
+@media (max-width: 760px) {
+  .editable-document-card {
+    grid-template-columns: 1fr;
+  }
+}

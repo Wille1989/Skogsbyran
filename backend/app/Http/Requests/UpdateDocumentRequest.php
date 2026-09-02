@@ -7,6 +7,7 @@ namespace App\Http\Requests;
 use App\Modules\Document\Models\Document;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 final class UpdateDocumentRequest extends FormRequest
 {
@@ -27,7 +28,7 @@ final class UpdateDocumentRequest extends FormRequest
     {
         return [
             'file' => [
-                'required',
+                'sometimes',
                 'file',
                 'mimetypes:application/pdf',
                 'max:20480',
@@ -45,6 +46,22 @@ final class UpdateDocumentRequest extends FormRequest
                 'string',
                 'max:120',
             ],
+        ];
+    }
+
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                if ($this->hasFile('file') || $this->filled('title') || $this->filled('type')) {
+                    return;
+                }
+
+                $validator->errors()->add(
+                    'document',
+                    'A document file, title, or type is required.'
+                );
+            },
         ];
     }
 }

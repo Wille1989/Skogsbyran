@@ -49,3 +49,15 @@ export function deleteDocument(propertyId: string, documentId: string): Promise<
         }
     );
 }
+
+export function updateDocumentTitle(propertyId: string, documentId: string, title: string): Promise<DocumentItem> {
+    return apiFetch<DocumentItem>(`${baseURL}/property/${propertyId}/documents/${documentId}`,
+        {
+            method: "PUT",
+            headers: buildAuthHeaders({
+                "Content-Type": "application/json",
+            }),
+            body: JSON.stringify({ title }),
+        }
+    );
+}

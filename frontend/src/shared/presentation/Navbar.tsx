@@ -68,6 +68,11 @@ function Navbar() {
               <li>
                 <NavLink to="/about">Kontakt</NavLink>
               </li>
+              {isAdmin ? (
+                <li>
+                  <NavLink to="/dashboard/property/create">Skapa fastighet</NavLink>
+                </li>
+              ) : null}
             </ul>
           </nav>
         </section>

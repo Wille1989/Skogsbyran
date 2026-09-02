@@ -1,5 +1,6 @@
 export type LocationPoiDraft = {
   uiId: string;
+  id?: string;
   name: string;
   description: string;
   latitude: number;
@@ -28,12 +29,15 @@ export type PropertyLocationPayload = {
   longitude: number | null;
   googlePlaceId: string;
   pois: Array<{
+    id?: string;
     name: string;
     description: string;
     latitude: number;
     longitude: number;
   }>;
 };
+
+export type PropertyLocationResponse = PropertyLocationPayload;
 
 export const createDefaultLocationDraft = (): PropertyLocationDraft => ({
   address: "",
@@ -74,6 +78,7 @@ export function buildLocationPayload(draft: PropertyLocationDraft): PropertyLoca
     pois: draft.pois
       .filter((poi) => poi.name.trim() !== "")
       .map((poi) => ({
+        id: poi.id,
         name: poi.name.trim(),
         description: poi.description.trim(),
         latitude: poi.latitude,

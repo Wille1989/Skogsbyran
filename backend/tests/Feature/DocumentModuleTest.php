@@ -74,6 +74,57 @@ final class DocumentModuleTest extends TestCase
         ]);
     }
 
+    public function test_it_updates_document_title_without_replacing_the_file(): void
+    {
+        Storage::fake(ObjectStorage::DOCUMENTS_DISK);
+        Storage::disk(ObjectStorage::DOCUMENTS_DISK)->buildTemporaryUrlsUsing(
+            fn (string $path): string => 'https://temporary-documents.test/'.$path
+        );
+        Sanctum::actingAs(User::factory()->create(['admin' => true]), ['admin']);
+
+        $property = Property::query()->create([
+            'title' => 'Document rename property',
+            'caption' => 'Rename only',
+        ]);
+
+        $createResponse = $this->post('/property/'.$property->id.'/documents', [
+            'title' => 'Gammalt namn',
+            'document' => UploadedFile::fake()->create(
+                'original.pdf',
+                256,
+                'application/pdf'
+            ),
+        ]);
+
+        $documentId = (int) $createResponse->json('documentId');
+        $storageKey = (string) DB::table('document_variants')
+            ->where('document_id', $documentId)
+            ->where('variant', 'original')
+            ->value('storage_key');
+
+        $this->putJson('/property/'.$property->id.'/documents/'.$documentId, [
+            'title' => 'Nytt namn',
+        ])
+            ->assertOk()
+            ->assertJsonPath('documentId', (string) $documentId)
+            ->assertJsonPath('title', 'Nytt namn')
+            ->assertJsonPath('originalName', 'original.pdf');
+
+        $this->assertDatabaseHas('documents', [
+            'id' => $documentId,
+            'name' => 'Nytt namn',
+        ]);
+        $this->assertDatabaseHas('property_documents', [
+            'property_id' => $property->id,
+            'document_id' => $documentId,
+            'title' => 'Nytt namn',
+        ]);
+        $this->assertDatabaseHas('document_variants', [
+            'document_id' => $documentId,
+            'storage_key' => $storageKey,
+        ]);
+    }
+
     public function test_it_uploads_and_replaces_documents_through_normalized_tables(): void
     {
         Storage::fake(ObjectStorage::DOCUMENTS_DISK);

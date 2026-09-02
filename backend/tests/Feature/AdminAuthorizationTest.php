@@ -48,4 +48,21 @@ final class AdminAuthorizationTest extends TestCase
         $this->deleteJson('/property/'.$property->id)
             ->assertNoContent();
     }
+
+    public function test_admin_routes_allow_real_admin_bearer_tokens(): void
+    {
+        $user = User::factory()->create([
+            'admin' => true,
+        ]);
+
+        $property = Property::query()->create([
+            'title' => 'Protected property',
+        ]);
+
+        $token = $user->createToken('skogsbyran-admin', ['admin'])->plainTextToken;
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/property/'.$property->id)
+            ->assertNoContent();
+    }
 }

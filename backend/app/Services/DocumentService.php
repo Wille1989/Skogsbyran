@@ -95,9 +95,32 @@ final class DocumentService
             $document
         );
 
-        $file = $validated['file'];
         $propertyDocument = $this->freshPropertyDocument($property, $document);
         $type = $validated['type'] ?? $this->legacyType($propertyDocument);
+
+        if (!isset($validated['file'])) {
+            $title = $this->resolveTitleWithoutFile(
+                $type,
+                $validated['title'] ?? null,
+                $propertyDocument
+            );
+
+            DB::transaction(function () use ($property, $document, $type, $title): void {
+                $document->fill([
+                    'name' => $title,
+                ])->save();
+
+                $property->documents()->updateExistingPivot($document->id, [
+                    'type' => $type,
+                    'title' => $title,
+                    'sort_order' => $this->sortOrder($property, $type),
+                ]);
+            });
+
+            return $this->freshPropertyDocument($property, $document);
+        }
+
+        $file = $validated['file'];
         $title = $this->resolveTitle($type, $validated['title'] ?? null, $file);
 
         $upload = $this->storageService->upload(
@@ -208,6 +231,19 @@ final class DocumentService
             Document::TYPE_PROSPECT => 'Prospekt',
             Document::TYPE_PROPERTY_MAP => 'Fastighetskarta',
             default => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) ?: 'Dokument',
+        };
+    }
+
+    private function resolveTitleWithoutFile(?string $type, mixed $title, Document $document): string {
+        if (is_string($title) && trim($title) !== '') {
+            return trim($title);
+        }
+
+        return match ($type) {
+            Document::TYPE_BID_FORM => 'Anbudsblankett',
+            Document::TYPE_PROSPECT => 'Prospekt',
+            Document::TYPE_PROPERTY_MAP => 'Fastighetskarta',
+            default => $document->name,
         };
     }
 
