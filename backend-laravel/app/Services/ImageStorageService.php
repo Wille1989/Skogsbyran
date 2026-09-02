@@ -34,6 +34,7 @@ final class ImageStorageService
     public function delete(array $storageKeys): void
     {
         $this->objectStorage->delete(
+            ObjectStorage::IMAGES_DISK,
             array_values($storageKeys)
         );
     }
@@ -61,6 +62,7 @@ final class ImageStorageService
 
                 try {
                     $this->objectStorage->putStream(
+                        ObjectStorage::IMAGES_DISK,
                         $storageKey,
                         $stream
                     );
@@ -142,7 +144,7 @@ final class ImageStorageService
     {
         foreach ($storageKeys as $storageKey) {
             try {
-                $this->objectStorage->delete((string) $storageKey);
+                $this->objectStorage->delete(ObjectStorage::IMAGES_DISK, (string) $storageKey);
             } catch (Throwable) {
                 // Cleanup failure must not hide original exception.
             }

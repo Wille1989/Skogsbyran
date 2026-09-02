@@ -47,6 +47,7 @@ final class DocumentStorageService
             ?: 'application/pdf';
 
         $this->objectStorage->putContents(
+            ObjectStorage::DOCUMENTS_DISK,
             $storageKey,
             $contents
         );
@@ -64,6 +65,7 @@ final class DocumentStorageService
 
     public function delete(string $storageKey): void {
         $this->objectStorage->delete(
+            ObjectStorage::DOCUMENTS_DISK,
             $storageKey
         );
     }

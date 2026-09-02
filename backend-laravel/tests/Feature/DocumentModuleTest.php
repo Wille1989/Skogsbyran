@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Infrastructure\Storage\ObjectStorage;
 use App\Models\User;
 use App\Modules\Document\Models\Document;
 use App\Modules\Property\Models\Property;
@@ -20,7 +21,10 @@ final class DocumentModuleTest extends TestCase
 
     public function test_it_uploads_and_replaces_documents_through_normalized_tables(): void
     {
-        Storage::fake('public');
+        Storage::fake(ObjectStorage::DOCUMENTS_DISK);
+        Storage::disk(ObjectStorage::DOCUMENTS_DISK)->buildTemporaryUrlsUsing(
+            fn (string $path): string => 'https://temporary-documents.test/'.$path
+        );
         Sanctum::actingAs(User::factory()->create(['admin' => true]), ['admin']);
 
         $property = Property::query()->create([
@@ -51,7 +55,7 @@ final class DocumentModuleTest extends TestCase
             ->where('variant', 'original')
             ->value('storage_key');
 
-        Storage::disk('public')->assertExists($firstStorageKey);
+        Storage::disk(ObjectStorage::DOCUMENTS_DISK)->assertExists($firstStorageKey);
 
         $this->assertDatabaseHas('property_documents', [
             'property_id' => $property->id,
@@ -86,7 +90,7 @@ final class DocumentModuleTest extends TestCase
         $this->assertDatabaseCount('property_documents', 1);
         $this->assertDatabaseCount('document_variants', 1);
 
-        Storage::disk('public')->assertMissing($firstStorageKey);
-        Storage::disk('public')->assertExists($secondStorageKey);
+        Storage::disk(ObjectStorage::DOCUMENTS_DISK)->assertMissing($firstStorageKey);
+        Storage::disk(ObjectStorage::DOCUMENTS_DISK)->assertExists($secondStorageKey);
     }
 }

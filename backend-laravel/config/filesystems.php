@@ -1,5 +1,37 @@
 <?php
 
+$backblazeEndpoint = static function (?string $endpoint): ?string {
+    if ($endpoint === null || $endpoint === '') {
+        return null;
+    }
+
+    if (! str_starts_with($endpoint, 'http://') && ! str_starts_with($endpoint, 'https://')) {
+        return 'https://'.$endpoint;
+    }
+
+    return $endpoint;
+};
+
+$backblazeRegionFromEndpoint = static function (?string $endpoint) use ($backblazeEndpoint): ?string {
+    $endpoint = $backblazeEndpoint($endpoint);
+
+    if ($endpoint === null) {
+        return null;
+    }
+
+    $host = parse_url($endpoint, PHP_URL_HOST);
+
+    if (! is_string($host)) {
+        return null;
+    }
+
+    if (preg_match('/(?:^|\.)s3\.([a-z0-9-]+)\.backblazeb2\.com$/', $host, $matches) === 1) {
+        return $matches[1];
+    }
+
+    return null;
+};
+
 return [
 
     /*
@@ -14,8 +46,6 @@ return [
     */
 
     'default' => env('FILESYSTEM_DISK', 'local'),
-
-    'object_storage_disk' => env('OBJECT_STORAGE_DISK', 'public'),
 
     /*
     |--------------------------------------------------------------------------
@@ -59,6 +89,32 @@ return [
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
+            'report' => false,
+        ],
+
+        'images' => [
+            'driver' => 's3',
+            'key' => env('B2_ACCESS_KEY_ID'),
+            'secret' => env('B2_SECRET_ACCESS_KEY'),
+            'region' => env('B2_REGION', $backblazeRegionFromEndpoint(env('B2_IMAGES_ENDPOINT'))),
+            'bucket' => env('B2_IMAGES_BUCKET'),
+            'endpoint' => $backblazeEndpoint(env('B2_IMAGES_ENDPOINT')),
+            'use_path_style_endpoint' => env('B2_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
+        'documents' => [
+            'driver' => 's3',
+            'key' => env('B2_ACCESS_KEY_ID'),
+            'secret' => env('B2_SECRET_ACCESS_KEY'),
+            'region' => env('B2_REGION', $backblazeRegionFromEndpoint(env('B2_DOCUMENTS_ENDPOINT'))),
+            'bucket' => env('B2_DOCUMENTS_BUCKET'),
+            'endpoint' => $backblazeEndpoint(env('B2_DOCUMENTS_ENDPOINT')),
+            'use_path_style_endpoint' => env('B2_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
+            'throw' => true,
             'report' => false,
         ],
 

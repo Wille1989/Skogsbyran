@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Infrastructure\Storage\ObjectStorage;
 use App\Models\User;
 use App\Modules\Property\Models\Property;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,7 +20,10 @@ final class ImageModuleTest extends TestCase
 
     public function test_it_uploads_images_into_normalized_image_tables(): void
     {
-        Storage::fake('public');
+        Storage::fake(ObjectStorage::IMAGES_DISK);
+        Storage::disk(ObjectStorage::IMAGES_DISK)->buildTemporaryUrlsUsing(
+            fn (string $path): string => 'https://temporary-images.test/'.$path
+        );
         Sanctum::actingAs(User::factory()->create(['admin' => true]), ['admin']);
 
         $property = Property::query()->create([
@@ -87,7 +91,7 @@ final class ImageModuleTest extends TestCase
             ->all();
 
         foreach ($storageKeys as $storageKey) {
-            Storage::disk('public')->assertExists($storageKey);
+            Storage::disk(ObjectStorage::IMAGES_DISK)->assertExists($storageKey);
         }
     }
 }

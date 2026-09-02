@@ -15,6 +15,8 @@ use Illuminate\Support\Collection;
 
 final class PropertyPresenter
 {
+    private const TEMPORARY_URL_MINUTES = 60;
+
     public function __construct(
         private readonly ObjectStorage $objectStorage,
     ) {
@@ -131,8 +133,10 @@ final class PropertyPresenter
         $urls = [];
 
         foreach ($image->variants as $variant) {
-            $urls[$variant->variant->value] = $this->objectStorage->url(
-                $variant->storage_key
+            $urls[$variant->variant->value] = $this->objectStorage->temporaryUrl(
+                ObjectStorage::IMAGES_DISK,
+                $variant->storage_key,
+                now()->addMinutes(self::TEMPORARY_URL_MINUTES)
             );
         }
 
@@ -161,7 +165,11 @@ final class PropertyPresenter
             'documentId' => (string) $document->id,
             'type' => $pivot?->type ?? 'document',
             'title' => $pivot?->title ?? $document->name,
-            'url' => $variant ? $this->objectStorage->url($variant->storage_key) : '',
+            'url' => $variant ? $this->objectStorage->temporaryUrl(
+                ObjectStorage::DOCUMENTS_DISK,
+                $variant->storage_key,
+                now()->addMinutes(self::TEMPORARY_URL_MINUTES)
+            ) : '',
             'originalName' => $document->original_filename,
             'mimeType' => $document->mime_type,
             'sizeBytes' => $variant?->file_size ?? 0,
