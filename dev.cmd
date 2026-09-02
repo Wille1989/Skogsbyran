@@ -23,8 +23,6 @@ if not exist "%ROOT%frontend\package.json" (
 start "Skogsbyran Backend" powershell -NoExit -Command "Set-Location '%ROOT%backend'; & '%PHP_EXE%' artisan serve --host=127.0.0.1 --port=8020"
 start "Skogsbyran Frontend" powershell -NoExit -Command "Set-Location '%ROOT%frontend'; npm.cmd run dev"
 
-echo Backend och frontend startas nu i varsitt fonster.
-echo Kor detta fran projektroten med:
-echo .\dev.cmd
+echo Backend and Frontend is now running!
 
 endlocal
