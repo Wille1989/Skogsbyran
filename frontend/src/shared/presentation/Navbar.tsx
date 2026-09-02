@@ -16,7 +16,13 @@ function Navbar() {
   };
 
   return (
-    <header className="site-header">
+    <header className={`site-header ${isAdmin ? "has-admin-session-banner" : ""}`}>
+      {isAdmin ? (
+        <div className="admin-session-banner" role="status">
+          Du är inloggad som admin
+        </div>
+      ) : null}
+
       <div className="inner-header">
         <div className="header-logo">
           <NavLink to="/" end className="site-brand" aria-label="Gå till startsidan">
@@ -27,7 +33,7 @@ function Navbar() {
 
         {!isLoggedIn ? (
           <NavLink to="/login" className="nav-button" aria-label="Logga in som admin">
-            <span aria-hidden="true">•••</span>
+            Logga in
           </NavLink>
         ) : (
           <button
@@ -36,7 +42,7 @@ function Navbar() {
             onClick={handleLogOutClick}
             aria-label={isAdmin ? "Logga ut som admin" : "Logga ut"}
           >
-            <span aria-hidden="true">•••</span>
+            Logga ut
           </button>
         )}
 
