@@ -2,25 +2,35 @@
 .pending-documents-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .pending-document-card {
   display: grid;
   grid-template-columns: minmax(220px, 1fr) minmax(180px, 0.8fr) auto;
-  gap: 12px;
+  gap: 18px;
   align-items: end;
-  padding: 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.82);
+  padding: 18px;
+  border: 1px solid rgba(137, 163, 96, 0.42);
+  border-radius: 4px;
+  background: rgba(255, 255, 250, 0.58);
 }
 
 .pending-document-card span {
-  color: var(--muted);
+  color: #143d32;
+  font-size: 0.92rem;
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.pending-documents .button-danger {
+  background: #6f3028;
+}
+
+.pending-documents .button-danger:hover {
+  background: #5d2923;
 }
 
 @media (max-width: 760px) {

@@ -70,7 +70,7 @@ export function CreatePage() {
           <LocationEditor value={location} onChange={setLocation} />
         </section>
 
-        <section className="property-areas">
+        <section className="property-areas area-form-card">
           <div className="create-section-copy">
             <strong>Områden</strong>
             <p>Skapa ett eller flera fristående områden. Varje område sparas först när hela fastigheten sparas.</p>

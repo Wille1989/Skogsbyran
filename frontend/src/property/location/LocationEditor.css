@@ -3,7 +3,11 @@
 .poi-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+}
+
+.location-editor {
+  padding: clamp(24px, 4vw, 44px);
 }
 
 .create-section-copy {
@@ -20,7 +24,7 @@
 .location-grid {
   display: grid;
   grid-template-columns: minmax(280px, 0.8fr) minmax(320px, 1.2fr);
-  gap: 20px;
+  gap: 18px;
 }
 
 .location-field-row {
@@ -37,16 +41,53 @@
 .location-map {
   min-height: 360px;
   width: 100%;
-  border: 1px solid rgba(20, 83, 45, 0.15);
-  border-radius: 20px;
+  border: 1.5px solid #8faa66;
+  border-radius: 28px;
+  background: rgba(255, 255, 250, 0.62);
   overflow: hidden;
 }
 
 .poi-card {
-  padding: 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.82);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid rgba(137, 163, 96, 0.42);
+  border-radius: 4px;
+  background: rgba(255, 255, 250, 0.58);
+}
+
+.location-editor .button {
+  border: 0;
+  border-radius: 999px;
+  background: #4b3f2d;
+  color: #fffaf1;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  padding: 15px 34px;
+  transition: background-color 0.16s ease, transform 0.16s ease;
+}
+
+.location-editor .button:hover {
+  background: #3d3325;
+  color: #fffaf1;
+  transform: translateY(-1px);
+}
+
+.location-editor .button:focus-visible {
+  outline: 3px solid rgba(143, 170, 102, 0.36);
+  outline-offset: 4px;
+}
+
+.location-editor .button-danger {
+  background: #6f3028;
+}
+
+.location-editor .button-danger:hover {
+  background: #5d2923;
 }
 
 @media (max-width: 860px) {

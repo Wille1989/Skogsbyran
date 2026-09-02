@@ -200,7 +200,7 @@ export function LocationEditor({ value, onChange }: LocationEditorProps) {
   };
 
   return (
-    <section className="location-editor">
+    <section className="location-editor form">
       <div className="create-section-copy">
         <strong>Plats och närliggande punkter</strong>
         <p>Sök adressen via Google Places. Klicka sedan i kartan för att lägga till POIs som skola, badplats eller väganslutning.</p>

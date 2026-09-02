@@ -4,18 +4,6 @@
   gap: 24px;
 }
 
-.property-details,
-.property-images,
-.property-location,
-.property-areas,
-.property-documents-create {
-  padding: clamp(20px, 3vw, 32px);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
-}
-
 .property-areas,
 .create-area-list,
 .create-area-card {
@@ -26,9 +14,9 @@
 
 .create-area-card {
   padding: 18px;
-  border-radius: 18px;
-  background: rgba(240, 253, 244, 0.72);
-  border: 1px solid rgba(20, 83, 45, 0.12);
+  border: 1px solid rgba(137, 163, 96, 0.42);
+  border-radius: 4px;
+  background: rgba(255, 255, 250, 0.58);
 }
 
 .create-area-card-header {
@@ -41,6 +29,39 @@
 .form-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.property-areas .button {
+  border: 0;
+  border-radius: 999px;
+  background: #4b3f2d;
+  color: #fffaf1;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  padding: 15px 34px;
+  transition: background-color 0.16s ease, transform 0.16s ease;
+}
+
+.property-areas .button:hover {
+  background: #3d3325;
+  color: #fffaf1;
+  transform: translateY(-1px);
+}
+
+.property-areas .button:focus-visible {
+  outline: 3px solid rgba(143, 170, 102, 0.36);
+  outline-offset: 4px;
+}
+
+.property-areas .button-danger {
+  background: #6f3028;
+}
+
+.property-areas .button-danger:hover {
+  background: #5d2923;
 }
 
 @media (max-width: 700px) {

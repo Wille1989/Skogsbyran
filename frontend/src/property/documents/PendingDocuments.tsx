@@ -56,7 +56,7 @@ export function PendingDocuments({ documents, onChange }: PendingDocumentsProps)
   };
 
   return (
-    <section className="pending-documents">
+    <section className="pending-documents document-form">
       <div className="create-section-copy">
         <strong>Dokument</strong>
         <p>Lägg till en eller flera PDF:er. De laddas upp först när fastigheten sparas.</p>
