@@ -1,14 +1,10 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../../user/data/auth.hooks";
-import { getStoredAuthSession, isAdminSession, isAuthenticated } from "../../user/data/authSession";
+import { useAuth } from "@/modules/auth/data/auth.hooks";
 import "./navbar.css";
 
 function Navbar() {
-  const { onLogout } = useAuth();
+  const { isAuthenticated, isAdmin, onLogout } = useAuth();
   const navigate = useNavigate();
-  const session = getStoredAuthSession();
-  const isLoggedIn = isAuthenticated(session);
-  const isAdmin = isAdminSession(session);
 
   const handleLogOutClick = () => {
     onLogout();
@@ -31,7 +27,7 @@ function Navbar() {
           </NavLink>
         </div>
 
-        {!isLoggedIn ? (
+        {!isAuthenticated ? (
           <NavLink to="/login" className="nav-button" aria-label="Logga in som admin">
             Logga in
           </NavLink>

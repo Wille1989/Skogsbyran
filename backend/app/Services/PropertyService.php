@@ -25,12 +25,8 @@ final class PropertyService
         $properties = Property::query()
             ->with([
                 'images.metadata',
-                'images.adjustment',
                 'images.variants',
-                'documents.variants',
-                'areas.location',
-                'areas.points',
-                'location.pois',
+                'location',
             ])
             ->where('is_visible', true)
             ->orderByDesc('id')

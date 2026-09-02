@@ -32,9 +32,43 @@ final class PropertyPresenter
     {
         return [
             'properties' => $properties
-                ->map(fn (Property $property): array => $this->property($property))
+                ->map(fn (Property $property): array => $this->listingProperty($property))
                 ->values()
                 ->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function listingProperty(Property $property): array
+    {
+        $property->loadMissing([
+            'images.metadata',
+            'images.variants',
+            'location',
+        ]);
+
+        $primaryImage = $property->images->firstWhere('is_primary', true)
+            ?? $property->images->first();
+
+        return [
+            'propertyId' => (string) $property->id,
+            'details' => [
+                'title' => $property->title,
+                'caption' => $property->caption ?? '',
+                'price' => (string) ($property->price_whole_units ?? $property->price ?? ''),
+                'size' => (string) ($property->size_hectares ?? $property->size ?? ''),
+                'slug' => $property->slug ?? '',
+                'listingStatus' => $property->listing_status?->value ?? 'available',
+                'isVisible' => $property->is_visible ?? true,
+            ],
+            'primaryImage' => $primaryImage instanceof Image
+                ? $this->listingImage($primaryImage)
+                : null,
+            'location' => $property->location instanceof Location
+                ? $this->listingLocation($property->location)
+                : null,
         ];
     }
 
@@ -116,6 +150,17 @@ final class PropertyPresenter
     }
 
     /**
+     * @return array<string, string>
+     */
+    private function listingLocation(Location $location): array
+    {
+        return [
+            'city' => $location->city ?? '',
+            'municipality' => $location->municipality ?? '',
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function poi(PointOfInterest $poi): array
@@ -165,6 +210,36 @@ final class PropertyPresenter
             ],
             'createdAt' => $image->created_at?->toISOString(),
             'updatedAt' => $image->updated_at?->toISOString(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function listingImage(Image $image): array
+    {
+        $image->loadMissing(['metadata', 'variants']);
+
+        $metadata = $image->metadata;
+        $urls = $this->imageVariantUrls($image);
+        $fallbackUrl = $urls[ImageVariantName::Medium->value]
+            ?? $urls[ImageVariantName::Large->value]
+            ?? $urls[ImageVariantName::Thumb->value]
+            ?? '';
+
+        return [
+            'imageId' => (string) $image->id,
+            'urls' => [
+                'thumbnail' => $urls[ImageVariantName::Thumb->value] ?? $fallbackUrl,
+                'medium' => $urls[ImageVariantName::Medium->value] ?? $fallbackUrl,
+                'large' => $urls[ImageVariantName::Large->value] ?? $fallbackUrl,
+            ],
+            'position' => $image->sort_order,
+            'isPrimary' => $image->is_primary,
+            'details' => [
+                'caption' => $metadata?->caption ?? '',
+                'altText' => $metadata?->alt_text ?? '',
+            ],
         ];
     }
 
