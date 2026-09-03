@@ -6,6 +6,8 @@ import {
   listingStatusLabels,
   locationLabel,
 } from "./propertyListing";
+import "./PropertyCard.css";
+import { IconPencil } from "@tabler/icons-react";
 
 type PropertyCardProps = {
   property: PropertyListingItem;
@@ -32,7 +34,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           className="edit"
           aria-label={`Redigera ${property.details.title}`}
         >
-          Redigera
+          <IconPencil size={20} stroke={1.5} />
         </Link>
       ) : null}
 

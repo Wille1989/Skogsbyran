@@ -1,35 +1,18 @@
 .property-card {
+  display: flex;
   position: relative;
+  padding: 10px;
+  border-color: #3d3325;
+  border: 10px solid black;
+  border-radius: 10px;
+  max-width: 1200px;
 
   .edit {
     position: absolute;
     top: 18px;
     left: 18px;
     z-index: 1;
-
-    min-height: 38px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 0 16px;
-
-    border: 1px solid rgba(255, 250, 241, 0.62);
-    border-radius: 999px;
-
-    background: rgba(75, 63, 45, 0.92);
-    color: #fffaf1;
-
-    font-size: 0.86rem;
-    font-weight: 800;
-    line-height: 1;
-
-    box-shadow: 0 12px 26px rgba(8, 20, 13, 0.16);
-
-    transition:
-      background-color 0.16s ease,
-      transform 0.16s ease;
-
+/*
     &:hover,
     &:focus-visible {
       background: #3d3325;
@@ -41,19 +24,16 @@
       outline: 3px solid rgba(255, 250, 241, 0.5);
       outline-offset: 4px;
     }
+      */
   }
 
   .card-link {
     display: grid;
-    grid-template-rows: minmax(280px, 46vw) auto;
+    grid-template-rows: minmax(180px, 26vw) auto;
+    width: 100%;
+    background-color: blanchedalmond;
 
     overflow: hidden;
-
-    border: 1px solid var(--border-soft);
-
-    background: var(--surface);
-    box-shadow: var(--shadow-soft);
-    color: inherit;
 
     transition:
       transform 0.22s ease,
