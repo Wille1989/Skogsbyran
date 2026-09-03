@@ -1,0 +1,41 @@
+.property-card {
+    .edit {
+
+    }
+
+    .card-link {
+        .image-frame {
+            img {
+
+            }
+        }
+
+        .body {
+            .status {
+
+            }
+
+            .heading {
+                h3 {
+
+                }
+
+                .price {
+
+                }
+            }
+
+            .meta {
+
+            }
+
+            .caption {
+
+            }
+
+            .cta {
+
+            }
+        }
+    }
+}

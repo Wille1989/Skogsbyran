@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { PropertyListingItem } from "@/modules/property/data/types";
+import { type PropertyListingItem } from "@/modules/property/data/types";
 import { useCurrentUserQuery } from "@/modules/auth/data/auth.hooks";
 import {
   formatPrice,
@@ -25,11 +25,11 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const isAdmin = currentUser?.isAdmin ?? false;
 
   return (
-    <article className="property-listing-card-shell">
+    <article className="property-card">
       {isAdmin ? (
         <Link
           to={`/dashboard/property/edit/${property.propertyId}`}
-          className="property-listing-card-edit"
+          className="edit"
           aria-label={`Redigera ${property.details.title}`}
         >
           Redigera
@@ -38,13 +38,12 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
       <Link
         to={`/property/${property.propertyId}`}
-        className="property-listing-card"
+        className="card-link"
         aria-label={`Visa ${property.details.title}`}
       >
         {primaryImage ? (
-          <div className="property-listing-card-image-frame">
+          <div className="image-frame">
             <img
-              className="property-listing-card-image"
               src={primaryImage.urls.large || primaryImage.urls.medium}
               alt={primaryImage.details.altText || property.details.title}
               loading="lazy"
@@ -53,30 +52,30 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </div>
         ) : null}
 
-        <div className="property-listing-card-body">
-          <span className="property-listing-card-status">
+        <div className="body">
+          <span className="status">
             {listingStatusLabels[property.details.listingStatus]}
           </span>
 
-          <div className="property-listing-card-heading">
+          <div className="heading">
             <h3>{property.details.title}</h3>
 
             {property.details.price ? (
-              <span className="property-listing-card-price">
+              <span className="price">
                 {formatPrice(property.details.price)}
               </span>
             ) : null}
           </div>
 
-          {meta ? <p className="property-listing-card-meta">{meta}</p> : null}
+          {meta ? <p className="meta">{meta}</p> : null}
 
           {property.details.caption ? (
-            <p className="property-listing-card-caption">
+            <p className="caption">
               {property.details.caption}
             </p>
           ) : null}
 
-          <span className="property-listing-card-cta">Visa fastighet →</span>
+          <span className="cta">Visa fastighet →</span>
         </div>
       </Link>
     </article>
