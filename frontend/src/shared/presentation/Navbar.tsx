@@ -22,14 +22,13 @@ function Navbar() {
       <div className="inner-header">
         <div className="header-logo">
           <NavLink to="/" end className="site-brand" aria-label="Gå till startsidan">
-            <h1 className="site-brand-mark">Skogsbyrån</h1>
-            <span className="site-brand-subtitle">Skog, mark och hållbara affärer</span>
+            <h1 id="site-header-title">Skogsbyrån</h1>
           </NavLink>
         </div>
 
         {!isAuthenticated ? (
           <NavLink to="/login" className="nav-button" aria-label="Logga in som admin">
-            Logga in
+            ...
           </NavLink>
         ) : (
           <button
@@ -43,16 +42,7 @@ function Navbar() {
         )}
 
         <section aria-labelledby="site-header-title">
-          <h2 id="site-header-title">Vi är Skogsbyrån.</h2>
-          <p>
-            Fastighetsförmedling och rådgivning för skog, mark och gårdar.
-            Med fötterna stadigt i myllan.
-          </p>
-          <p>
-            Vi hjälper dig att hitta rätt väg genom köp, försäljning och
-            långsiktigt ägande av naturens värden.
-          </p>
-
+          
           <nav className="navigation-bar" aria-label="Huvudmeny">
             <ul className="navigation-bar-list">
               <li>
