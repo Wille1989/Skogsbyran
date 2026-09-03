@@ -1,41 +1,228 @@
 .property-card {
-    .edit {
+  position: relative;
 
+  .edit {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    z-index: 1;
+
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 16px;
+
+    border: 1px solid rgba(255, 250, 241, 0.62);
+    border-radius: 999px;
+
+    background: rgba(75, 63, 45, 0.92);
+    color: #fffaf1;
+
+    font-size: 0.86rem;
+    font-weight: 800;
+    line-height: 1;
+
+    box-shadow: 0 12px 26px rgba(8, 20, 13, 0.16);
+
+    transition:
+      background-color 0.16s ease,
+      transform 0.16s ease;
+
+    &:hover,
+    &:focus-visible {
+      background: #3d3325;
+      color: #fffaf1;
+      transform: translateY(-1px);
     }
 
+    &:focus-visible {
+      outline: 3px solid rgba(255, 250, 241, 0.5);
+      outline-offset: 4px;
+    }
+  }
+
+  .card-link {
+    display: grid;
+    grid-template-rows: minmax(280px, 46vw) auto;
+
+    overflow: hidden;
+
+    border: 1px solid var(--border-soft);
+
+    background: var(--surface);
+    box-shadow: var(--shadow-soft);
+    color: inherit;
+
+    transition:
+      transform 0.22s ease,
+      box-shadow 0.22s ease,
+      border-color 0.22s ease;
+
+    &:hover,
+    &:focus-visible {
+      color: inherit;
+      transform: translateY(-4px);
+
+      border-color: rgba(36, 59, 47, 0.22);
+      box-shadow: 0 30px 56px rgba(28, 33, 25, 0.12);
+
+      .image-frame {
+        img {
+          transform: scale(1.025);
+        }
+      }
+
+      .body {
+        .cta {
+          color: var(--accent);
+          transform: translateX(4px);
+        }
+      }
+    }
+
+    &:focus-visible {
+      outline: 3px solid rgba(36, 59, 47, 0.28);
+      outline-offset: 6px;
+    }
+
+    .image-frame {
+      position: relative;
+
+      min-height: 280px;
+      overflow: hidden;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(19, 48, 35, 0.18),
+          rgba(68, 87, 54, 0.08)
+        ),
+        var(--surface-strong);
+
+      img {
+        width: 100%;
+        height: 100%;
+        display: block;
+
+        object-fit: cover;
+
+        transition: transform 0.28s ease;
+      }
+    }
+
+    .body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+
+      padding: clamp(24px, 4vw, 44px);
+
+      .status {
+        width: fit-content;
+
+        padding: 8px 13px;
+        border-radius: 999px;
+
+        background: var(--forest-soft);
+        color: var(--forest-deep);
+
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        line-height: 1;
+
+        text-transform: uppercase;
+      }
+
+      .heading {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 24px;
+
+        h3 {
+          margin: 0;
+
+          color: var(--forest-deep);
+
+          font-size: clamp(2rem, 3.8vw, 3.35rem);
+        }
+
+        .price {
+          color: var(--forest-deep);
+
+          font-size: clamp(1rem, 1.7vw, 1.22rem);
+          font-weight: 800;
+          line-height: 1.15;
+
+          white-space: nowrap;
+        }
+      }
+
+      .meta,
+      .caption {
+        margin: 0;
+      }
+
+      .meta {
+        color: var(--accent);
+
+        font-size: 1rem;
+        font-weight: 800;
+      }
+
+      .caption {
+        max-width: 72ch;
+        display: -webkit-box;
+        overflow: hidden;
+
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+      }
+
+      .cta {
+        align-self: flex-end;
+
+        color: var(--forest-deep);
+        font-weight: 800;
+
+        transition:
+          color 0.16s ease,
+          transform 0.16s ease;
+      }
+    }
+  }
+}
+
+@media (min-width: 1180px) {
+  .property-card {
     .card-link {
-        .image-frame {
-            img {
-
-            }
-        }
-
-        .body {
-            .status {
-
-            }
-
-            .heading {
-                h3 {
-
-                }
-
-                .price {
-
-                }
-            }
-
-            .meta {
-
-            }
-
-            .caption {
-
-            }
-
-            .cta {
-
-            }
-        }
+      grid-template-rows: minmax(420px, 48vw) auto;
     }
+  }
+}
+
+@media (max-width: 768px) {
+  .property-card {
+    .card-link {
+      grid-template-rows: minmax(220px, 58vw) auto;
+
+      .image-frame {
+        min-height: 220px;
+      }
+
+      .body {
+        .heading {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+
+        .cta {
+          align-self: flex-start;
+        }
+      }
+    }
+  }
 }
