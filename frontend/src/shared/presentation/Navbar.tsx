@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { IconChevronDown } from "@tabler/icons-react";
 import { useAuth } from "@/modules/auth/data/auth.hooks";
-import "./navbar.css";
+import "./Navbar.css";
 
 function Navbar() {
   const { isAuthenticated, isAdmin, onLogout } = useAuth();

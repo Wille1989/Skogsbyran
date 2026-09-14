@@ -1,5 +1,5 @@
 import { IconTrees, IconUserHeart, IconShieldCheck, IconPlant } from '@tabler/icons-react';
-import './footer.css';
+import './Footer.css';
 
 function Footer() {
   return (
