@@ -52,6 +52,9 @@ function Navbar() {
                 <NavLink to="/sale">Sälja med Skogsbyrån</NavLink>
               </li>
               <li>
+                <NavLink to="/om-oss">Om oss</NavLink>
+              </li>
+              <li>
                 <NavLink to="/about">Kontakt</NavLink>
               </li>
               {isAdmin ? (

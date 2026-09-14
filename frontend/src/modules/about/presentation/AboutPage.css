@@ -1,0 +1,23 @@
+.about-page {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 96px) 0;
+}
+
+.about-page h1 {
+  margin-bottom: clamp(28px, 5vw, 56px);
+  color: var(--forest-deep);
+  font-size: clamp(2.4rem, 5vw, 4.5rem);
+}
+
+.about-page p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .about-page {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+}

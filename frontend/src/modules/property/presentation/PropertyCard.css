@@ -2,53 +2,47 @@
   display: flex;
   position: relative;
   padding: 10px;
-  border-color: #3d3325;
-  border: 10px solid black;
+  border: 2px solid #C5A15A;
   border-radius: 10px;
   max-width: 1200px;
+  max-height: 600px;
+  background: #24352F;
+  color: #F2EBDD;
 
   .edit {
     position: absolute;
     top: 18px;
     left: 18px;
     z-index: 1;
-/*
-    &:hover,
-    &:focus-visible {
-      background: #3d3325;
-      color: #fffaf1;
-      transform: translateY(-1px);
-    }
-
-    &:focus-visible {
-      outline: 3px solid rgba(255, 250, 241, 0.5);
-      outline-offset: 4px;
-    }
-      */
   }
 
   .card-link {
     display: grid;
     grid-template-rows: minmax(180px, 26vw) auto;
     width: 100%;
-    background-color: blanchedalmond;
 
     overflow: hidden;
 
-    transition:
-      transform 0.22s ease,
-      box-shadow 0.22s ease,
-      border-color 0.22s ease;
-
-    &:hover,
-    &:focus-visible {
-      color: inherit;
-      transform: translateY(-4px);
-
-      border-color: rgba(36, 59, 47, 0.22);
-      box-shadow: 0 30px 56px rgba(28, 33, 25, 0.12);
-
       .image-frame {
+        position: relative;
+        .status {
+          position: absolute;
+          z-index: 5;
+          padding: 8px 13px;
+          top: 18px;
+          left: 18px;
+          border-radius: 5px;
+          border: 2px solid #C5A15A;
+          background: #24352F;
+
+          color: #F2EBDD;
+          font-size: 1.5rem;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          line-height: 1;
+          text-transform: uppercase;
+        }
+
         img {
           transform: scale(1.025);
         }
@@ -95,26 +89,7 @@
     .body {
       display: flex;
       flex-direction: column;
-      gap: 14px;
 
-      padding: clamp(24px, 4vw, 44px);
-
-      .status {
-        width: fit-content;
-
-        padding: 8px 13px;
-        border-radius: 999px;
-
-        background: var(--forest-soft);
-        color: var(--forest-deep);
-
-        font-size: 0.75rem;
-        font-weight: 800;
-        letter-spacing: 0.12em;
-        line-height: 1;
-
-        text-transform: uppercase;
-      }
 
       .heading {
         display: grid;
@@ -125,13 +100,29 @@
         h3 {
           margin: 0;
 
-          color: var(--forest-deep);
-
+          color: #F2EBDD;
           font-size: clamp(2rem, 3.8vw, 3.35rem);
+          font-weight: 800;
+          letter-spacing: 0.15em;
+          line-height: 1;
+          text-transform: uppercase;
+
+          ::before,
+          ::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: rgba(143, 170, 102, 0.7);
+          }
         }
 
         .price {
-          color: var(--forest-deep);
+            color: #F2EBDD;
+          font-size: clamp(1rem, 3.8vw, 2.25rem);
+          font-weight: 800;
+          letter-spacing: 0.15em;
+          line-height: 1;
+          text-transform: uppercase;
 
           font-size: clamp(1rem, 1.7vw, 1.22rem);
           font-weight: 800;
@@ -147,7 +138,12 @@
       }
 
       .meta {
-        color: var(--accent);
+        color: #F2EBDD;
+        font-size: clamp(1rem, 3.8vw, 2.25rem);
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        line-height: 1;
+        text-transform: uppercase;
 
         font-size: 1rem;
         font-weight: 800;
@@ -160,6 +156,13 @@
 
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 3;
+
+        color: #F2EBDD;
+        font-size: clamp(1rem, 3.8vw, 2.25rem);
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        line-height: 1;
+        text-transform: uppercase;
       }
 
       .cta {
@@ -173,7 +176,6 @@
           transform 0.16s ease;
       }
     }
-  }
 }
 
 @media (min-width: 1180px) {

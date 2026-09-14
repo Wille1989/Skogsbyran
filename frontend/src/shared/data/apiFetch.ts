@@ -9,7 +9,7 @@ export async function apiFetch<T>(url: string, options: RequestInit = {} ): Prom
     let response: Response;
     const requestOptions: RequestInit = {
         ...options,
-        credentials: "include",
+        credentials: options.credentials ?? "include",
         headers: buildRequestHeaders(options),
     };
 

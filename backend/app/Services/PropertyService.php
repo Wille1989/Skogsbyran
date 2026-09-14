@@ -24,8 +24,7 @@ final class PropertyService
     {
         $properties = Property::query()
             ->with([
-                'images.metadata',
-                'images.variants',
+                'primaryImage.variants',
                 'location',
             ])
             ->where('is_visible', true)

@@ -16,6 +16,7 @@ import { lazy, Suspense } from 'react';
 import { AdminRoute } from "@/modules/auth/presentation/Middleware.tsx";
 import { IndexPage }  from "@/modules/property/presentation/IndexPage.tsx";
 import { ShowPage }   from "@/modules/property/presentation/ShowPage.tsx";
+import { AboutPage } from "@/modules/about/presentation/AboutPage.tsx";
 
 const AuthPage = lazy(() => import("@/modules/auth/presentation/Form.tsx").then((module) => ({ default: module.AuthPage })));
 const CreatePage = lazy(() => import("@/modules/property/presentation/CreatePage.tsx").then((module) => ({ default: module.CreatePage })));
@@ -36,6 +37,7 @@ function App() {
 
               {/* GUEST ROUTES */}
               <Route path="/" element={<IndexPage/>}/>
+              <Route path="/om-oss" element={<AboutPage/>}/>
               <Route path="/property/:propertyId" element={<ShowPage/>}/>
               <Route path="/login" element={<AuthPage/>}/>
             </Routes>

@@ -8,7 +8,8 @@ import { type CreatePropertyInput } from "./types";
 export function getById(propertyId: string): Promise<ResponseGetProperty> {
     return apiFetch<ResponseGetProperty>(`${baseURL}/property/${propertyId}`,
         {
-            method: "GET"
+            method: "GET",
+            credentials: "omit",
         }
     );
 }
@@ -16,7 +17,8 @@ export function getById(propertyId: string): Promise<ResponseGetProperty> {
 export function getAll(): Promise<ResponseGetProperties> {
     return apiFetch<ResponseGetProperties>(`${baseURL}/properties`,
         {
-            method: "GET"
+            method: "GET",
+            credentials: "omit",
         }
     );
 }

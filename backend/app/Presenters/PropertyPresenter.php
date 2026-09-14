@@ -43,14 +43,7 @@ final class PropertyPresenter
      */
     private function listingProperty(Property $property): array
     {
-        $property->loadMissing([
-            'images.metadata',
-            'images.variants',
-            'location',
-        ]);
-
-        $primaryImage = $property->images->firstWhere('is_primary', true)
-            ?? $property->images->first();
+        $primaryImage = $property->primaryImage;
 
         return [
             'propertyId' => (string) $property->id,
@@ -218,28 +211,14 @@ final class PropertyPresenter
      */
     private function listingImage(Image $image): array
     {
-        $image->loadMissing(['metadata', 'variants']);
-
-        $metadata = $image->metadata;
         $urls = $this->imageVariantUrls($image);
-        $fallbackUrl = $urls[ImageVariantName::Medium->value]
-            ?? $urls[ImageVariantName::Large->value]
-            ?? $urls[ImageVariantName::Thumb->value]
-            ?? '';
 
         return [
             'imageId' => (string) $image->id,
             'urls' => [
-                'thumbnail' => $urls[ImageVariantName::Thumb->value] ?? $fallbackUrl,
-                'medium' => $urls[ImageVariantName::Medium->value] ?? $fallbackUrl,
-                'large' => $urls[ImageVariantName::Large->value] ?? $fallbackUrl,
-            ],
-            'position' => $image->sort_order,
-            'isPrimary' => $image->is_primary,
-            'details' => [
-                'caption' => $metadata?->caption ?? '',
-                'altText' => $metadata?->alt_text ?? '',
-            ],
+
+                'large' => $urls[ImageVariantName::Large->value],
+            ]
         ];
     }
 

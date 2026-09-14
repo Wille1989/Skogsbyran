@@ -45,9 +45,13 @@ export function PropertyCard({ property }: PropertyCardProps) {
       >
         {primaryImage ? (
           <div className="image-frame">
+            <span className="status">
+              {listingStatusLabels[property.details.listingStatus]}
+            </span>
+
             <img
-              src={primaryImage.urls.large || primaryImage.urls.medium}
-              alt={primaryImage.details.altText || property.details.title}
+              src={primaryImage.urls.large}
+              alt={property.details.title}
               loading="lazy"
               decoding="async"
             />
@@ -55,10 +59,6 @@ export function PropertyCard({ property }: PropertyCardProps) {
         ) : null}
 
         <div className="body">
-          <span className="status">
-            {listingStatusLabels[property.details.listingStatus]}
-          </span>
-
           <div className="heading">
             <h3>{property.details.title}</h3>
 
@@ -70,12 +70,6 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </div>
 
           {meta ? <p className="meta">{meta}</p> : null}
-
-          {property.details.caption ? (
-            <p className="caption">
-              {property.details.caption}
-            </p>
-          ) : null}
 
           <span className="cta">Visa fastighet →</span>
         </div>
