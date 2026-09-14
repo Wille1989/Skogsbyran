@@ -3,7 +3,7 @@
  */
 import './App.css'
 import Layout from "@/shared/presentation/Layout.tsx";
-import "@/shared/presentation/spinner.css";
+import { LoadingSpinner } from "@/shared/presentation/LoadingSpinner.tsx";
 /**
  * REACT SPECIFIK
  */
@@ -29,7 +29,7 @@ function App() {
     <>
       <QueryClientProvider client={clientQuery}>
         <Layout>
-          <Suspense fallback={<div className="spinner" />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               {/* ADMIN ROUTES */}
               <Route path='/dashboard/property/create' element={<AdminRoute><CreatePage/></AdminRoute>}/>

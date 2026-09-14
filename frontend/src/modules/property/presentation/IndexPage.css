@@ -13,7 +13,7 @@
 .property-index { width: min(1200px, calc(100% - 48px)); margin: auto; padding: 40px 0 24px; scroll-margin-top: 24px; }
 .property-index h2 { margin: 0; font-size: clamp(2.6rem, 4.5vw, 3.6rem); line-height: 1.08; font-weight: 600; }
 .property-index-subtitle { margin: 4px 0 0; font: 500 1.75rem/1.2 var(--heading-font); color: var(--text); }
-.property-filters { display: flex; flex-wrap: wrap; gap: 14px; margin: 4px 0 14px; }
+.property-filters { display: flex; flex-wrap: wrap; gap: 14px; margin: 25px 0 15px; }
 .property-filters button { min-width: 144px; padding: 9px 22px; border: 1px solid var(--border-soft); border-radius: 999px; background: transparent; color: var(--text); font: inherit; font-size: 0.9rem; cursor: pointer; }
 .property-filters button[aria-pressed="true"] { background: var(--forest-900); color: var(--white-warm); border-color: var(--forest-900); }
 .property-filters button:disabled { opacity: 0.55; cursor: not-allowed; }

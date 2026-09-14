@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { ResponseProperty } from "@/modules/property/data/types";
-import "@/shared/presentation/spinner.css";
+import { LoadingSpinner } from "@/shared/presentation/LoadingSpinner.tsx";
 import { useSavePropertyChangesMutation } from "../data/editMutations";
 import {
   areaDraftsFromProperty,
@@ -57,7 +57,7 @@ export function EditPage() {
   }, [initializeImages, loadedPropertyId, property]);
 
   if (isPending) {
-    return <div className="spinner" />;
+    return <LoadingSpinner />;
   }
 
   if (error || !property) {

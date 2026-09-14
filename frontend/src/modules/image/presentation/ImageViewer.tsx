@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import { calculateImageIndex } from "../data/calculateIndex";
 import { ImageEditDialog } from "./ImageEditDialog";
 import type { ImageFile } from "../data/types";
+import { IconPhoto } from "@tabler/icons-react";
 
 type ImageViewerProps = {
       propertyId: string;
@@ -28,6 +29,7 @@ export function ImageViewer({
       const [isLightboxOpen, setIsLightboxOpen] = useState(false);
       const [editingImage, setEditingImage] = useState<ImageFile | null>(null);
       const closeButtonRef =useRef<HTMLButtonElement | null>(null);
+      const lightboxRef = useRef<HTMLDivElement | null>(null);
       const previousFocusRef = useRef<HTMLElement | null>(null);
       const safeActiveIndex = images.length > 0 ? Math.min(activeIndex, images.length - 1) : 0;
       const activeImage = images[safeActiveIndex] ?? null;
@@ -65,6 +67,18 @@ export function ImageViewer({
                   event: KeyboardEvent
             ): void => {
                   if (editingImage) return;
+                  if (event.key === "Tab") {
+                        const buttons = lightboxRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)');
+                        const first = buttons?.[0];
+                        const last = buttons?.[buttons.length - 1];
+                        if (event.shiftKey && document.activeElement === first) {
+                              event.preventDefault();
+                              last?.focus();
+                        } else if (!event.shiftKey && document.activeElement === last) {
+                              event.preventDefault();
+                              first?.focus();
+                        }
+                  }
                   
                   if (event.key === "Escape") {
                         setIsLightboxOpen(false);
@@ -166,6 +180,7 @@ export function ImageViewer({
                   >
                         <div
                               className="property-lightbox-dialog"
+                              ref={lightboxRef}
                               onClick={(event) =>
                                     event.stopPropagation()
                               }
@@ -284,7 +299,7 @@ export function ImageViewer({
                                                                         index
                                                                   )
                                                             }
-                                                            aria-label={`Visa bild ${index + 1
+                                                            aria-pressed={index === safeActiveIndex} aria-label={`Visa bild ${index + 1
                                                                   }`}
                                                       >
                                                             <img
@@ -328,7 +343,7 @@ export function ImageViewer({
                         >
                               <img
                                     className="property-viewer-preview-image"
-                                    src={activeImage.urls.medium}
+                                    src={activeImage.urls.large}
                                     alt={
                                           activeImage.details.altText ||
                                           propertyTitle
@@ -337,7 +352,7 @@ export function ImageViewer({
                               />
 
                               <span className="property-viewer-preview-label">
-                                    Visa större bild
+                                    <IconPhoto size={19} aria-hidden="true" /> Visa alla bilder
                               </span>
                         </button>
 
@@ -353,9 +368,10 @@ export function ImageViewer({
                                                             : ""
                                                       }`}
                                                 onClick={() =>
-                                                      openLightbox(index)
+                                                      selectImage(index)
                                                 }
-                                                aria-label={`Öppna bild ${index + 1
+                                                aria-pressed={index === safeActiveIndex}
+                                                aria-label={`Visa bild ${index + 1
                                                       }`}
                                           >
                                                 <img

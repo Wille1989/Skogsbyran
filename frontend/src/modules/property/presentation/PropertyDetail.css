@@ -1,0 +1,48 @@
+.detail-layout { --bg: var(--cream-100); --surface: var(--cream-50); --text: var(--text-primary); --muted: var(--text-secondary); background: var(--bg); color: var(--text); }
+.detail-layout .main-content { max-width: 1248px; }
+.property-detail-page { padding: 24px 0 40px; width: 100%; }
+.detail-pill { display: inline-flex; align-items: center; justify-content: center; gap: 14px; border: 1px solid var(--border-soft); border-radius: 999px; padding: 11px 22px; background: var(--sage-100); color: var(--forest-950); font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
+.detail-pill:hover { background: var(--sage-200); color: var(--forest-950); }
+.detail-heading h1 { margin: 20px 0 16px; font-size: clamp(3rem, 5.4vw, 4.6rem); line-height: 1.08; font-weight: 500; overflow-wrap: anywhere; }
+.detail-meta { display: flex; flex-wrap: wrap; gap: 22px 48px; margin-bottom: 26px; }
+.detail-meta > span { display: inline-flex; gap: 15px; align-items: center; font-size: .95rem; }
+.detail-meta svg { color: var(--forest-900); }
+.detail-gallery { position: relative; }
+.detail-status { position: absolute; left: 16px; top: 16px; z-index: 1; padding: 6px 16px; border-radius: 999px; background: var(--forest-950); color: var(--white-warm); font-size: .8rem; font-weight: 600; text-transform: uppercase; pointer-events: none; }
+.detail-gallery .property-viewer-preview { border: 1px solid var(--border-soft); border-radius: 6px; }
+.detail-gallery .property-viewer-preview-image { aspect-ratio: 3.15; max-height: none; object-fit: cover; }
+.detail-gallery .property-viewer-preview-label { display: inline-flex; align-items: center; gap: 10px; border: 1px solid var(--sage-200); border-radius: 999px; background: var(--forest-950); }
+.detail-gallery .property-viewer-thumbnails { display: flex; gap: 12px; overflow-x: auto; padding: 4px; }
+.detail-gallery .property-viewer-thumb { flex: 0 0 calc((100% - 60px) / 6); min-height: 0; height: 90px; border-radius: 4px; }
+.detail-gallery .property-viewer-thumb img { min-height: 0; height: 100%; }
+.detail-no-image { padding: 120px 24px; text-align: center; background: var(--sage-100); border-radius: 6px; }
+.detail-columns { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 30px; margin-top: 30px; align-items: start; }
+.detail-content > section + section { margin-top: 28px; padding-top: 26px; border-top: 1px solid var(--border-soft); }
+.property-detail-page h2 { font-size: 2.5rem; font-weight: 500; line-height: 1.1; margin-bottom: 16px; }
+.detail-description p { white-space: pre-wrap; line-height: 1.65; overflow-wrap: anywhere; }
+.detail-sidebar { display: flex; flex-direction: column; gap: 16px; }
+.detail-facts { padding: 24px; border: 1px solid var(--border-soft); border-radius: 6px; background: var(--cream-50); }
+.detail-facts h2 { font-size: 2rem; }
+.detail-facts dl { margin: 0 0 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-soft); }
+.detail-facts dl > div { display: grid; grid-template-columns: 1fr 1.1fr; gap: 14px; align-items: center; margin-top: 16px; font-size: .85rem; }
+.detail-facts dt { display: flex; gap: 16px; align-items: center; }
+.detail-facts dd { margin: 0; overflow-wrap: anywhere; }
+.detail-primary { width: 100%; background: var(--forest-950); color: var(--white-warm); }
+.detail-primary:hover { background: var(--forest-900); color: var(--white-warm); }
+.detail-contact { border: 1px solid var(--border-soft); border-radius: 6px; overflow: hidden; }
+.detail-contact-intro { background: linear-gradient(rgba(15,55,41,.8), rgba(15,55,41,.8)), url('/images/woodland-placeholder.webp') center/cover; padding: 26px; color: var(--white-warm); }
+.detail-contact-intro h2 { font-size: 2.2rem; }
+.detail-contact-intro p { color: inherit; font-size: .9rem; }
+.detail-contact address { display: flex; flex-direction: column; gap: 12px; padding: 18px; font-style: normal; font-size: .8rem; }
+.detail-contact address a { display: flex; gap: 10px; align-items: center; overflow-wrap: anywhere; }
+.detail-contact address svg { flex-shrink: 0; }
+.property-detail-page :is(a,button,select):focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+.detail-map-dialog { width: min(1000px, calc(100% - 32px)); max-height: 90dvh; padding: 24px; border: 1px solid var(--border-soft); border-radius: 8px; background: var(--cream-50); }
+.detail-map-dialog::backdrop { background: rgba(15,55,41,.5); }
+.detail-map-dialog > header { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 20px; }
+@media (max-width: 760px) {
+  .property-detail-page { padding: 20px 16px 32px; }
+  .detail-columns { grid-template-columns: 1fr; }
+  .detail-gallery .property-viewer-preview-image { aspect-ratio: 1.6; }
+  .detail-gallery .property-viewer-thumb { flex-basis: 110px; height: 72px; }
+}

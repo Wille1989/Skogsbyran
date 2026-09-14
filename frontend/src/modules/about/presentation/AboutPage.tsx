@@ -1,8 +1,11 @@
 import "./AboutPage.css";
+import { Link } from 'react-router-dom';
+import { IconArrowLeft } from '@tabler/icons-react';
 
 export function AboutPage() {
   return (
     <article className="about-page" aria-labelledby="about-page-title">
+      <Link to="/" className="detail-pill detail-back"><IconArrowLeft size={19} aria-hidden="true" />Tillbaka</Link>
       <h1 id="about-page-title">Skogsbyrån i Jönköping</h1>
       <p>
         Skogsbyrån i Jönköping arbetar med rådgivning och fastighetsförmedling för dig som äger, köper eller säljer skog, mark och lantbruksfastigheter.

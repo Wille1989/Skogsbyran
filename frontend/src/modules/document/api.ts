@@ -5,6 +5,12 @@ import  {
       type DocumentType,
 } from "./types.ts";
 
+export async function downloadDocument(url: string): Promise<Blob> {
+    const response = await fetch(url, { credentials: "omit" });
+    if (!response.ok) throw new Error("Document download failed");
+    return response.blob();
+}
+
 function buildDocumentFormData(file: File, type: DocumentType): FormData {
     const formData = new FormData();
 

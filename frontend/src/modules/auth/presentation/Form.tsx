@@ -1,5 +1,7 @@
 import { useAuth } from '../data/auth.hooks.ts';
 import "./Form.css";
+import { Link } from 'react-router-dom';
+import { IconArrowLeft } from '@tabler/icons-react';
 
 export function AuthPage() {
   const {
@@ -13,6 +15,7 @@ export function AuthPage() {
 
   return (
     <div className="auth-page">
+      <Link to="/" className="detail-pill detail-back"><IconArrowLeft size={19} aria-hidden="true" />Tillbaka</Link>
       <form onSubmit={onLogin} className="form auth-form">
         <h1 className="auth-title">Logga in</h1>
 

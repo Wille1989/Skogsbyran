@@ -22,7 +22,6 @@ export function IndexPage() {
     <>
       <section id="fastigheter" className="property-index" aria-labelledby="property-index-title">
         <h2 id="property-index-title">Fastigheter till salu</h2>
-        <p className="property-index-subtitle">Aktuella fastigheter</p>
         <div className="property-filters" role="group" aria-label="Filtrera fastigheter efter status">
           {filters.map(filter => {
             const count = sections.find(section => section.title === filter.title)?.properties.length ?? 0;
@@ -52,8 +51,8 @@ export function IndexPage() {
             <Link className="home-about-link" to="/om-oss">Läs mer om Skogsbyrån <IconArrowRight size={20} aria-hidden="true" /></Link>
           </div>
           <div className="home-about-images" aria-hidden="true">
-            <div className="home-about-landscape"><img src="/images/forest-lake-placeholder.png" alt="" loading="lazy" /></div>
-            <img className="home-about-detail" src="/images/woodland-placeholder.webp" alt="" loading="lazy" />
+            <div className="home-about-landscape"><img src="/images/landscape.png" alt="" loading="lazy" /></div>
+            <img className="home-about-detail" src="/images/woodland.webp" alt="" loading="lazy" />
             <p className="home-about-note">Skog, mark<br />och möjligheter.</p>
           </div>
         </div>

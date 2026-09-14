@@ -1,11 +1,22 @@
-import { useRef, useState } from 'react';
+import { useImperativeHandle, useRef, useState, type Ref } from 'react';
 import { ContactForm } from './ContactForm';
 import './ContactPanel.css';
 
-export function ContactPanel() {
+export type ContactPanelHandle = { open: () => void };
+
+export function ContactPanel({ ref }: { ref?: Ref<ContactPanelHandle> }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
+  const returnFocus = useRef<HTMLElement | null>(null);
+
+  function openPanel() {
+    returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : trigger.current;
+    dialog.current?.showModal();
+    setOpen(true);
+  }
+
+  useImperativeHandle(ref, () => ({ open: openPanel }));
 
   function close() {
     dialog.current?.close();
@@ -16,14 +27,14 @@ export function ContactPanel() {
       <button
         ref={trigger} type="button" className="contact-trigger"
         aria-expanded={open} aria-controls="contact-panel" aria-haspopup="dialog"
-        onClick={() => { dialog.current?.showModal(); setOpen(true); }}
+        onClick={openPanel}
       >
         Kontakta oss <span aria-hidden="true">＋</span>
       </button>
       <dialog
         ref={dialog} id="contact-panel" className="contact-panel"
         aria-labelledby="contact-panel-title"
-        onClose={() => { setOpen(false); trigger.current?.focus(); }}
+        onClose={() => { setOpen(false); returnFocus.current?.focus(); }}
       >
         <div className="contact-panel-heading">
           <h2 id="contact-panel-title">Kontakta oss</h2>

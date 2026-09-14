@@ -4,7 +4,7 @@
 .site-brand:hover { color: inherit; }
 .site-brand h1, .site-wordmark { margin: 0; font: 600 clamp(3rem, 6.4vw, 5.5rem)/1.1 var(--heading-font); letter-spacing: -0.035em; }
 .site-wordmark { font-size: 2.6rem; }
-.home-hero { min-height: 520px; background-image: linear-gradient(rgba(15, 55, 41, 0.57), rgba(15, 55, 41, 0.75)), url('/images/forest-lake-placeholder.png'); background-size: cover; background-position: center bottom; }
+.home-hero { min-height: 520px; background-image: url('/images/header-img.png'); background-size: cover; background-position: center; }
 .home-hero .inner-header { padding-top: 42px; padding-bottom: 56px; }
 .hero-copy { display: flex; flex-direction: column; align-items: center; }
 .hero-copy p { color: var(--white-warm); }

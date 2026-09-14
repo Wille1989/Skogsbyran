@@ -45,7 +45,7 @@ export function formatPrice(price: string): string {
   return `${new Intl.NumberFormat("sv-SE").format(numericPrice)} kr`;
 }
 
-export function locationLabel(property: PropertyListingItem): string {
+export function locationLabel(property: Pick<PropertyListingItem, "location">): string {
   const parts = [
     property.location?.city,
     property.location?.municipality &&
