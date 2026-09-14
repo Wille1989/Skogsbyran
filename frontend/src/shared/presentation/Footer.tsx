@@ -1,36 +1,16 @@
+import { IconTrees, IconUserHeart, IconShieldCheck, IconPlant } from '@tabler/icons-react';
 import './footer.css';
 
 function Footer() {
   return (
     <footer className="site-footer">
-      <div className="footer-inner">
-        <div className="footer-brand">
-          <div className="footer-logo">Skogsbyrån</div>
-          <p className="footer-tagline">
-            En modern mäklarbyrå med fokus på skog, mark och hållbara fastigheter.
-          </p>
-        </div>
-
-        <div className="footer-links">
-          <div className="footer-column">
-            <h4>Meny</h4>
-            <a href="/">Startsida</a>
-            <a href="/product/compare">Köpa</a>
-            <a href="/sale">Sälja</a>
-            <a href="/about">Om företaget</a>
-          </div>
-
-          <div className="footer-column">
-            <h4>Kontakt</h4>
-            <a href="mailto:info@skogsbyran.se">info@skogsbyran.se</a>
-            <a href="tel:+46123456789">+46 12 345 67 89</a>
-          </div>
-        </div>
+      <div className="footer-values">
+        <span><IconTrees size={32} stroke={1} aria-hidden="true" />Skog och mark</span>
+        <span><IconUserHeart size={32} stroke={1} aria-hidden="true" />Dina intressen i fokus</span>
+        <span><IconShieldCheck size={32} stroke={1} aria-hidden="true" />Oberoende rådgivning</span>
+        <span><IconPlant size={32} stroke={1} aria-hidden="true" />Trygga fastighetsaffärer</span>
       </div>
-
-      <div className="footer-bottom">
-        <span>© {new Date().getFullYear()} Skogsbyrån</span>
-      </div>
+      <p className="footer-copyright">© {new Date().getFullYear()} Skogsbyrån i Jönköping</p>
     </footer>
   );
 }

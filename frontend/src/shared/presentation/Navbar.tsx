@@ -1,10 +1,12 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { IconChevronDown } from "@tabler/icons-react";
 import { useAuth } from "@/modules/auth/data/auth.hooks";
 import "./navbar.css";
 
 function Navbar() {
   const { isAuthenticated, isAdmin, onLogout } = useAuth();
   const navigate = useNavigate();
+  const isHome = useLocation().pathname === "/";
 
   const handleLogOutClick = () => {
     onLogout();
@@ -12,7 +14,7 @@ function Navbar() {
   };
 
   return (
-    <header className={`site-header ${isAdmin ? "has-admin-session-banner" : ""}`}>
+    <header className={`site-header ${isHome ? "home-hero" : "compact-header"} ${isAdmin ? "has-admin-session-banner" : ""}`}>
       {isAdmin ? (
         <div className="admin-session-banner" role="status">
           Du är inloggad som admin
@@ -22,7 +24,7 @@ function Navbar() {
       <div className="inner-header">
         <div className="header-logo">
           <NavLink to="/" end className="site-brand" aria-label="Gå till startsidan">
-            <h1 id="site-header-title">Skogsbyrån</h1>
+            {isHome ? <h1 id="site-header-title">Skogsbyrån</h1> : <span className="site-wordmark">Skogsbyrån</span>}
           </NavLink>
         </div>
 
@@ -41,30 +43,15 @@ function Navbar() {
           </button>
         )}
 
-        <section aria-labelledby="site-header-title">
-          
-          <nav className="navigation-bar" aria-label="Huvudmeny">
-            <ul className="navigation-bar-list">
-              <li>
-                <NavLink to="/">Fastigheter till salu</NavLink>
-              </li>
-              <li>
-                <NavLink to="/sale">Sälja med Skogsbyrån</NavLink>
-              </li>
-              <li>
-                <NavLink to="/om-oss">Om oss</NavLink>
-              </li>
-              <li>
-                <NavLink to="/about">Kontakt</NavLink>
-              </li>
-              {isAdmin ? (
-                <li>
-                  <NavLink to="/dashboard/property/create">Skapa fastighet</NavLink>
-                </li>
-              ) : null}
-            </ul>
-          </nav>
-        </section>
+        {isHome && (
+          <div className="hero-copy">
+            <p className="hero-eyebrow">Skog · Jord · Människor · Framtid</p>
+            <p className="hero-statement">Din partner för skogs- och<br className="hero-line-break" /> lantbruksfastigheter</p>
+            <p className="hero-intro">Rådgivning och fastighetsförmedling i Jönköping.<br /> För dig som äger, köper eller säljer skog, mark och lantbruksfastigheter.</p>
+            <a href="#fastigheter" className="hero-cta">Fastigheter till salu <IconChevronDown size={22} aria-hidden="true" /></a>
+          </div>
+        )}
+        {isAdmin && <NavLink className="header-admin-link" to="/dashboard/property/create">Skapa fastighet</NavLink>}
       </div>
     </header>
   );

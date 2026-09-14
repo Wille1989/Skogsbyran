@@ -1,216 +1,26 @@
-.site-header {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background:
-    linear-gradient(145deg, rgba(19, 48, 35, 0.94), rgba(68, 87, 54, 0.82)),
-    linear-gradient(42deg, #d9c49a 0%, #78906d 42%, #263d2f 100%);
-  color: #fffaf1;
-}
-
-.site-header.has-admin-session-banner {
-  padding-top: 34px;
-}
-
-.admin-session-banner {
-  position: fixed;
-  top: 0;
-  z-index: 1;
-  left: 0;
-  width: 100%;
-  padding: 8px 16px;
-  background: #4b3f2d;
-  color: #fffaf1;
-  font-size: 0.9rem;
-  font-weight: 800;
-  line-height: 1.2;
-  text-align: center;
-  box-shadow: 0 10px 24px rgba(8, 20, 13, 0.16);
-}
-
-.inner-header {
-  width: min(1200px, 100%);
-  align-items: center;
-  padding: clamp(18px, 3vw, 44px);
-}
-
-.site-brand {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-  padding: 18px;
-  color: inherit;
-  text-align: center;
-}
-
-.site-brand:hover {
-  color: inherit;
-}
-
-.site-brand-mark {
-  margin: 0;
-  font-family: var(--heading-font);
-  font-size: clamp(1.9rem, 4vw, 3rem);
-  line-height: 0.9;
-  color: #d1bf9e;
-}
-
-.site-brand-subtitle {
-  color: rgba(255, 250, 241, 0.78);
-  font-size: clamp(0.64rem, 1.1vw, 0.84rem);
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-.nav-button {
-  all: unset;
-  position: absolute;
-  top: clamp(20px, 3vw, 48px);
-  right: clamp(18px, 3vw, 44px);
-  min-height: 38px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 18px;
-  border: 1px solid rgba(255, 250, 241, 0.46);
-  border-radius: 999px;
-  background: rgba(255, 250, 241, 0.12);
-  color: rgba(255, 250, 241, 0.9);
-  cursor: pointer;
-  font-size: 0.92rem;
-  font-weight: 800;
-  line-height: 1;
-  transition: background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
-}
-
-.inner-header > section {
-  width: min(760px, 100%);
-  justify-self: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.inner-header > section h2 {
-  margin: 0;
-  color: #fffaf1;
-  font-size: clamp(3rem, 6.5vw, 6rem);
-  line-height: 0.92;
-}
-
-.inner-header > section p {
-  margin: 0;
-  max-width: 720px;
-  color: rgba(255, 250, 241, 0.92);
-  font-family: var(--heading-font);
-  font-size: clamp(1.2rem, 2.1vw, 1.7rem);
-  font-weight: 700;
-  line-height: 1.18;
-}
-
-.navigation-bar {
-  width: 100%;
-  margin-top: clamp(10px, 1.5vw, 18px);
-}
-
-.navigation-bar-list {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 14px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-.navigation-bar-list a {
-  min-width: min(230px, 100%);
-  min-height: 54px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 13px 26px;
-  border-radius: 999px;
-  background: rgba(255, 250, 241, 0.88);
-  color: var(--forest);
-  font-size: 0.98rem;
-  font-weight: 700;
-  line-height: 1.1;
-  text-align: center;
-  box-shadow: 0 14px 32px rgba(8, 20, 13, 0.14);
-  transition: background-color 0.16s ease, transform 0.16s ease;
-}
-
-.navigation-bar-list a:hover,
-.navigation-bar-list a:focus-visible,
-.nav-button:hover,
-.nav-button:focus-visible {
-  color: #fffaf1;
-}
-
-.nav-button:hover,
-.nav-button:focus-visible {
-  background: rgba(255, 250, 241, 0.2);
-  transform: translateY(-1px);
-}
-
-.navigation-bar-list a:hover,
-.navigation-bar-list a:focus-visible {
-  background: #fffaf1;
-  transform: translateY(-2px);
-}
-
-.navigation-bar-list a:focus-visible,
-.nav-button:focus-visible {
-  outline: 3px solid rgba(255, 250, 241, 0.42);
-  outline-offset: 4px;
-}
-
+.site-header { position: relative; background: var(--forest-950); color: var(--white-warm); text-align: center; }
+.inner-header { width: min(1200px, 100%); margin: auto; padding: 28px 24px; }
+.site-brand { display: inline-block; color: inherit; }
+.site-brand:hover { color: inherit; }
+.site-brand h1, .site-wordmark { margin: 0; font: 600 clamp(3rem, 6.4vw, 5.5rem)/1.1 var(--heading-font); letter-spacing: -0.035em; }
+.site-wordmark { font-size: 2.6rem; }
+.home-hero { min-height: 520px; background-image: linear-gradient(rgba(15, 55, 41, 0.57), rgba(15, 55, 41, 0.75)), url('/images/forest-lake-placeholder.png'); background-size: cover; background-position: center bottom; }
+.home-hero .inner-header { padding-top: 42px; padding-bottom: 56px; }
+.hero-copy { display: flex; flex-direction: column; align-items: center; }
+.hero-copy p { color: var(--white-warm); }
+.hero-eyebrow { margin: 12px 0 32px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.28em; text-transform: uppercase; }
+.hero-statement { margin: 0 0 16px; font: 500 clamp(2rem, 3.3vw, 3rem)/1.08 var(--heading-font); }
+.hero-intro { margin: 0; max-width: 58ch; font-size: 0.98rem; line-height: 1.55; }
+.hero-cta { display: inline-flex; align-items: center; gap: 30px; margin-top: 28px; padding: 14px 26px; border-radius: 999px; background: var(--white-warm); color: var(--forest-950); font-weight: 600; font-size: 0.92rem; }
+.hero-cta:hover { background: var(--sage-200); color: var(--forest-950); }
+.nav-button { position: absolute; top: 16px; right: 20px; border: 1px solid rgba(250, 248, 241, 0.4); border-radius: 999px; padding: 8px 14px; background: transparent; color: var(--white-warm); font: inherit; font-size: 0.8rem; cursor: pointer; }
+.nav-button:hover { background: var(--forest-900); color: var(--white-warm); }
+.header-admin-link { display: inline-block; margin-top: 16px; text-decoration: underline; }
+.admin-session-banner { padding: 8px 16px; background: var(--forest-900); font-size: 0.85rem; }
+.site-header a:focus-visible, .site-header button:focus-visible { outline: 3px solid var(--sage-200); outline-offset: 5px; }
 @media (max-width: 640px) {
-  .inner-header {
-    padding: 16px;
-  }
-
-  .header-logo {
-    width: 112px;
-  }
-
-  .site-brand {
-    padding: 14px;
-  }
-
-  .nav-button {
-    top: 18px;
-    right: 12px;
-  }
-
-  .inner-header > section {
-    align-items: stretch;
-    padding-top: 32px;
-  }
-
-  .inner-header > section h2 {
-    font-size: clamp(2.55rem, 16vw, 3.7rem);
-  }
-
-  .inner-header > section p {
-    font-size: 1.08rem;
-  }
-
-  .navigation-bar-list {
-    gap: 10px;
-  }
-
-  .navigation-bar-list a {
-    width: 100%;
-    min-height: 48px;
-    padding: 12px 18px;
-    font-size: 0.92rem;
-  }
+  .home-hero { min-height: 480px; }
+  .home-hero .inner-header { padding-top: 70px; }
+  .hero-line-break { display: none; }
+  .hero-eyebrow { letter-spacing: 0.16em; }
 }

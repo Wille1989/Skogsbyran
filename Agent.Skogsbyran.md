@@ -317,6 +317,7 @@ Prefer:
 - immutable values where practical
 - small methods with one clear responsibility
 - clear domain-oriented names
+- 
 
 New and modified PHP code must satisfy the project's configured PHPStan level.
 
@@ -461,26 +462,40 @@ Do not add or update Composer or npm dependencies unless explicitly requested or
 
 Discover and use commands actually defined by the repository. Check files such as `package.json`, `composer.json`, test configuration, and project documentation before assuming command names.
 
-Prefer targeted checks first.
+Use the smallest relevant verification for the change.
 
-Relevant checks may include:
+For small, low-risk changes, prefer lightweight targeted checks such as:
 
-- TypeScript type checking
-- frontend linting
-- targeted frontend tests
-- a production frontend build
-- PHP syntax checks
-- PHPStan analysis
-- Laravel tests for the affected feature
-- formatter or coding-standard checks
+* TypeScript type checking for affected frontend code
+* frontend linting when relevant
+* PHP syntax checks for modified PHP files
+* PHPStan analysis when backend logic or types are affected
+* reviewing the final diff
 
-Run broader or expensive checks when the risk and scope justify them. Explain why before running unusually broad, slow, or destructive commands.
+Do not add or modify tests by default.
+
+Add or update tests when:
+
+* the user explicitly asks for tests
+* important business logic is introduced or changed
+* a bug fix represents a regression that should be protected
+* existing tests already cover the affected behavior and need updating
+* the risk or complexity of the change makes automated testing clearly valuable
+
+Do not run test suites merely because tests exist.
+
+Run targeted tests when they provide meaningful verification for the affected behavior. Run broader test suites, production builds, or other expensive checks only when the scope or risk of the change justifies them.
+
+Do not run unrelated frontend and backend checks. Verify only the parts of the system affected by the change unless broader verification is justified.
+
+Explain why before running unusually broad, slow, or destructive commands.
 
 Do not clear caches, delete generated files, rebuild all assets, migrate a database, seed data, or run destructive commands unless the task requires it and the impact is understood.
 
 Never claim that a command or test passed unless it was actually run successfully.
 
-If a relevant check cannot be run, state why and describe what should be run manually.
+If an important verification step cannot be run, state why and describe what remains unverified.
+
 
 ## Implementation Rules
 

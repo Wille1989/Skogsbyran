@@ -23,7 +23,9 @@ export type ResponseGetProperties = {
     properties: PropertyListingItem[];
 };
 
-export type PropertyListingImage = Pick<ImageFile, "imageId" | "urls" | "position" | "isPrimary" | "details">;
+export type PropertyListingImage = Pick<ImageFile, "imageId"> & {
+    urls: Pick<ImageFile["urls"], "large">;
+};
 
 export type PropertyListingItem = {
     propertyId: string;
