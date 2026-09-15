@@ -24,45 +24,53 @@ export function CreatePage() {
   const [location, setLocation] = useState<PropertyLocationDraft>(createDefaultLocationDraft);
   const [saveProgress, setSaveProgress] = useState<CreatePropertyProgress | null>(null);
 
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   const handleSubmit = (details: FormDetails): void => {
-    setSaveProgress({
-      percent: 0,
-      label: "Förbereder sparning...",
-    });
+    setValidationError(null);
+    try {
+      setSaveProgress({
+        percent: 0,
+        label: "Förbereder sparning...",
+      });
 
-    const imageChanges = imageFiles.buildChanges();
-    const areas = areaDrafts.flatMap((areaDraft) => {
-      const area = buildAreaPayload(areaDraft);
+      const imageChanges = imageFiles.buildChanges();
+      const areas = areaDrafts.flatMap((areaDraft) => {
+        const area = buildAreaPayload(areaDraft);
 
-      return area ? [area] : [];
-    });
+        return area ? [area] : [];
+      });
 
-    createProperty.mutate(
-      {
-        details, 
-        images: imageChanges.newImages,
-        areas,
-        location: buildLocationPayload(location),
-        documents,
-        onProgress: setSaveProgress,
-      },
-      {
-        onSuccess: () => {
-          imageFiles.clearImages();
-          setAreaDrafts([createDefaultAreaDraft()]);
-          setDocuments([]);
-          setLocation(createDefaultLocationDraft());
-
-          navigate("/");
+      createProperty.mutate(
+        {
+          details,
+          images: imageChanges.newImages,
+          areas,
+          location: buildLocationPayload(location),
+          documents,
+          onProgress: setSaveProgress,
         },
-        onError: () => {
-          setSaveProgress((currentProgress) => ({
-            percent: currentProgress?.percent ?? 0,
-            label: "Sparningen avbröts. Kontrollera felmeddelandet och försök igen.",
-          }));
-        },
-      }
-    );
+        {
+          onSuccess: () => {
+            imageFiles.clearImages();
+            setAreaDrafts([createDefaultAreaDraft()]);
+            setDocuments([]);
+            setLocation(createDefaultLocationDraft());
+
+            navigate("/");
+          },
+          onError: () => {
+            setSaveProgress((currentProgress) => ({
+              percent: currentProgress?.percent ?? 0,
+              label: "Sparningen avbröts. Kontrollera felmeddelandet och försök igen.",
+            }));
+          },
+        }
+      );
+    } catch (error) {
+      setValidationError(error instanceof Error ? error.message : "Kartdata kunde inte valideras.");
+      setSaveProgress(null);
+    }
   };
 
   return (
@@ -81,7 +89,7 @@ export function CreatePage() {
       </section>
 
         <section className="property-location">
-          <LocationEditor value={location} onChange={setLocation} />
+          <LocationEditor value={location} onChange={setLocation} polygons={areaDrafts.map(area => area.polygon)} />
         </section>
 
         <section className="property-areas area-form-card">
@@ -107,6 +115,7 @@ export function CreatePage() {
                 </div>
 
                 <PropertyAreaEditor
+                  mainMarker={location.latitude !== null && location.longitude !== null ? { lat: location.latitude, lng: location.longitude } : null}
                   mode="create"
                   value={areaDraft}
                   onChange={(nextDraft) =>
@@ -130,12 +139,13 @@ export function CreatePage() {
           <PendingDocuments documents={documents} onChange={setDocuments} />
         </section>
 
+        {validationError && <p className="form-error" role="alert">{validationError}</p>}
         {createProperty.error instanceof Error ? (
           <p className="form-error" role="alert">
             {createProperty.error.message}
           </p>
         ) : null}
-      
+
         <div className="form-actions">
           {saveProgress ? (
             <div

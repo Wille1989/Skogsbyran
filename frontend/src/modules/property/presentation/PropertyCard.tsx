@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { type PropertyListingItem } from "@/modules/property/data/types";
 import { useCurrentUserQuery } from "@/modules/auth/data/auth.hooks";
-import { formatPrice, listingStatusLabels, locationLabel } from "./propertyListing";
+import { formatHectares, formatPrice, listingStatusLabels, locationLabel } from "./propertyListing";
 import { IconArrowRight, IconMapPin, IconPencil, IconTrees } from "@tabler/icons-react";
 import "./PropertyCard.css";
 
@@ -32,7 +32,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
             {property.details.price && <span className="price">{formatPrice(property.details.price)}</span>}
           </div>
           <div className="meta">
-            {property.details.size && <span><IconTrees size={24} stroke={1.3} aria-hidden="true" />{property.details.size} ha</span>}
+            {property.details.size && <span><IconTrees size={24} stroke={1.3} aria-hidden="true" />{formatHectares(property.details.size)}</span>}
             {location && <span><IconMapPin size={24} stroke={1.3} aria-hidden="true" />{location}</span>}
           </div>
           <div className="card-summary">

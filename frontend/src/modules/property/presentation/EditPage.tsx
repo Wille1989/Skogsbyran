@@ -56,7 +56,7 @@ export function EditPage() {
     setLoadedPropertyId(property.propertyId);
   }, [initializeImages, loadedPropertyId, property]);
 
-  if (isPending) {
+  if (isPending || (property && loadedPropertyId !== property.propertyId)) {
     return <LoadingSpinner />;
   }
 
@@ -84,6 +84,7 @@ export function EditPage() {
         initialLocation: property.location,
         areas,
         initialAreas: property.areas,
+        onAreaCreated: (draft, saved) => setAreas(current => current.map(area => area === draft ? { ...area, id: saved.id } : area)),
         documents,
         pendingDocuments,
       },
@@ -130,10 +131,10 @@ export function EditPage() {
           </section>
 
           <section className="property-location">
-            <LocationEditor value={location} onChange={setLocation} />
+            <LocationEditor value={location} onChange={setLocation} polygons={areas.map(area => area.polygon)} />
           </section>
 
-          <EditableAreas areas={areas} onChange={setAreas} />
+          <EditableAreas areas={areas} onChange={setAreas} mainMarker={location.latitude !== null && location.longitude !== null ? { lat: location.latitude, lng: location.longitude } : null} />
 
           <section className="property-documents">
             <EditableDocuments

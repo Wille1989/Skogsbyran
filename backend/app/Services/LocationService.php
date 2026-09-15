@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Modules\Location\Data\LocationData;
 use App\Modules\Location\Models\Location;
 use App\Modules\Location\Models\PointOfInterest;
 use App\Modules\Property\Models\Property;
@@ -14,35 +15,33 @@ final class LocationService
 {
     public function __construct(
         private readonly PropertyPresenter $propertyPresenter,
-    ) {
-    }
+    ) {}
 
     /**
-     * @param  array<string, mixed>  $validated
      * @return array<string, mixed>
      */
-    public function replace(Property $property, array $validated): array
+    public function replace(Property $property, LocationData $data): array
     {
-        $location = DB::transaction(function () use ($property, $validated): Location {
+        $location = DB::transaction(function () use ($property, $data): Location {
             $location = Location::query()->firstOrNew([
                 'property_id' => $property->id,
             ]);
 
             $location->fill([
-                'address' => $validated['address'] ?? null,
-                'postal_code' => $validated['postal_code'] ?? null,
-                'city' => $validated['city'] ?? null,
-                'municipality' => $validated['municipality'] ?? null,
-                'country_code' => strtoupper((string) ($validated['country_code'] ?? 'SE')),
-                'latitude' => $validated['latitude'] ?? null,
-                'longitude' => $validated['longitude'] ?? null,
-                'google_place_id' => $validated['google_place_id'] ?? null,
+                'address' => $data->address,
+                'postal_code' => $data->postalCode,
+                'city' => $data->city,
+                'municipality' => $data->municipality,
+                'country_code' => $data->countryCode,
+                'latitude' => $data->latitude,
+                'longitude' => $data->longitude,
+                'google_place_id' => $data->googlePlaceId,
             ]);
             $location->save();
 
             $location->pois()->delete();
 
-            foreach ($validated['pois'] ?? [] as $poi) {
+            foreach ($data->pois as $poi) {
                 PointOfInterest::query()->create([
                     'location_id' => $location->id,
                     'name' => $poi['name'],

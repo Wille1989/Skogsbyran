@@ -56,3 +56,9 @@ export function locationLabel(property: Pick<PropertyListingItem, "location">): 
 
   return parts.join(" · ");
 }
+
+export function formatHectares(size: string): string {
+  const value = Number(size.replace(",", "."));
+  if (!size.trim() || !Number.isFinite(value) || value < 0) return "Areal saknas";
+  return `${new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 4 }).format(value)} ha`;
+}

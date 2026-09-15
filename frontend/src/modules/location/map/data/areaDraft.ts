@@ -1,45 +1,19 @@
-import type {
-    Coordinates,
-    PropertyAreaDraft,
-    PropertyAreaPayload,
-} from "./types";
-
-export const DEFAULT_AREA_MARKER: Coordinates = {
-    lat: 59.3293,
-    lng: 18.0686,
-};
+import type { Coordinates, PropertyAreaDraft, PropertyAreaPayload } from "./types";
 
 export function createDefaultAreaDraft(): PropertyAreaDraft {
-    return {
-        name: "Område 1",
-        polygon: [],
-        marker: DEFAULT_AREA_MARKER,
-    };
+  return { name: "Område 1", polygon: [] };
 }
 
-export function roundCoordinate(value: number): number {
-    return Math.round(value * 1_000_000) / 1_000_000;
+export function isValidCoordinate(point: Coordinates): boolean {
+  return Number.isFinite(point.lat) && Math.abs(point.lat) <= 90 && Number.isFinite(point.lng) && Math.abs(point.lng) <= 180;
 }
 
 export function buildAreaPayload(draft: PropertyAreaDraft): PropertyAreaPayload | null {
-    if (draft.polygon.length < 3) {
-        return null;
-    }
-
-    const marker = draft.marker ?? DEFAULT_AREA_MARKER;
-
-    return {
-    name:
-    draft.name.trim() || "Område 1",
-
-    polygon: draft.polygon.map((point) => ({
-        lat: roundCoordinate(point.lat),
-        lng: roundCoordinate(point.lng),
-    })),
-
-    marker: {
-        lat: roundCoordinate(marker.lat),
-        lng: roundCoordinate(marker.lng),
-        },
-    };
+  if (!draft.polygon.length) return null;
+  if (draft.polygon.length < 3 || !draft.polygon.every(isValidCoordinate)
+    || new Set(draft.polygon.map(point => `${point.lat},${point.lng}`)).size < 3) {
+    throw new Error("Varje polygon måste ha minst tre olika punkter med giltiga koordinater.");
+  }
+  if (!draft.name.trim()) throw new Error("Ange ett namn på varje område.");
+  return { name: draft.name.trim(), polygon: draft.polygon.map(point => ({ lat: point.lat, lng: point.lng })) };
 }

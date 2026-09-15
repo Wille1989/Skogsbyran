@@ -24,11 +24,9 @@ export type PropertyAreaCollection = {
 export type PropertyAreaPayload = {
     name: string;
     polygon: Coordinates[];
-    marker: Coordinates;
 };
 
 export type PropertyAreaDraft = {
     name: string;
     polygon: Coordinates[];
-    marker: Coordinates | null;
 };

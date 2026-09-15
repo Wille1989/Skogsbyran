@@ -4,7 +4,8 @@ import { deleteDocument, updateDocumentTitle, uploadDocument } from "@/modules/d
 import { deleteImages, updateImages, uploadImages } from "@/modules/image/data/api";
 import { updateLocation } from "@/modules/location/api";
 import { createArea, deleteArea, updateArea } from "@/modules/location/map/data/api";
-import type { ResponseProperty } from "@/modules/property/data/types";
+import type { ResponseProperty, ResponseGetProperty } from "@/modules/property/data/types";
+import type { PropertyArea } from "@/modules/location/map/data/types";
 import { getById } from "./api";
 import { propertyQueryKeys } from "./queryKeys";
 import {
@@ -28,6 +29,21 @@ export function useSavePropertyChangesMutation() {
       const locationPatch = changedLocationPayload(input.initialLocation, input.location);
       const areas = areaChanges(input.initialAreas, input.areas);
       const documents = documentChanges(input.documents);
+      // Keep acknowledged Area writes as the baseline if a later request fails.
+      // The page retains its draft, including the ID returned for a newly created area.
+      const rememberArea = (areaId: string, saved?: PropertyArea): void => {
+        queryClient.setQueryData<ResponseGetProperty>(propertyQueryKeys.byId(input.propertyId), current => {
+          if (!current) return current;
+          const storedAreas = current.property.areas;
+          let nextAreas = storedAreas.filter(area => area.id !== areaId);
+          if (saved) {
+            nextAreas = storedAreas.some(area => area.id === areaId)
+              ? storedAreas.map(area => area.id === areaId ? saved : area)
+              : [...storedAreas, saved];
+          }
+          return { ...current, property: { ...current.property, areas: nextAreas } };
+        });
+      };
 
       if (hasObjectKeys(detailsPatch)) {
         await patchDetails(input.propertyId, detailsPatch);
@@ -60,14 +76,18 @@ export function useSavePropertyChangesMutation() {
 
       for (const areaId of areas.removedAreaIds) {
         await deleteArea(input.propertyId, areaId);
+        rememberArea(areaId);
       }
 
       for (const area of areas.updatedAreas) {
-        await updateArea(input.propertyId, area.areaId, area.payload);
+        const saved = await updateArea(input.propertyId, area.areaId, area.payload);
+        rememberArea(saved.id, saved);
       }
 
       for (const area of areas.createdAreas) {
-        await createArea(input.propertyId, area);
+        const saved = await createArea(input.propertyId, area.payload);
+        input.onAreaCreated?.(area.draft, saved);
+        rememberArea(saved.id, saved);
       }
 
       for (const documentId of documents.removedDocumentIds) {

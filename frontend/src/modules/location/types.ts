@@ -1,3 +1,5 @@
+import { isValidCoordinate } from "./map/data/areaDraft";
+
 export type LocationPoiDraft = {
   uiId: string;
   id?: string;
@@ -52,6 +54,14 @@ export const createDefaultLocationDraft = (): PropertyLocationDraft => ({
 });
 
 export function buildLocationPayload(draft: PropertyLocationDraft): PropertyLocationPayload | null {
+  if ((draft.latitude === null) !== (draft.longitude === null)
+    || (draft.latitude !== null && draft.longitude !== null && !isValidCoordinate({ lat: draft.latitude, lng: draft.longitude }))) {
+    throw new Error("Fastighetens position har ogiltiga koordinater.");
+  }
+  for (const poi of draft.pois) {
+    if (!poi.name.trim() || poi.name.trim().length > 120) throw new Error("Varje POI behöver ett namn med högst 120 tecken.");
+    if (!isValidCoordinate({ lat: poi.latitude, lng: poi.longitude })) throw new Error("En POI har ogiltiga koordinater.");
+  }
   const hasLocation =
     draft.address.trim() !== "" ||
     draft.postalCode.trim() !== "" ||
@@ -76,7 +86,6 @@ export function buildLocationPayload(draft: PropertyLocationDraft): PropertyLoca
     longitude: draft.longitude,
     googlePlaceId: draft.googlePlaceId.trim(),
     pois: draft.pois
-      .filter((poi) => poi.name.trim() !== "")
       .map((poi) => ({
         id: poi.id,
         name: poi.name.trim(),

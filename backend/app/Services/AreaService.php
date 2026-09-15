@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Modules\Location\Data\AreaData;
 use App\Modules\Location\Models\Area;
 use App\Modules\Location\Models\AreaPoint;
 use App\Modules\Location\Models\Location;
 use App\Modules\Property\Models\Property;
 use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
 
 class AreaService
 {
@@ -36,18 +36,21 @@ class AreaService
     /**
      * Create one area for a property.
      *
-     * @param  array<string, mixed>  $validated
      * @return array<string, mixed>
      */
-    public function create(Property $property, array $validated): array
+    public function create(Property $property, AreaData $data): array
     {
-        $polygon = $validated['polygon'];
-        $location = $this->locationForProperty($property, $validated['marker']);
-
-        $area = DB::transaction(function () use ($location, $validated, $polygon): Area {
+        $polygon = $data->polygon;
+        $area = DB::transaction(function () use ($property, $data, $polygon): Area {
+            // Compatibility: old clients could initialize Location through Area.marker.
+            // New clients write the main position through Location instead.
+            $location = Location::query()->firstOrCreate(['property_id' => $property->id], [
+                'latitude' => $data->legacyMarker['lat'] ?? null,
+                'longitude' => $data->legacyMarker['lng'] ?? null,
+            ]);
             $area = Area::query()->create([
                 'location_id' => $location->id,
-                'name' => $validated['name'],
+                'name' => $data->name,
                 'sort_order' => $this->nextSortOrder($location),
             ]);
 
@@ -74,18 +77,17 @@ class AreaService
     /**
      * Replace one stored area.
      *
-     * @param  array<string, mixed>  $validated
      * @return array<string, mixed>
      */
-    public function replace(Property $property, Area $area, array $validated): array
+    public function replace(Property $property, Area $area, AreaData $data): array
     {
         $this->assertAreaBelongsToProperty($property, $area);
 
-        $polygon = $validated['polygon'];
+        $polygon = $data->polygon;
 
-        $area = DB::transaction(function () use ($area, $validated, $polygon): Area {
+        $area = DB::transaction(function () use ($area, $data, $polygon): Area {
             $area->fill([
-                'name' => $validated['name'],
+                'name' => $data->name,
             ]);
             $area->save();
 
@@ -114,7 +116,7 @@ class AreaService
         $area->loadMissing('location');
 
         if ($area->location?->property_id !== $property->id) {
-            throw new InvalidArgumentException('Area does not belong to the property.');
+            abort(404, 'Area does not belong to the property.');
         }
     }
 
@@ -123,7 +125,7 @@ class AreaService
      *
      * @return array<string, mixed>
      */
-    private function mapArea(Area $area): array
+    public function mapArea(Area $area): array
     {
         $area->loadMissing(['location', 'points']);
 
@@ -141,21 +143,6 @@ class AreaService
             'createdAt' => $area->created_at?->toISOString(),
             'updatedAt' => $area->updated_at?->toISOString(),
         ];
-    }
-
-    /**
-     * @param  array{lat: float|int, lng: float|int}  $marker
-     */
-    private function locationForProperty(Property $property, array $marker): Location
-    {
-        return Location::query()->firstOrCreate(
-            ['property_id' => $property->id],
-            [
-                'country_code' => 'SE',
-                'latitude' => $marker['lat'],
-                'longitude' => $marker['lng'],
-            ]
-        );
     }
 
     private function nextSortOrder(Location $location): int
