@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Modules\Location\Data\AreaData;
+use App\Modules\Location\Data\LocationData;
 use App\Modules\Property\Models\Property;
 use App\Presenters\PropertyPresenter;
 use Illuminate\Support\Facades\DB;
@@ -13,9 +15,9 @@ final class PropertyService
     public function __construct(
         private readonly ImageService $imageService,
         private readonly AreaService $areaService,
+        private readonly LocationService $locationService,
         private readonly PropertyPresenter $propertyPresenter,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string, array<int, array<string, mixed>>>
@@ -54,23 +56,28 @@ final class PropertyService
 
     /**
      * @param  array<string, mixed>  $validated
+     * @param  list<AreaData>  $areas
      * @return array<string, array<string, mixed>>
      */
-    public function create(array $validated): array
+    public function create(array $validated, array $areas = [], ?LocationData $location = null): array
     {
-        $property = DB::transaction(function () use ($validated): Property {
+        $property = DB::transaction(function () use ($validated, $areas, $location): Property {
             $property = Property::query()->create(
                 $validated['details']
             );
 
-            foreach ($validated['areas'] ?? [] as $area) {
+            if ($location !== null) {
+                $this->locationService->replace($property, $location);
+            }
+
+            foreach ($areas as $area) {
                 $this->areaService->create(
                     $property,
                     $area
                 );
             }
 
-            if (!empty($validated['images'])) {
+            if (! empty($validated['images'])) {
                 $this->imageService->store(
                     $property,
                     [

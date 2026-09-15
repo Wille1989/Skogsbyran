@@ -1,189 +1,14 @@
-import { useEffect, useId, useRef, useState, type ChangeEvent } from "react";
-import { googleMapsMapId, loadGoogleMaps } from "@/modules/location/map/data/googleMapsLoader";
+import { useState, type ChangeEvent } from "react";
+import { PropertyAreaMap } from "./map/presentation/PropertyAreaMap";
+import type { Coordinates } from "./map/data/types";
 import type { LocationPoiDraft, PropertyLocationDraft } from "./types";
 import "./LocationEditor.css";
 
-type LocationEditorProps = {
-  value: PropertyLocationDraft;
-  onChange: (value: PropertyLocationDraft) => void;
-};
+type LocationEditorProps = { value: PropertyLocationDraft; onChange: (value: PropertyLocationDraft) => void; polygons?: Coordinates[][] };
 
-const DEFAULT_CENTER = {
-  lat: 59.3293,
-  lng: 18.0686,
-};
-
-function createUiId(): string {
-  return crypto.randomUUID();
-}
-
-function roundCoordinate(value: number): number {
-  return Math.round(value * 1000000) / 1000000;
-}
-
-function readAddressComponent(place: google.maps.places.PlaceResult, type: string, useShortName = false): string {
-  const component = place.address_components?.find((item) => item.types.includes(type));
-
-  return component ? (useShortName ? component.short_name : component.long_name) : "";
-}
-
-export function LocationEditor({ value, onChange }: LocationEditorProps) {
-  const mapElementId = useId().replace(/:/g, "");
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const mapElementRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const placeMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
-  const poiMarkerRefs = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
-  const autocompleteListenerRef = useRef<google.maps.MapsEventListener | null>(null);
-  const mapClickListenerRef = useRef<google.maps.MapsEventListener | null>(null);
-  const valueRef = useRef(value);
-  const onChangeRef = useRef(onChange);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  useEffect(() => {
-    valueRef.current = value;
-    onChangeRef.current = onChange;
-  }, [value, onChange]);
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    async function setup(): Promise<void> {
-      try {
-        const googleMaps = await loadGoogleMaps();
-
-        if (isCancelled || !mapElementRef.current || !searchInputRef.current) {
-          return;
-        }
-
-        const center =
-          valueRef.current.latitude !== null && valueRef.current.longitude !== null
-            ? { lat: valueRef.current.latitude, lng: valueRef.current.longitude }
-            : DEFAULT_CENTER;
-
-        const map = new googleMaps.maps.Map(mapElementRef.current, {
-          center,
-          zoom: valueRef.current.latitude !== null ? 12 : 6,
-          mapId: googleMapsMapId,
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
-          cameraControl: false,
-        });
-
-        mapRef.current = map;
-
-        const autocomplete = new googleMaps.maps.places.Autocomplete(searchInputRef.current, {
-          fields: ["address_components", "formatted_address", "geometry", "place_id", "name"],
-          componentRestrictions: { country: "se" },
-        });
-
-        autocompleteListenerRef.current = autocomplete.addListener("place_changed", () => {
-          const place = autocomplete.getPlace();
-          const location = place.geometry?.location;
-
-          if (!location) {
-            return;
-          }
-
-          const next = {
-            ...valueRef.current,
-            address:
-              place.formatted_address ??
-              [readAddressComponent(place, "route"), readAddressComponent(place, "street_number")]
-                .filter(Boolean)
-                .join(" "),
-            postalCode: readAddressComponent(place, "postal_code"),
-            city:
-              readAddressComponent(place, "postal_town") ||
-              readAddressComponent(place, "locality"),
-            municipality: readAddressComponent(place, "administrative_area_level_2"),
-            countryCode: readAddressComponent(place, "country", true) || "SE",
-            latitude: roundCoordinate(location.lat()),
-            longitude: roundCoordinate(location.lng()),
-            googlePlaceId: place.place_id ?? "",
-          };
-
-          onChangeRef.current(next);
-          map.panTo({ lat: next.latitude ?? DEFAULT_CENTER.lat, lng: next.longitude ?? DEFAULT_CENTER.lng });
-          map.setZoom(13);
-        });
-
-        mapClickListenerRef.current = map.addListener("click", (event: google.maps.MapMouseEvent) => {
-          if (!event.latLng) {
-            return;
-          }
-
-          const nextPoi: LocationPoiDraft = {
-            uiId: createUiId(),
-            name: `POI ${valueRef.current.pois.length + 1}`,
-            description: "",
-            latitude: roundCoordinate(event.latLng.lat()),
-            longitude: roundCoordinate(event.latLng.lng()),
-          };
-
-          onChangeRef.current({
-            ...valueRef.current,
-            pois: [...valueRef.current.pois, nextPoi],
-          });
-        });
-      } catch (error) {
-        if (!isCancelled) {
-          setLoadError((error as Error).message || "Google Maps kunde inte laddas.");
-        }
-      }
-    }
-
-    void setup();
-
-    return () => {
-      isCancelled = true;
-      autocompleteListenerRef.current?.remove();
-      autocompleteListenerRef.current = null;
-      mapClickListenerRef.current?.remove();
-      mapClickListenerRef.current = null;
-      if (placeMarkerRef.current) {
-        placeMarkerRef.current.map = null;
-      }
-      poiMarkerRefs.current.forEach((marker) => {
-        marker.map = null;
-      });
-      poiMarkerRefs.current = [];
-      mapRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    const map = mapRef.current;
-
-    if (!map || !window.google?.maps) {
-      return;
-    }
-
-    if (placeMarkerRef.current) {
-      placeMarkerRef.current.map = null;
-    }
-
-    if (value.latitude !== null && value.longitude !== null) {
-      placeMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({
-        map,
-        position: { lat: value.latitude, lng: value.longitude },
-        title: "Fastighetens plats",
-      });
-    }
-
-    poiMarkerRefs.current.forEach((marker) => {
-      marker.map = null;
-    });
-    poiMarkerRefs.current = value.pois.map((poi) =>
-      new google.maps.marker.AdvancedMarkerElement({
-        map,
-        position: { lat: poi.latitude, lng: poi.longitude },
-        title: poi.name,
-      }),
-    );
-  }, [value.latitude, value.longitude, value.pois]);
-
+export function LocationEditor({ value, onChange, polygons }: LocationEditorProps) {
+  const [mode, setMode] = useState<"marker" | "poi" | "navigate">("navigate");
+  const [movingPoi, setMovingPoi] = useState<string | null>(null);
   const updateField = (field: keyof PropertyLocationDraft) => (event: ChangeEvent<HTMLInputElement>): void => {
     onChange({
       ...value,
@@ -199,6 +24,7 @@ export function LocationEditor({ value, onChange }: LocationEditorProps) {
   };
 
   const removePoi = (uiId: string): void => {
+    if (movingPoi === uiId) setMovingPoi(null);
     onChange({
       ...value,
       pois: value.pois.filter((poi) => poi.uiId !== uiId),
@@ -208,16 +34,12 @@ export function LocationEditor({ value, onChange }: LocationEditorProps) {
   return (
     <section className="location-editor form">
       <div className="create-section-copy">
-        <strong>Plats och närliggande punkter</strong>
-        <p>Sök adressen via Google Places. Klicka sedan i kartan för att lägga till POIs som skola, badplats eller väganslutning.</p>
+        <strong>Fastighetens plats och POI</strong>
+        <p>Sök adress eller välj huvudposition i kartan. Lägg till namngivna platser som bostadshus, sjö och brygga. Dra markörerna för att flytta dem.</p>
       </div>
 
       <div className="location-grid">
         <div className="location-fields">
-          <div className="form-field">
-            <label htmlFor="property-location-search">Sök adress/plats</label>
-            <input ref={searchInputRef} id="property-location-search" placeholder="Sök med Google Places" />
-          </div>
 
           <div className="form-field">
             <label htmlFor="property-address">Adress</label>
@@ -243,8 +65,31 @@ export function LocationEditor({ value, onChange }: LocationEditorProps) {
         </div>
 
         <div className="location-map-shell">
-          {loadError ? <p className="form-error">{loadError}</p> : null}
-          <div id={mapElementId} ref={mapElementRef} className="location-map" />
+          <div className="area-toolbar">
+            <button type="button" aria-pressed={mode === "navigate"} onClick={() => setMode("navigate")}>Navigera</button>
+            <button type="button" aria-pressed={mode === "marker"} onClick={() => setMode("marker")}>Sätt huvudposition</button>
+            <button type="button" aria-pressed={mode === "poi" && movingPoi === null} onClick={() => { setMovingPoi(null); setMode("poi"); }}>Lägg till POI</button>
+            <button type="button" onClick={() => onChange({ ...value, latitude: null, longitude: null })}>Ta bort huvudposition</button>
+          </div>
+          <p>{mode === "navigate" ? "Flytta och zooma kartan." : mode === "marker" ? "Klicka för att sätta huvudpositionen." : movingPoi ? "Klicka för att flytta vald POI till en ny plats." : "Klicka för att lägga till en POI-flagga."}</p>
+          <PropertyAreaMap
+            polygon={[]} otherPolygons={polygons} mode={mode}
+            marker={value.latitude !== null && value.longitude !== null ? { lat: value.latitude, lng: value.longitude } : null}
+            pois={value.pois}
+            onSetMarker={position => onChange({ ...value, latitude: position.lat, longitude: position.lng })}
+            onAddressSelect={({ position, ...address }) => onChange({ ...value, ...address, latitude: position.lat, longitude: position.lng })}
+            onAddPoi={position => {
+              if (movingPoi) {
+                updatePoi(movingPoi, { latitude: position.lat, longitude: position.lng });
+                setMovingPoi(null);
+                setMode("navigate");
+                return;
+              }
+              onChange({ ...value, pois: [...value.pois, {
+              uiId: crypto.randomUUID(), name: `POI ${value.pois.length + 1}`, description: "", latitude: position.lat, longitude: position.lng,
+            }] }); }}
+            onMovePoi={(index, position) => updatePoi(value.pois[index].uiId, { latitude: position.lat, longitude: position.lng })}
+          />
         </div>
       </div>
 
@@ -256,11 +101,13 @@ export function LocationEditor({ value, onChange }: LocationEditorProps) {
                 <label htmlFor={`poi-name-${poi.uiId}`}>Namn</label>
                 <input
                   id={`poi-name-${poi.uiId}`}
+                  maxLength={120}
                   value={poi.name}
                   onChange={(event) => updatePoi(poi.uiId, { name: event.target.value })}
                 />
               </div>
 
+              <button type="button" className="button" onClick={() => { setMovingPoi(poi.uiId); setMode("poi"); }}>Flytta i kartan</button>
               <button type="button" className="button button-danger" onClick={() => removePoi(poi.uiId)}>
                 Ta bort POI
               </button>

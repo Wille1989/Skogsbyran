@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AreaController;
-use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DetailsController;
+use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\PropertyController;
+use App\Http\Middleware\EnsurePropertyVisible;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,7 +29,7 @@ Route::middleware('auth:web')->group(function (): void {
 |--------------------------------------------------------------------------
 */
 Route::get('/properties', [PropertyController::class, 'index']);
-Route::get('/property/{property}', [PropertyController::class, 'show']);
+Route::get('/property/{property}', [PropertyController::class, 'show'])->middleware(EnsurePropertyVisible::class);
 
 /*
 |--------------------------------------------------------------------------
@@ -86,5 +87,5 @@ Route::middleware(['auth:web', 'admin'])->group(function (): void {
 | Areas
 |--------------------------------------------------------------------------
 */
-Route::get('/property/{property}/areas', [AreaController::class, 'index']);
-Route::get('/property/{property}/area/{area}', [AreaController::class, 'show']);
+Route::get('/property/{property}/areas', [AreaController::class, 'index'])->middleware(EnsurePropertyVisible::class);
+Route::get('/property/{property}/area/{area}', [AreaController::class, 'show'])->middleware(EnsurePropertyVisible::class);

@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Modules\Property\Models\Property;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 final class LocationModuleTest extends TestCase
@@ -17,7 +16,7 @@ final class LocationModuleTest extends TestCase
 
     public function test_it_replaces_property_location_and_pois(): void
     {
-        Sanctum::actingAs(User::factory()->create(['admin' => true]), ['admin']);
+        $this->actingAs(User::factory()->create(['admin' => true]), 'web');
 
         $property = Property::query()->create([
             'title' => 'Location POI property',
@@ -75,7 +74,7 @@ final class LocationModuleTest extends TestCase
 
     public function test_it_stores_location_areas_with_ordered_points(): void
     {
-        Sanctum::actingAs(User::factory()->create(['admin' => true]), ['admin']);
+        $this->actingAs(User::factory()->create(['admin' => true]), 'web');
 
         $property = Property::query()->create([
             'title' => 'Location module property',

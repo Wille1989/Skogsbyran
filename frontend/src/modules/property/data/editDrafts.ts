@@ -33,6 +33,7 @@ export type EditPropertyInput = {
   initialAreas: PropertyArea[];
   documents: EditableDocumentDraft[];
   pendingDocuments: PendingDocument[];
+  onAreaCreated?: (draft: EditableAreaDraft, saved: PropertyArea) => void;
 };
 
 export function locationDraftFromProperty(property: ResponseProperty): PropertyLocationDraft {
@@ -67,7 +68,6 @@ export function areaDraftsFromProperty(property: ResponseProperty): EditableArea
     id: area.id,
     name: area.name,
     polygon: area.polygon,
-    marker: area.marker,
   }));
 }
 
@@ -129,7 +129,7 @@ export function changedLocationPayload(
 }
 
 export function areaChanges(initialAreas: PropertyArea[], currentAreas: EditableAreaDraft[]): {
-  createdAreas: PropertyAreaPayload[];
+  createdAreas: Array<{ draft: EditableAreaDraft; payload: PropertyAreaPayload }>;
   updatedAreas: Array<{ areaId: string; payload: PropertyAreaPayload }>;
   removedAreaIds: string[];
 } {
@@ -139,18 +139,19 @@ export function areaChanges(initialAreas: PropertyArea[], currentAreas: Editable
       .filter((areaId): areaId is string => typeof areaId === "string" && areaId !== ""),
   );
   const initialAreasById = new Map(initialAreas.map((area) => [area.id, area]));
-  const createdAreas: PropertyAreaPayload[] = [];
+  const createdAreas: Array<{ draft: EditableAreaDraft; payload: PropertyAreaPayload }> = [];
   const updatedAreas: Array<{ areaId: string; payload: PropertyAreaPayload }> = [];
 
   currentAreas.forEach((area) => {
     const payload = buildAreaPayload(area);
 
     if (!payload) {
+      if (area.id) throw new Error("Ett sparat område får inte ha en tom polygon. Ta bort området om det ska raderas.");
       return;
     }
 
     if (!area.id) {
-      createdAreas.push(payload);
+      createdAreas.push({ draft: area, payload });
       return;
     }
 

@@ -8,7 +8,7 @@ import { usePropertyByIdQuery } from '../data/queries';
 import { Images } from '@/modules/image/presentation/Images';
 import { Documents } from '@/modules/document/Documents';
 import { ContactContext } from '@/modules/contact/presentation/ContactContext';
-import { formatPrice, listingStatusLabels, locationLabel } from './propertyListing';
+import { formatHectares, formatPrice, listingStatusLabels, locationLabel } from './propertyListing';
 import { LoadingSpinner } from '@/shared/presentation/LoadingSpinner';
 const PropertyAreaMap = lazy(() => import('@/modules/location/map/presentation/PropertyAreaMap').then(module => ({ default: module.PropertyAreaMap })));
 
@@ -20,20 +20,18 @@ export function ShowPage() {
   const openContact = useContext(ContactContext);
   const mapDialog = useRef<HTMLDialogElement>(null);
   const [mapOpen, setMapOpen] = useState(false);
-  const [areaIndex, setAreaIndex] = useState(0);
   if (isPending) return <LoadingSpinner />;
   if (error || !data?.property) return <section className="property-detail-page"><Link to="/">Tillbaka</Link><h1>Fastigheten kunde inte hämtas</h1><p>Det gick inte att läsa in fastigheten just nu.</p></section>;
   const property = data.property;
   const { details, location, areas } = property;
   const place = locationLabel(property);
   const address = [location?.address, location?.postalCode, place].filter(Boolean).join(', ');
-  const area = areas[areaIndex] ?? areas[0];
-  const marker = area?.marker ?? (location?.latitude != null && location.longitude != null ? { lat: location.latitude, lng: location.longitude } : null);
-  const hasMap = Boolean(area || marker);
+  const marker = (location?.latitude != null && location.longitude != null ? { lat: location.latitude, lng: location.longitude } : null);
+  const hasMap = Boolean(areas.length || marker || location?.pois.length);
   const images = [...property.images].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.position - b.position);
   const facts = [
     ...(details.price ? [{ label: 'Pris', value: formatPrice(details.price), icon: IconCoins }] : []),
-    ...(details.size ? [{ label: 'Areal', value: `${details.size} ha`, icon: IconTrees }] : []),
+    ...(details.size ? [{ label: 'Areal', value: formatHectares(details.size), icon: IconTrees }] : []),
     ...(place ? [{ label: 'Läge', value: place, icon: IconMapPin }] : []),
   ];
   return (
@@ -51,6 +49,7 @@ export function ShowPage() {
         <div className="detail-content">
           {details.caption && <section className="detail-description"><h2>Beskrivning</h2><p>{details.caption}</p></section>}
           {(address || hasMap) && <section className="detail-location"><h2>Läge</h2>{address && <p>{address}</p>}{hasMap && <button type="button" className="detail-pill" onClick={() => { setMapOpen(true); mapDialog.current?.showModal(); }}>Visa på karta <IconArrowRight size={20} aria-hidden="true" /></button>}</section>}
+          {!hasMap && <p>Ingen kartdata har sparats för fastigheten.</p>}
           <Documents propertyId={property.propertyId} documents={property.documents} canManage={isAdmin} />
         </div>
         <aside className="detail-sidebar" aria-label="Fastighetsfakta och kontakt">
@@ -67,8 +66,8 @@ export function ShowPage() {
       </div>
       {hasMap && <dialog className="detail-map-dialog" ref={mapDialog} aria-labelledby="detail-map-title" onClose={() => setMapOpen(false)}>
         <header><h2 id="detail-map-title">{details.title} – karta</h2><button type="button" className="detail-pill" onClick={() => mapDialog.current?.close()} autoFocus>Stäng</button></header>
-        {areas.length > 1 && <label>Område<select value={areaIndex} onChange={event => setAreaIndex(Number(event.target.value))}>{areas.map((entry, index) => <option key={entry.id} value={index}>{entry.name || `Område ${index + 1}`}</option>)}</select></label>}
-        {mapOpen && <Suspense fallback={<p>Kartan hämtas…</p>}><PropertyAreaMap polygon={area?.polygon ?? []} marker={marker} mode={area ? 'polygon' : 'marker'} readOnly onPolygonChange={() => {}} onSetMarker={() => {}} /></Suspense>}
+        {mapOpen && <Suspense fallback={<p>Kartan hämtas…</p>}><PropertyAreaMap key={property.propertyId} polygon={areas[0]?.polygon ?? []} otherPolygons={areas.slice(1).map(area => area.polygon)} marker={marker} pois={location?.pois} readOnly /></Suspense>}
+        {location?.pois.length ? <ul>{location.pois.map((poi, index) => <li key={poi.id ?? index}><strong>{poi.name}</strong>{poi.description && <span> – {poi.description}</span>}</li>)}</ul> : null}
       </dialog>}
     </article>
   );

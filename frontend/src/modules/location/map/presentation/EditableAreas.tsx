@@ -1,13 +1,15 @@
+import type { Coordinates } from "../data/types";
 import { createDefaultAreaDraft } from "../data/areaDraft";
 import { PropertyAreaEditor } from "./PropertyAreaEditor";
 import type { EditableAreaDraft } from "@/modules/property/data/editDrafts";
 
 type EditableAreasProps = {
   areas: EditableAreaDraft[];
+  mainMarker: Coordinates | null;
   onChange: (areas: EditableAreaDraft[]) => void;
 };
 
-export function EditableAreas({ areas, onChange }: EditableAreasProps) {
+export function EditableAreas({ areas, onChange, mainMarker }: EditableAreasProps) {
   const visibleAreas = areas;
 
   const updateArea = (index: number, area: EditableAreaDraft): void => {
@@ -36,6 +38,7 @@ export function EditableAreas({ areas, onChange }: EditableAreasProps) {
             </div>
 
             <PropertyAreaEditor
+              mainMarker={mainMarker}
               mode="edit"
               value={area}
               onChange={(nextArea) => updateArea(index, { ...nextArea, id: area.id })}
