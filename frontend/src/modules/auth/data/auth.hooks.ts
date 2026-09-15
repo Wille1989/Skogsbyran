@@ -67,7 +67,7 @@ export function useAuth() {
 
             setSuccessMessage('Du loggas in!');
             await delay(1000);
-            navigate(authUser.isAdmin ? '/admin' : '/');
+            navigate(authUser.isAdmin ? '/admin' : '/', { replace: true });
         } catch (error) {
             setErrorMessage(getErrorMessage(error, 'Kunde inte logga in användaren'));
         } finally {
@@ -88,7 +88,7 @@ export function useAuth() {
 
             setSuccessMessage('Du loggas ut!');
             await delay(1000);
-            navigate('/');
+            navigate('/', { replace: true });
         } catch (error) {
             setErrorMessage(getErrorMessage(error, 'Kunde inte logga ut användaren'));
         } finally {
@@ -99,8 +99,6 @@ export function useAuth() {
     return {
         form,
         loading,
-        currentUser: currentUserQuery.data ?? null,
-        isAuthenticated: currentUserQuery.data !== null,
         isAdmin: currentUserQuery.data?.isAdmin ?? false,
         isAuthPending: currentUserQuery.isPending,
         successMessage,

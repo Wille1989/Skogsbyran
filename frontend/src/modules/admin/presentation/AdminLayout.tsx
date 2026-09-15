@@ -17,7 +17,7 @@ export function AdminLayout() {
             <nav aria-label="Administration" onClick={() => setMenuOpen(false)}>
                 <NavLink to="/admin" end><IconHome size={23} />Översikt</NavLink>
                 <NavLink to="/admin/properties"><IconBuildingEstate size={23} />Fastigheter</NavLink>
-                <Link to="/"><IconExternalLink size={23} />Gå till webbplats</Link>
+                <Link to="/"><IconExternalLink size={23} />Visa webbplatsen</Link>
             </nav>
             <div className="admin-sidebar-footer">
                 <div className="admin-user"><span>AD</span>Administratör</div>

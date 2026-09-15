@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 | Auth
 |--------------------------------------------------------------------------
 */
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 Route::middleware('auth:web')->group(function (): void {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);

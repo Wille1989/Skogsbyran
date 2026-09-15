@@ -1,13 +1,9 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { IconChevronDown } from "@tabler/icons-react";
-import { useAuth } from "@/modules/auth/data/auth.hooks";
 import "./Navbar.css";
 
 function Navbar() {
-  const { isAuthenticated, isAdmin, onLogout } = useAuth();
   const isHome = useLocation().pathname === "/";
-
-
 
   return (
     <header className={`site-header ${isHome ? "home-hero" : "compact-header"}`}>
@@ -18,23 +14,6 @@ function Navbar() {
             {isHome ? <h1 id="site-header-title">Skogsbyrån</h1> : <span className="site-wordmark">Skogsbyrån</span>}
           </NavLink>
         </div>
-
-        {!isAuthenticated ? (
-          <NavLink to="/login" className="nav-button" aria-label="Logga in som admin">
-            ...
-          </NavLink>
-        ) : isAdmin ? (
-          <NavLink to="/admin" className="nav-button">Administration</NavLink>
-        ) : (
-          <button
-            type="button"
-            className="nav-button"
-            onClick={() => void onLogout()}
-            aria-label={isAdmin ? "Logga ut som admin" : "Logga ut"}
-          >
-            Logga ut
-          </button>
-        )}
 
         {isHome && (
           <div className="hero-copy">
