@@ -15,7 +15,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
   return (
     <article className="property-card">
       {currentUser?.isAdmin && (
-        <Link to={`/dashboard/property/edit/${property.propertyId}`} className="edit" aria-label={`Redigera ${property.details.title}`}>
+        <Link to={`/admin/properties/${property.propertyId}/edit`} className="edit" aria-label={`Redigera ${property.details.title}`}>
           <IconPencil size={20} stroke={1.5} />
         </Link>
       )}

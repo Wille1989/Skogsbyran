@@ -11,18 +11,14 @@ import {
   type EditableDocumentDraft,
 } from "@/modules/property/data/editDrafts";
 import { usePropertyByIdQuery } from "../data/queries";
-import { DetailsForm } from "../details/Form";
 import { type FormDetails } from "../details/types";
 import { EditableDocuments } from "@/modules/document/EditableDocuments";
 import { type PendingDocument } from "@/modules/document/types";
 import { useImageFiles } from "@/modules/image/data/useImageFiles";
 import { type ImageFile } from "@/modules/image/data/types";
-import { ImageDropZone } from "@/modules/image/presentation/FileDropContainer.tsx";
 import { ImageEditDialog } from "@/modules/image/presentation/ImageEditDialog.tsx";
-import { LocationEditor } from "@/modules/location/LocationEditor";
 import { createDefaultLocationDraft, type PropertyLocationDraft } from "@/modules/location/types";
-import { EditableAreas } from "@/modules/location/map/presentation/EditableAreas";
-import "./EditPage.css";
+import { PropertyForm } from "@/modules/admin/presentation/PropertyForm";
 
 function initialDetails(property: ResponseProperty | undefined): FormDetails | null {
   return property?.details ?? null;
@@ -103,66 +99,14 @@ export function EditPage() {
 
   return (
     <>
-      <main className="update-section-shell">
-        <div className="edit-page-header">
-          <div>
-            <span>Admin</span>
-            <h1>Redigera fastighet</h1>
-          </div>
-
-          {saveChanges.isSuccess ? (
-            <p className="edit-save-status">Förändringarna är sparade.</p>
-          ) : null}
-        </div>
-
-        <div className="update-section-grid">
-          <section className="property-details">
-            <DetailsForm
-              initialValues={initialDetails(property) ?? undefined}
-              onSubmit={handleSave}
-            />
-          </section>
-
-          <section className="property-images">
-            <ImageDropZone
-              imageFiles={imageFiles}
-              onEditExistingImage={setEditingImageId}
-            />
-          </section>
-
-          <section className="property-location">
-            <LocationEditor value={location} onChange={setLocation} polygons={areas.map(area => area.polygon)} />
-          </section>
-
-          <EditableAreas areas={areas} onChange={setAreas} mainMarker={location.latitude !== null && location.longitude !== null ? { lat: location.latitude, lng: location.longitude } : null} />
-
-          <section className="property-documents">
-            <EditableDocuments
-              documents={documents}
-              pendingDocuments={pendingDocuments}
-              onDocumentsChange={setDocuments}
-              onPendingDocumentsChange={setPendingDocuments}
-            />
-          </section>
-
-          {saveChanges.error instanceof Error ? (
-            <p className="form-error" role="alert">
-              {saveChanges.error.message}
-            </p>
-          ) : null}
-
-          <div className="form-actions edit-form-actions">
-            <button
-              type="submit"
-              form="property-form"
-              className="form-submit"
-              disabled={saveChanges.isPending}
-            >
-              {saveChanges.isPending ? "Sparar förändringarna..." : "Spara förändringarna"}
-            </button>
-          </div>
-        </div>
-      </main>
+      <PropertyForm
+        title="Redigera fastighet" subtitle={property.details.title} submitLabel="Spara ändringar"
+        initialDetails={initialDetails(property) ?? undefined} onSubmit={handleSave}
+        imageFiles={imageFiles} onEditImage={setEditingImageId} isSaving={saveChanges.isPending}
+        location={location} onLocationChange={setLocation} areas={areas} onAreasChange={setAreas}
+        documents={<EditableDocuments documents={documents} pendingDocuments={pendingDocuments} onDocumentsChange={setDocuments} onPendingDocumentsChange={setPendingDocuments} />}
+        error={saveChanges.error instanceof Error ? saveChanges.error.message : null} saved={saveChanges.isSuccess}
+      />
 
       {editingImage ? (
         <ImageEditDialog

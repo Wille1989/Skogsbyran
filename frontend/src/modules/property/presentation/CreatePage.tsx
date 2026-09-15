@@ -1,19 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DetailsForm } from "../details/Form";
-import { ImageDropZone } from "@/modules/image/presentation/FileDropContainer.tsx";
 import { createDefaultAreaDraft, buildAreaPayload } from "@/modules/location/map/data/areaDraft.ts";
 import { useImageFiles } from "@/modules/image/data/useImageFiles";
 import { useCreatePropertyMutation } from "../data/mutations.ts";
 import { type FormDetails } from "../details/types";
 import { type PropertyAreaDraft } from "@/modules/location/map/data/types";
-import { PropertyAreaEditor } from "@/modules/location/map/presentation/PropertyAreaEditor.tsx";
 import { PendingDocuments } from "@/modules/document/PendingDocuments.tsx";
 import { type PendingDocument } from "@/modules/document/types.ts";
-import { LocationEditor } from "@/modules/location/LocationEditor.tsx";
 import { buildLocationPayload, createDefaultLocationDraft, type PropertyLocationDraft } from "@/modules/location/types.ts";
 import { type CreatePropertyProgress } from "../data/types.ts";
-import "./CreatePage.css";
+import { PropertyForm } from "@/modules/admin/presentation/PropertyForm";
 
 export function CreatePage() {
   const navigate = useNavigate();
@@ -57,7 +53,7 @@ export function CreatePage() {
             setDocuments([]);
             setLocation(createDefaultLocationDraft());
 
-            navigate("/");
+            navigate("/admin/properties");
           },
           onError: () => {
             setSaveProgress((currentProgress) => ({
@@ -73,110 +69,12 @@ export function CreatePage() {
     }
   };
 
-  return (
-    <main className="form-page">
-      <div className="form-stack">
-        <section className="property-details">
-          <DetailsForm
-              onSubmit={handleSubmit}
-          />
-        </section>
-
-        <section className="property-images">
-          <ImageDropZone
-              imageFiles={imageFiles}
-          />
-      </section>
-
-        <section className="property-location">
-          <LocationEditor value={location} onChange={setLocation} polygons={areaDrafts.map(area => area.polygon)} />
-        </section>
-
-        <section className="property-areas area-form-card">
-          <div className="create-section-copy">
-            <strong>Områden</strong>
-            <p>Skapa ett eller flera fristående områden. Varje område sparas först när hela fastigheten sparas.</p>
-          </div>
-
-          <div className="create-area-list">
-            {areaDrafts.map((areaDraft, index) => (
-              <div className="create-area-card" key={index}>
-                <div className="create-area-card-header">
-                  <strong>Område {index + 1}</strong>
-                  {areaDrafts.length > 1 ? (
-                    <button
-                      type="button"
-                      className="button button-danger"
-                      onClick={() => setAreaDrafts(areaDrafts.filter((_, draftIndex) => draftIndex !== index))}
-                    >
-                      Ta bort område
-                    </button>
-                  ) : null}
-                </div>
-
-                <PropertyAreaEditor
-                  mainMarker={location.latitude !== null && location.longitude !== null ? { lat: location.latitude, lng: location.longitude } : null}
-                  mode="create"
-                  value={areaDraft}
-                  onChange={(nextDraft) =>
-                    setAreaDrafts(areaDrafts.map((draft, draftIndex) => (draftIndex === index ? nextDraft : draft)))
-                  }
-                />
-              </div>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            className="button"
-            onClick={() => setAreaDrafts([...areaDrafts, createDefaultAreaDraft()])}
-          >
-            Lägg till område
-          </button>
-        </section>
-
-        <section className="property-documents-create">
-          <PendingDocuments documents={documents} onChange={setDocuments} />
-        </section>
-
-        {validationError && <p className="form-error" role="alert">{validationError}</p>}
-        {createProperty.error instanceof Error ? (
-          <p className="form-error" role="alert">
-            {createProperty.error.message}
-          </p>
-        ) : null}
-
-        <div className="form-actions">
-          {saveProgress ? (
-            <div
-              className={`create-progress ${createProperty.isPending ? "is-active" : "is-idle"}`}
-              role="status"
-              aria-live="polite"
-            >
-              <div className="create-progress-copy">
-                <strong>{saveProgress.percent}%</strong>
-                <span>{saveProgress.label}</span>
-              </div>
-
-              <div className="create-progress-track" aria-hidden="true">
-                <div
-                  className="create-progress-value"
-                  style={{ width: `${saveProgress.percent}%` }}
-                />
-              </div>
-            </div>
-          ) : null}
-
-          <button
-            type="submit"
-            form="property-form"
-            className="form-submit"
-            disabled={createProperty.isPending}
-          >
-            {createProperty.isPending ? "Skapar fastigheten..." : "Skapa fastighet"}
-          </button>
-        </div>
-      </div>
-    </main>
-  );
+  return <PropertyForm
+    title="Skapa ny fastighet" submitLabel="Skapa fastighet" onSubmit={handleSubmit}
+    imageFiles={imageFiles} isSaving={createProperty.isPending}
+    location={location} onLocationChange={setLocation} areas={areaDrafts} onAreasChange={setAreaDrafts}
+    documents={<PendingDocuments documents={documents} onChange={setDocuments} />}
+    error={validationError || (createProperty.error instanceof Error ? createProperty.error.message : null)}
+    progress={saveProgress}
+  />;
 }

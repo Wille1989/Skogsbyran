@@ -1,4 +1,4 @@
-import './layout.css';
+import './Layout.css';
 import Footer from './Footer';
 import Navbar from './Navbar';
 import { matchPath, useLocation } from 'react-router-dom';

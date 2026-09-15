@@ -1,3 +1,4 @@
+import { IconFileDescription } from "@tabler/icons-react";
 import { PendingDocuments } from "./PendingDocuments";
 import type { PendingDocument } from "./types";
 import type { EditableDocumentDraft } from "@/modules/property/data/editDrafts";
@@ -37,14 +38,15 @@ export function EditableDocuments({
   return (
     <section className="editable-documents document-form">
       <div className="create-section-copy">
-        <strong>Dokument</strong>
-        <p>Ändra namn, ta bort befintliga dokument eller lägg till nya PDF:er. Inget sparas förrän du trycker på Spara förändringarna.</p>
+        <h2>Dokument</h2>
+        <p>Ändra dokumenttitlar och hantera PDF:er. Ändringarna sparas med fastigheten.</p>
       </div>
 
       {visibleDocuments.length > 0 ? (
         <div className="editable-document-list">
           {visibleDocuments.map((document) => (
             <article className="editable-document-card" key={document.documentId}>
+              <IconFileDescription size={22} aria-hidden="true" />
               <div className="form-field">
                 <label htmlFor={`document-title-${document.documentId}`}>Dokumentnamn</label>
                 <input
@@ -55,7 +57,7 @@ export function EditableDocuments({
               </div>
 
               <a href={document.url} target="_blank" rel="noopener noreferrer" className="editable-document-link">
-                Öppna PDF
+                {document.originalName || "Öppna PDF"}
               </a>
 
               <button type="button" className="button button-danger" onClick={() => markRemoved(document.documentId)}>
@@ -68,7 +70,7 @@ export function EditableDocuments({
         <p>Det finns inga dokument uppladdade ännu.</p>
       )}
 
-      <PendingDocuments documents={pendingDocuments} onChange={onPendingDocumentsChange} />
+      <PendingDocuments showHeading={false} documents={pendingDocuments} onChange={onPendingDocumentsChange} />
     </section>
   );
 }

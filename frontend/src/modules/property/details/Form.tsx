@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { type FormDetails, type ListingStatus } from './types';
 import './Form.css';
 
 type FormProps = {
         initialValues?: FormDetails;
+        cover?: ReactNode;
         onSubmit: (data: FormDetails) => void;
 };
 
@@ -26,7 +27,7 @@ const listingStatusOptions: Array<{ value: ListingStatus; label: string }> = [
         { value: 'sold', label: 'Såld' },
 ];
 
-export function DetailsForm({ initialValues, onSubmit }: FormProps) {
+export function DetailsForm({ initialValues, onSubmit, cover }: FormProps) {
         const {register, handleSubmit, reset, formState: { errors }, } = useForm<FormDetails>({defaultValues});
 
         useEffect(() => {
@@ -74,6 +75,16 @@ export function DetailsForm({ initialValues, onSubmit }: FormProps) {
                                 </div>
 
                                 <div className="form-field">
+                                        <label htmlFor="caption">Fastighetsbeskrivning</label>
+                                        <textarea
+                                                id="caption"
+                                                rows={5}
+                                                placeholder="Beskriv fastigheten här"
+                                                {...register("caption")}
+                                        />
+                                </div>
+                        </div>
+                        <aside className="admin-details-side">                                <div className="form-field">
                                         <label htmlFor="listingStatus">Status</label>
                                         <select
                                                 id="listingStatus"
@@ -96,16 +107,7 @@ export function DetailsForm({ initialValues, onSubmit }: FormProps) {
                                         <label htmlFor="isVisible">Synlig publikt</label>
                                 </div>
 
-                                <div className="form-field">
-                                        <label htmlFor="caption">Fastighetsbeskrivning</label>
-                                        <textarea
-                                                id="caption"
-                                                rows={15}
-                                                placeholder="Beskriv fastigheten här"
-                                                {...register("caption")}
-                                        />
-                                </div>
-                        </div>
+<p className="admin-status-hint">Status och synlighet sparas med fastigheten. Du kan ändra dem senare.</p>{cover}</aside>
                 </div>
         </form>
         );

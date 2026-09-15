@@ -67,7 +67,7 @@ export function useAuth() {
 
             setSuccessMessage('Du loggas in!');
             await delay(1000);
-            navigate('/dashboard/property/create');
+            navigate(authUser.isAdmin ? '/admin' : '/');
         } catch (error) {
             setErrorMessage(getErrorMessage(error, 'Kunde inte logga in användaren'));
         } finally {

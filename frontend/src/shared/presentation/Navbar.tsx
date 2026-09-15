@@ -1,25 +1,16 @@
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { IconChevronDown } from "@tabler/icons-react";
 import { useAuth } from "@/modules/auth/data/auth.hooks";
-import "./navbar.css";
+import "./Navbar.css";
 
 function Navbar() {
   const { isAuthenticated, isAdmin, onLogout } = useAuth();
-  const navigate = useNavigate();
   const isHome = useLocation().pathname === "/";
 
-  const handleLogOutClick = () => {
-    onLogout();
-    navigate("/");
-  };
+
 
   return (
-    <header className={`site-header ${isHome ? "home-hero" : "compact-header"} ${isAdmin ? "has-admin-session-banner" : ""}`}>
-      {isAdmin ? (
-        <div className="admin-session-banner" role="status">
-          Du är inloggad som admin
-        </div>
-      ) : null}
+    <header className={`site-header ${isHome ? "home-hero" : "compact-header"}`}>
 
       <div className="inner-header">
         <div className="header-logo">
@@ -32,11 +23,13 @@ function Navbar() {
           <NavLink to="/login" className="nav-button" aria-label="Logga in som admin">
             ...
           </NavLink>
+        ) : isAdmin ? (
+          <NavLink to="/admin" className="nav-button">Administration</NavLink>
         ) : (
           <button
             type="button"
             className="nav-button"
-            onClick={handleLogOutClick}
+            onClick={() => void onLogout()}
             aria-label={isAdmin ? "Logga ut som admin" : "Logga ut"}
           >
             Logga ut
@@ -51,7 +44,6 @@ function Navbar() {
             <a href="#fastigheter" className="hero-cta">Fastigheter till salu <IconChevronDown size={22} aria-hidden="true" /></a>
           </div>
         )}
-        {isAdmin && <NavLink className="header-admin-link" to="/dashboard/property/create">Skapa fastighet</NavLink>}
       </div>
     </header>
   );
