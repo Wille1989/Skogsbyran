@@ -266,11 +266,6 @@ final class DocumentService
             ->with('variants')
             ->firstOrFail();
 
-        if (!$fresh instanceof Document) {
-            throw (new ModelNotFoundException())
-                ->setModel(Document::class, [$document->id]);
-        }
-
         return $fresh;
     }
 

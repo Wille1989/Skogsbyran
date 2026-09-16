@@ -10,7 +10,7 @@ import { Documents } from '@/modules/document/Documents';
 import { ContactContext } from '@/modules/contact/presentation/ContactContext';
 import { formatHectares, formatPrice, listingStatusLabels, locationLabel } from './propertyListing';
 import { LoadingSpinner } from '@/shared/presentation/LoadingSpinner';
-const PropertyAreaMap = lazy(() => import('@/modules/location/map/presentation/PropertyAreaMap').then(module => ({ default: module.PropertyAreaMap })));
+const PropertyMapView = lazy(() => import('@/modules/location/map/presentation/PropertyMapView').then(module => ({ default: module.PropertyMapView })));
 
 export function ShowPage() {
   const { propertyId = '' } = useParams<{ propertyId: string }>();
@@ -66,9 +66,9 @@ export function ShowPage() {
       </div>
       {hasMap && <dialog className="detail-map-dialog" ref={mapDialog} aria-labelledby="detail-map-title" onClose={() => setMapOpen(false)}>
         <header><h2 id="detail-map-title">{details.title} – karta</h2><button type="button" className="detail-pill" onClick={() => mapDialog.current?.close()} autoFocus>Stäng</button></header>
-        {mapOpen && <Suspense fallback={<p>Kartan hämtas…</p>}><PropertyAreaMap key={property.propertyId} polygon={areas[0]?.polygon ?? []} otherPolygons={areas.slice(1).map(area => area.polygon)} marker={marker} pois={location?.pois} readOnly /></Suspense>}
-        {location?.pois.length ? <ul>{location.pois.map((poi, index) => <li key={poi.id ?? index}><strong>{poi.name}</strong>{poi.description && <span> – {poi.description}</span>}</li>)}</ul> : null}
+        {mapOpen && <Suspense fallback={<p>Kartan hämtas…</p>}><PropertyMapView key={property.propertyId} data={{ polygons: areas.map(area => area.polygon), marker, pois: location?.pois ?? [] }} /></Suspense>}
       </dialog>}
     </article>
   );
 }
+

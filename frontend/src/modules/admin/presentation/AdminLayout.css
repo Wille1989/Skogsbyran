@@ -981,6 +981,7 @@
 }
 
 .admin-images .drop-zone-placeholder {
+    max-width: 100%;
     padding: 30px;
     border: 1px dashed #d7ddd6;
     background: #f8faf6;

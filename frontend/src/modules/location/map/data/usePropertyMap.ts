@@ -23,7 +23,7 @@ export function usePropertyMap(options: PropertyMapOptions) {
   const latest = useRef(options);
   const polygonRef = useRef<google.maps.Polygon | null>(null);
   const syncing = useRef(false);
-  const fitted = useRef(false);
+  const fitted = useRef<string | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => { latest.current = options; }, [options]);
@@ -40,9 +40,12 @@ export function usePropertyMap(options: PropertyMapOptions) {
         clickableIcons: false, gestureHandling: "cooperative",
       });
       overlay = new google.maps.Polygon({
-        map: instance, paths: latest.current.polygon,
+        map: instance,
         strokeColor: "#14532d", strokeWeight: 3, fillColor: "#14532d", fillOpacity: 0.18,
       });
+      // setPath creates the MVCArray even for an empty draft. paths: [] means
+      // zero rings in Google Maps, so getPath() can otherwise be undefined.
+      overlay.setPath(latest.current.polygon);
       polygonRef.current = overlay;
       const path = overlay.getPath();
       const change = (): void => {
@@ -64,9 +67,10 @@ export function usePropertyMap(options: PropertyMapOptions) {
       listeners.push(overlay.addListener("contextmenu", (event: google.maps.PolyMouseEvent) => {
         if (!latest.current.readOnly && latest.current.mode === "polygon" && event.vertex !== undefined) path.removeAt(event.vertex);
       }));
-      fitted.current = false;
+      fitted.current = null;
       setMap(instance);
     }).catch((reason: unknown) => {
+      console.error("Google Maps kunde inte initieras.", reason);
       if (!disposed) setError(reason instanceof Error ? reason.message : "Google Maps kunde inte laddas.");
     });
     return () => {
@@ -132,14 +136,19 @@ export function usePropertyMap(options: PropertyMapOptions) {
   }, [map, options.marker, options.pois, options.readOnly, options.onSetMarker, options.onMovePoi]);
 
   useEffect(() => {
-    if (!map || fitted.current) return;
+    if (!map) return;
     const points = [
       ...options.polygon, ...(options.otherPolygons?.flat() ?? []),
       ...(options.marker ? [options.marker] : []),
       ...(options.pois?.map(poi => ({ lat: poi.latitude, lng: poi.longitude })) ?? []),
     ];
-    fitted.current = true;
-    if (!points.length) return;
+    const signature = JSON.stringify(points);
+    if (options.readOnly ? fitted.current === signature : fitted.current !== null) return;
+    if (!points.length) {
+      if (options.readOnly) { map.setCenter(DEFAULT_CENTER); map.setZoom(6); fitted.current = signature; }
+      return;
+    }
+    fitted.current = signature;
     const bounds = new google.maps.LatLngBounds();
     points.forEach(point => bounds.extend(point));
     if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
@@ -148,6 +157,6 @@ export function usePropertyMap(options: PropertyMapOptions) {
     } else {
       map.fitBounds(bounds, 40);
     }
-  }, [map, options.polygon, options.otherPolygons, options.marker, options.pois]);
+  }, [map, options.polygon, options.otherPolygons, options.marker, options.pois, options.readOnly]);
   return { elementRef, map, error };
 }

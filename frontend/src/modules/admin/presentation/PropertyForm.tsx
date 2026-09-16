@@ -5,8 +5,8 @@ import { DetailsForm } from "@/modules/property/details/Form";
 import type { FormDetails } from "@/modules/property/details/types";
 import { ImageDropZone } from "@/modules/image/presentation/FileDropContainer";
 import type { useImageFiles } from "@/modules/image/data/useImageFiles";
-import { LocationEditor } from "@/modules/location/LocationEditor";
-import { EditableAreas } from "@/modules/location/map/presentation/EditableAreas";
+import { PropertyMapEditor } from "@/modules/location/map/presentation/PropertyMapEditor";
+
 import type { EditableAreaDraft } from "@/modules/property/data/editDrafts";
 import type { PropertyLocationDraft } from "@/modules/location/types";
 import type { CreatePropertyProgress } from "@/modules/property/data/types";
@@ -46,8 +46,6 @@ function SeoFields({ slug }: { slug: string }) {
 export function PropertyForm(props: Props) {
     const primary = props.imageFiles.images.find(image => image.isPrimary);
     const cover = primary ? ("file" in primary ? primary.previewUrl : primary.urls.medium) : null;
-    const mainMarker = props.location.latitude !== null && props.location.longitude !== null
-        ? { lat: props.location.latitude, lng: props.location.longitude } : null;
     return <div className="admin-property-form" aria-busy={props.isSaving}>
         <Link to="/admin/properties" className="admin-back"><IconArrowLeft size={17} />Tillbaka till fastigheter</Link>
         <header className="admin-page-heading"><div><h1>{props.title}</h1><p>{props.subtitle || "Fyll i informationen nedan för att skapa fastigheten."}</p></div><div className="admin-property-actions">{props.onDelete && <button type="button" className="admin-button is-danger" disabled={props.isSaving} onClick={props.onDelete}>{props.isDeleting ? "Raderar..." : "Radera fastighet"}</button>}<button type="submit" form="property-form" className="admin-button is-primary" disabled={props.isSaving}><IconDeviceFloppy size={18} />{props.isDeleting ? "Raderar..." : props.isSaving ? "Sparar…" : props.submitLabel}</button></div></header>
@@ -59,9 +57,9 @@ export function PropertyForm(props: Props) {
             <div className="admin-two-columns"><section className="admin-card admin-documents">{props.documents}</section><SeoFields key={props.initialDetails?.slug ?? "create"} slug={props.initialDetails?.slug ?? ""} /></div>
             <section className="admin-card admin-images"><ImageDropZone imageFiles={props.imageFiles} onEditExistingImage={props.onEditImage} /></section>
             <section className="admin-card admin-map-section"><div className="admin-card-heading"><div><h2><IconMapPin size={23} />Karta och områden</h2><p>Markera fastighetens gränser och lägg till eventuella delområden.</p></div></div>
-                <LocationEditor value={props.location} onChange={props.onLocationChange} polygons={props.areas.map(area => area.polygon)} />
-                <EditableAreas areas={props.areas} onChange={props.onAreasChange} mainMarker={mainMarker} />
+                <PropertyMapEditor location={props.location} onLocationChange={props.onLocationChange} areas={props.areas} onAreasChange={props.onAreasChange} disabled={props.isSaving} />
             </section>
         </div>
     </div>;
 }
+

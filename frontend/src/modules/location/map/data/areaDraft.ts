@@ -4,8 +4,10 @@ export function createDefaultAreaDraft(): PropertyAreaDraft {
   return { name: "Område 1", polygon: [] };
 }
 
-export function isValidCoordinate(point: Coordinates): boolean {
-  return Number.isFinite(point.lat) && Math.abs(point.lat) <= 90 && Number.isFinite(point.lng) && Math.abs(point.lng) <= 180;
+export function isValidCoordinate(point: unknown): point is Coordinates {
+  if (!point || typeof point !== "object" || !("lat" in point) || !("lng" in point)) return false;
+  return typeof point.lat === "number" && Number.isFinite(point.lat) && Math.abs(point.lat) <= 90
+    && typeof point.lng === "number" && Number.isFinite(point.lng) && Math.abs(point.lng) <= 180;
 }
 
 export function buildAreaPayload(draft: PropertyAreaDraft): PropertyAreaPayload | null {

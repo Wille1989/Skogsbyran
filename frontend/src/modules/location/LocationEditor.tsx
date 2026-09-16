@@ -1,14 +1,12 @@
-import { useState, type ChangeEvent } from "react";
-import { PropertyAreaMap } from "./map/presentation/PropertyAreaMap";
-import type { Coordinates } from "./map/data/types";
+import { type ChangeEvent } from "react";
+
+
 import type { LocationPoiDraft, PropertyLocationDraft } from "./types";
 import "./LocationEditor.css";
 
-type LocationEditorProps = { value: PropertyLocationDraft; onChange: (value: PropertyLocationDraft) => void; polygons?: Coordinates[][] };
+type LocationEditorProps = { value: PropertyLocationDraft; onChange: (value: PropertyLocationDraft) => void; onMovePoi: (uiId: string) => void };
 
-export function LocationEditor({ value, onChange, polygons }: LocationEditorProps) {
-  const [mode, setMode] = useState<"marker" | "poi" | "navigate">("navigate");
-  const [movingPoi, setMovingPoi] = useState<string | null>(null);
+export function LocationEditor({ value, onChange, onMovePoi }: LocationEditorProps) {
   const updateField = (field: keyof PropertyLocationDraft) => (event: ChangeEvent<HTMLInputElement>): void => {
     onChange({
       ...value,
@@ -24,7 +22,6 @@ export function LocationEditor({ value, onChange, polygons }: LocationEditorProp
   };
 
   const removePoi = (uiId: string): void => {
-    if (movingPoi === uiId) setMovingPoi(null);
     onChange({
       ...value,
       pois: value.pois.filter((poi) => poi.uiId !== uiId),
@@ -35,7 +32,7 @@ export function LocationEditor({ value, onChange, polygons }: LocationEditorProp
     <section className="location-editor form">
       <div className="create-section-copy">
         <strong>Fastighetens plats och POI</strong>
-        <p>Sök adress eller välj huvudposition i kartan. Lägg till namngivna platser som bostadshus, sjö och brygga. Dra markörerna för att flytta dem.</p>
+        <p>Komplettera adressen och namnge dina POI. Ändringarna sparas med fastigheten.</p>
       </div>
 
       <div className="location-grid">
@@ -64,33 +61,6 @@ export function LocationEditor({ value, onChange, polygons }: LocationEditorProp
           </div>
         </div>
 
-        <div className="location-map-shell">
-          <div className="area-toolbar">
-            <button type="button" aria-pressed={mode === "navigate"} onClick={() => setMode("navigate")}>Navigera</button>
-            <button type="button" aria-pressed={mode === "marker"} onClick={() => setMode("marker")}>Sätt huvudposition</button>
-            <button type="button" aria-pressed={mode === "poi" && movingPoi === null} onClick={() => { setMovingPoi(null); setMode("poi"); }}>Lägg till POI</button>
-            <button type="button" onClick={() => onChange({ ...value, latitude: null, longitude: null })}>Ta bort huvudposition</button>
-          </div>
-          <p>{mode === "navigate" ? "Flytta och zooma kartan." : mode === "marker" ? "Klicka för att sätta huvudpositionen." : movingPoi ? "Klicka för att flytta vald POI till en ny plats." : "Klicka för att lägga till en POI-flagga."}</p>
-          <PropertyAreaMap
-            polygon={[]} otherPolygons={polygons} mode={mode}
-            marker={value.latitude !== null && value.longitude !== null ? { lat: value.latitude, lng: value.longitude } : null}
-            pois={value.pois}
-            onSetMarker={position => onChange({ ...value, latitude: position.lat, longitude: position.lng })}
-            onAddressSelect={({ position, ...address }) => onChange({ ...value, ...address, latitude: position.lat, longitude: position.lng })}
-            onAddPoi={position => {
-              if (movingPoi) {
-                updatePoi(movingPoi, { latitude: position.lat, longitude: position.lng });
-                setMovingPoi(null);
-                setMode("navigate");
-                return;
-              }
-              onChange({ ...value, pois: [...value.pois, {
-              uiId: crypto.randomUUID(), name: `POI ${value.pois.length + 1}`, description: "", latitude: position.lat, longitude: position.lng,
-            }] }); }}
-            onMovePoi={(index, position) => updatePoi(value.pois[index].uiId, { latitude: position.lat, longitude: position.lng })}
-          />
-        </div>
       </div>
 
       <div className="poi-list">
@@ -107,7 +77,7 @@ export function LocationEditor({ value, onChange, polygons }: LocationEditorProp
                 />
               </div>
 
-              <button type="button" className="button" onClick={() => { setMovingPoi(poi.uiId); setMode("poi"); }}>Flytta i kartan</button>
+              <button type="button" className="button" onClick={() => onMovePoi(poi.uiId)}>Flytta i kartan</button>
               <button type="button" className="button button-danger" onClick={() => removePoi(poi.uiId)}>
                 Ta bort POI
               </button>
@@ -117,7 +87,7 @@ export function LocationEditor({ value, onChange, polygons }: LocationEditorProp
               <label htmlFor={`poi-description-${poi.uiId}`}>Beskrivning</label>
               <input
                 id={`poi-description-${poi.uiId}`}
-                value={poi.description}
+                maxLength={1000} value={poi.description}
                 onChange={(event) => updatePoi(poi.uiId, { description: event.target.value })}
                 placeholder="Ex. 3 km till badplats"
               />
@@ -128,3 +98,4 @@ export function LocationEditor({ value, onChange, polygons }: LocationEditorProp
     </section>
   );
 }
+
