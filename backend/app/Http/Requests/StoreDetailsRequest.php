@@ -28,7 +28,7 @@ class StorePropertyDetailsRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:150'],
-            'caption' => ['nullable', 'string', 'max:255'],
+            'caption' => ['nullable', 'string', 'max:700'],
             'price' => ['nullable', 'numeric'],
             'size' => ['nullable', 'numeric'],
         ];

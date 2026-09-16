@@ -39,6 +39,7 @@ class UpdateDetailsRequest extends FormRequest
             'caption' => [
                 'sometimes',
                 'string',
+                'max:700',
             ],
 
             'price' => [

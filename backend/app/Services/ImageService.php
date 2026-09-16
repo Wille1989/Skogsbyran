@@ -41,6 +41,11 @@ final class ImageService
                     $details = $imageData['details'];
                     $adjustments = $imageData['adjustments'];
 
+                    // An explicit primary must replace a fallback from an earlier upload batch.
+                    if ($imageData['isPrimary']) {
+                        $property->images()->where('is_primary', true)->update(['is_primary' => false]);
+                    }
+
                     $image = Image::query()->create([
                         'property_id' => $property->id,
                         'sort_order' => (int) $imageData['position'],

@@ -85,9 +85,11 @@ export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false }
                                         <textarea
                                                 id="caption"
                                                 rows={5}
+                                                maxLength={700}
                                                 placeholder="Beskriv fastigheten här"
-                                                {...register("caption")}
+                                                {...register("caption", { maxLength: { value: 700, message: "Beskrivningen får innehålla högst 700 tecken." } })}
                                         />
+                                        {errors.caption && <p className="form-error" role="alert">{errors.caption.message}</p>}
                                 </div>
                         </div>
                         <aside className="admin-details-side">                                <div className="form-field">

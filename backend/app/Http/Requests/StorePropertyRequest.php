@@ -89,6 +89,7 @@ final class StorePropertyRequest extends FormRequest
             'details.caption' => [
                 'required',
                 'string',
+                'max:700',
             ],
 
             'details.price' => [

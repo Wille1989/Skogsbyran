@@ -8,6 +8,27 @@ import {
       type UploadImagesInput,
 } from "./types.ts";
 
+const IMAGE_UPLOAD_BATCH_MAX_BYTES = 6 * 1024 * 1024;
+
+function batchImages(images: NewImageFile[]): NewImageFile[][] {
+      const batches: NewImageFile[][] = [];
+      let batch: NewImageFile[] = [];
+      let bytes = 0;
+
+      for (const image of images) {
+            if (batch.length > 0 && bytes + image.file.size > IMAGE_UPLOAD_BATCH_MAX_BYTES) {
+                  batches.push(batch);
+                  batch = [];
+                  bytes = 0;
+            }
+            batch.push(image);
+            bytes += image.file.size;
+      }
+
+      if (batch.length > 0) batches.push(batch);
+      return batches;
+}
+
 export function buildUploadFormData(images: NewImageFile[]): FormData {
       const formData = new FormData();
 
@@ -22,11 +43,16 @@ export function buildUploadFormData(images: NewImageFile[]): FormData {
       return formData;
 }
 
-export function uploadImages({propertyId, images}: UploadImagesInput): Promise<ImageFile[]> {
-      return apiFetch<ImageFile[]>(`${baseURL}/property/${propertyId}/images`, {
-            method: "POST",
-            body: buildUploadFormData(images)
-      })
+export async function uploadImages({propertyId, images}: UploadImagesInput): Promise<ImageFile[]> {
+      let uploaded: ImageFile[] = [];
+      for (const batch of batchImages(images)) {
+            // Each response contains the property's complete image collection.
+            uploaded = await apiFetch<ImageFile[]>(`${baseURL}/property/${propertyId}/images`, {
+                  method: "POST",
+                  body: buildUploadFormData(batch)
+            });
+      }
+      return uploaded;
 }
 
 export function updateImages({propertyId, images}: UpdateImagesInput): Promise<ImageFile[]>  {
