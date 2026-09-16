@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Modules\Activity\Enums\EventType;
 use App\Modules\Image\Models\Image;
 use App\Modules\Property\Models\Property;
 use Illuminate\Database\Eloquent\Collection;
@@ -15,7 +16,8 @@ use RuntimeException;
 final class ImageService
 {
     public function __construct(
-        private readonly ImageStorageService $storageService
+        private readonly ImageStorageService $storageService,
+        private readonly ActivityService $activityService
     ) {
     }
 
@@ -70,6 +72,10 @@ final class ImageService
                 }
 
                 $this->ensureSinglePrimaryImage($property);
+
+                if ($validated['images'] !== []) {
+                    $this->activityService->record(EventType::ImagesUploaded, $property);
+                }
 
                 return $property
                     ->images()

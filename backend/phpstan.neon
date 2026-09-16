@@ -10,4 +10,9 @@ parameters:
         - app/Http/Requests/StoreAnalyticsEventRequest.php
         - app/Http/Requests/AnalyticsStatisticsRequest.php
         - database/migrations/2026_09_16_120000_create_analytics_events_table.php
+        - app/Modules/Activity
+        - app/Services/ActivityService.php
+        - app/Presenters/ActivityPresenter.php
+        - app/Http/Controllers/Api/ActivityController.php
+        - database/migrations/2026_09_16_130000_create_activity_events_table.php
     tmpDir: storage/framework/cache/phpstan

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AreaController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DetailsController;
@@ -37,6 +38,8 @@ Route::get('/property/{property}', [PropertyController::class, 'show'])->middlew
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:web', 'admin'])->group(function (): void {
+    Route::get('/activity', [ActivityController::class, 'index']);
+
     Route::post('/property', [PropertyController::class, 'store']);
     Route::delete('/property/{property}', [PropertyController::class, 'destroy']);
 

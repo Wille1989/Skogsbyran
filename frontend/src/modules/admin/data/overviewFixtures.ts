@@ -6,13 +6,6 @@ export const plannedEvents = [
     { day: "22", month: "okt", title: "Värdering", property: "Granliden 3, Hudiksvall", time: "13:00–15:00", category: "Värdering", tone: "amber" },
     { day: "25", month: "okt", title: "Uppföljning med kund", property: "Tallheden 7, Härnösand", time: "11:00", category: "Möte", tone: "green" },
 ];
-export const recentActivity = [
-    { type: "create", title: "Ny fastighet skapad", property: "Björkbacken 5, Sundsvall", time: "2 timmar sedan" },
-    { type: "image", title: "Bilder uppladdade", property: "Tallvägen 12, Ljusdal", time: "5 timmar sedan" },
-    { type: "edit", title: "Fastighet uppdaterad", property: "Granliden 3, Hudiksvall", time: "1 dag sedan" },
-    { type: "publish", title: "Publicerad på webbplatsen", property: "Skogsdalen 1, Östersund", time: "2 dagar sedan" },
-    { type: "contact", title: "Ny intresseanmälan", property: "Tallheden 7, Härnösand", time: "2 dagar sedan" },
-] as const;
 export const quickStatus = [
     { title: "Saknar pris", count: 3, tone: "red" },
     { title: "Saknar bilder", count: 5, tone: "amber" },

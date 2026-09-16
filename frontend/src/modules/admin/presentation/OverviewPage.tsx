@@ -1,10 +1,10 @@
+import { RecentActivity } from "@/modules/activity/presentation/RecentActivity";
 import { useAnalyticsStatistics } from "@/modules/analytics/data/queries";
 import type { StatisticsPeriod } from "@/modules/analytics/data/types";
 import { useState } from "react";
-import { IconPointer, IconUsers, IconEye, IconCalendar, IconClock, IconChartPie, IconFileDescription, IconPhoto, IconPencil, IconUser, IconAlertTriangle } from "@tabler/icons-react";
-import { plannedEvents, recentActivity, quickStatus } from "../data/overviewFixtures";
+import { IconPointer, IconUsers, IconCalendar, IconChartPie, IconFileDescription, IconPhoto, IconAlertTriangle } from "@tabler/icons-react";
+import { plannedEvents, quickStatus } from "../data/overviewFixtures";
 
-const activityIcons = { create: IconFileDescription, image: IconPhoto, edit: IconPencil, publish: IconEye, contact: IconUser };
 const periods: { value: StatisticsPeriod; label: string; days: number }[] = [
     { value: "week", label: "Vecka", days: 7 }, { value: "month", label: "Månad", days: 30 },
     { value: "quarter", label: "Kvartal", days: 90 }, { value: "year", label: "År", days: 365 },
@@ -22,7 +22,7 @@ export function OverviewPage() {
     ];
     return <div className="admin-overview">
         <header className="admin-page-heading"><div><span className="admin-eyebrow">ADMIN / ÖVERSIKT</span><h1>Översikt</h1><p>Här kan du se aktivitet, besöksstatistik och planering för dina fastigheter.</p></div></header>
-        <p className="admin-notice"><strong>Delvis exempeldata.</strong> Planerade händelser, senaste aktivitet och snabbstatus visar fortfarande exempel.</p>
+        <p className="admin-notice"><strong>Delvis exempeldata.</strong> Planerade händelser och snabbstatus visar fortfarande exempel.</p>
         <section className="admin-card admin-statistics" aria-labelledby="statistics-title">
             <div className="admin-card-heading"><h2 id="statistics-title">Statistik</h2><div className="admin-tabs" aria-label="Statistikperiod">{periods.map(item => <button type="button" key={item.value} aria-pressed={period === item.value} onClick={() => setPeriod(item.value)}>{item.label}</button>)}</div></div>
             <p>Senaste {days} dagarna. Besök räknas per sidladdning, inte som unika personer.</p>
@@ -41,9 +41,7 @@ export function OverviewPage() {
                 </li>)}</ul>
             </section>
             <div className="admin-overview-side">
-                <section className="admin-card"><div className="admin-card-heading"><h2><IconClock />Senaste aktivitet</h2><span className="admin-example-label">Exempel</span></div>
-                    <ul className="admin-activity-list">{recentActivity.map(activity => { const Icon = activityIcons[activity.type]; return <li key={activity.type}><span className="admin-round-icon"><Icon size={22} /></span><div><strong>{activity.title}</strong><span>{activity.property}</span></div><small>{activity.time}</small></li>; })}</ul>
-                </section>
+                <RecentActivity />
                 <section className="admin-card"><div className="admin-card-heading"><h2><IconChartPie />Snabbstatus</h2><span className="admin-example-label">Exempel</span></div>
                     <ul className="admin-quick-list">{quickStatus.map((item, index) => { const Icon = [IconAlertTriangle, IconPhoto, IconFileDescription][index]; return <li key={item.title}><span className={`admin-round-icon tone-${item.tone}`}><Icon size={24} /></span><div><strong>{item.title}</strong><span>{item.count} fastigheter</span></div></li>; })}</ul>
                 </section>

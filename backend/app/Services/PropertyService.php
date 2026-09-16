@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Modules\Activity\Enums\EventType;
 use App\Modules\Location\Data\AreaData;
 use App\Modules\Location\Data\LocationData;
 use App\Modules\Property\Models\Property;
@@ -17,6 +18,7 @@ final class PropertyService
         private readonly AreaService $areaService,
         private readonly LocationService $locationService,
         private readonly PropertyPresenter $propertyPresenter,
+        private readonly ActivityService $activityService,
     ) {}
 
     /**
@@ -85,6 +87,8 @@ final class PropertyService
                     ]
                 );
             }
+
+            $this->activityService->record(EventType::PropertyCreated, $property);
 
             return $property->load([
                 'images.metadata',

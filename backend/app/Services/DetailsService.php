@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Modules\Activity\Enums\EventType;
+use Illuminate\Support\Facades\DB;
 use App\Presenters\PropertyPresenter;
 use App\Modules\Property\Models\Property;
 
@@ -12,7 +14,7 @@ use App\Modules\Property\Models\Property;
  */
 class DetailsService
 {
-    public function __construct(private readonly PropertyPresenter $propertyPresenter)
+    public function __construct(private readonly PropertyPresenter $propertyPresenter, private readonly ActivityService $activityService)
     {
     }
 
@@ -40,10 +42,13 @@ class DetailsService
      */
     public function update(Property $property, array $validated): void
     {
-        if ($validated !== []) {
+        DB::transaction(function () use ($property, $validated): void {
             $property->fill($validated);
-            $property->save();
-        }
+            if ($property->isDirty()) {
+                $property->save();
+                $this->activityService->record(EventType::PropertyUpdated, $property);
+            }
+        });
     }
 
     /**
