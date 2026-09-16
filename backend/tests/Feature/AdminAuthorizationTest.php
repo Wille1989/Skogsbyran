@@ -58,4 +58,21 @@ final class AdminAuthorizationTest extends TestCase
             ->deleteJson('/property/'.$property->id)
             ->assertUnauthorized();
     }
+
+    public function test_all_property_write_routes_keep_session_and_admin_middleware(): void
+    {
+        $checked = 0;
+        foreach (app('router')->getRoutes() as $route) {
+            if (! str_starts_with($route->uri(), 'property') || in_array('GET', $route->methods(), true)) {
+                continue;
+            }
+
+            $middleware = $route->gatherMiddleware();
+            $this->assertContains('auth:web', $middleware, $route->uri());
+            $this->assertContains('admin', $middleware, $route->uri());
+            $checked++;
+        }
+
+        $this->assertSame(13, $checked);
+    }
 }

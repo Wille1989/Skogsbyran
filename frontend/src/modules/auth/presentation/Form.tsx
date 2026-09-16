@@ -1,17 +1,23 @@
 import { useAuth } from '../data/auth.hooks.ts';
 import "./Form.css";
-import { Link } from 'react-router-dom';
+import { LoadingSpinner } from '@/shared/presentation/LoadingSpinner';
+import { Link, Navigate } from 'react-router-dom';
 import { IconArrowLeft } from '@tabler/icons-react';
 
 export function AuthPage() {
   const {
     loading,
+    isAdmin,
+    isAuthPending,
     form,
     successMessage,
     errorMessage,
     onLogin,
     onChange,
   } = useAuth();
+
+  if (isAuthPending) return <LoadingSpinner />;
+  if (isAdmin) return <Navigate to="/admin" replace />;
 
   return (
     <div className="auth-page">

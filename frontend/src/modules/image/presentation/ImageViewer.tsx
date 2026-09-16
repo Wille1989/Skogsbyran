@@ -9,6 +9,7 @@ import { calculateImageIndex } from "../data/calculateIndex";
 import { ImageEditDialog } from "./ImageEditDialog";
 import type { ImageFile } from "../data/types";
 import { IconPhoto } from "@tabler/icons-react";
+import { recordEvent } from "@/modules/analytics/data/api";
 
 type ImageViewerProps = {
       propertyId: string;
@@ -152,6 +153,8 @@ export function ImageViewer({
       };
 
       const openLightbox = (index: number): void => {
+            const image = images[index];
+            if (image) recordEvent({ event_type: "image_click", property_id: propertyId, image_id: image.imageId });
             setActiveIndex(index);
             setIsLightboxOpen(true);
       };

@@ -13,6 +13,7 @@ use App\Modules\Location\Models\Area;
 use App\Modules\Location\Models\Location;
 use App\Modules\Location\Models\PointOfInterest;
 use App\Modules\Property\Models\Property;
+use App\Services\AreaService;
 use Illuminate\Support\Collection;
 
 final class PropertyPresenter
@@ -21,8 +22,8 @@ final class PropertyPresenter
 
     public function __construct(
         private readonly ObjectStorage $objectStorage,
-    ) {
-    }
+        private readonly AreaService $areaService,
+    ) {}
 
     /**
      * @param  Collection<int, Property>  $properties
@@ -53,8 +54,11 @@ final class PropertyPresenter
                 'price' => (string) ($property->price_whole_units ?? $property->price ?? ''),
                 'size' => (string) ($property->size_hectares ?? $property->size ?? ''),
                 'slug' => $property->slug ?? '',
-                'listingStatus' => $property->listing_status?->value ?? 'available',
+                'listingStatus' => $property->listing_status->value,
                 'isVisible' => $property->is_visible ?? true,
+                'publishAt' => $property->publish_at?->utc()->format('Y-m-d\TH:i:s.v\Z'),
+                'scheduledListingStatus' => $property->scheduled_listing_status?->value,
+                'scheduledStatusAt' => $property->scheduled_status_at?->utc()->format('Y-m-d\TH:i:s.v\Z'),
             ],
             'primaryImage' => $primaryImage instanceof Image
                 ? $this->listingImage($primaryImage)
@@ -98,8 +102,11 @@ final class PropertyPresenter
                 'price' => (string) ($property->price_whole_units ?? $property->price ?? ''),
                 'size' => (string) ($property->size_hectares ?? $property->size ?? ''),
                 'slug' => $property->slug ?? '',
-                'listingStatus' => $property->listing_status?->value ?? 'available',
+                'listingStatus' => $property->listing_status->value,
                 'isVisible' => $property->is_visible ?? true,
+                'publishAt' => $property->publish_at?->utc()->format('Y-m-d\TH:i:s.v\Z'),
+                'scheduledListingStatus' => $property->scheduled_listing_status?->value,
+                'scheduledStatusAt' => $property->scheduled_status_at?->utc()->format('Y-m-d\TH:i:s.v\Z'),
             ],
             'images' => $property->images
                 ->map(fn (Image $image): array => $this->image($image))
@@ -110,7 +117,7 @@ final class PropertyPresenter
                 ->values()
                 ->all(),
             'areas' => $property->areas
-                ->map(fn (Area $area): array => $this->area($area))
+                ->map(fn (Area $area): array => $this->areaService->mapArea($area))
                 ->values()
                 ->all(),
             'location' => $property->location
@@ -218,7 +225,7 @@ final class PropertyPresenter
             'urls' => [
 
                 'large' => $urls[ImageVariantName::Large->value],
-            ]
+            ],
         ];
     }
 
@@ -248,11 +255,9 @@ final class PropertyPresenter
         $document->loadMissing('variants');
 
         $variant = $document->variants->first(
-            static fn ($variant): bool =>
-                $variant->variant === DocumentVariantName::Original
+            static fn ($variant): bool => $variant->variant === DocumentVariantName::Original
         ) ?? $document->variants->first(
-            static fn ($variant): bool =>
-                $variant->variant === DocumentVariantName::Preview
+            static fn ($variant): bool => $variant->variant === DocumentVariantName::Preview
         );
 
         $pivot = $document->pivot;
@@ -271,96 +276,5 @@ final class PropertyPresenter
             'mimeType' => $document->mime_type,
             'sizeBytes' => $variant?->file_size ?? 0,
         ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function area(Area $area): array
-    {
-        $area->loadMissing(['location', 'points']);
-
-        $polygon = $this->polygon($area);
-        $areaSquareMeters = $this->calculateAreaSquareMeters($polygon);
-
-        return [
-            'id' => (string) $area->id,
-            'propertyId' => (string) ($area->location?->property_id ?? ''),
-            'name' => $area->name,
-            'polygon' => $polygon,
-            'marker' => $this->marker($polygon),
-            'areaSquareMeters' => round($areaSquareMeters, 2),
-            'areaHectares' => round($areaSquareMeters / 10000, 4),
-            'createdAt' => $area->created_at?->toISOString(),
-            'updatedAt' => $area->updated_at?->toISOString(),
-        ];
-    }
-
-    /**
-     * @return array<int, array<string, float>>
-     */
-    private function polygon(Area $area): array
-    {
-        return $area->points
-            ->map(static fn ($point): array => [
-                'lat' => (float) $point->latitude,
-                'lng' => (float) $point->longitude,
-            ])
-            ->values()
-            ->all();
-    }
-
-    /**
-     * @param  array<int, array<string, float>>  $polygon
-     * @return array{lat: float, lng: float}
-     */
-    private function marker(array $polygon): array
-    {
-        if ($polygon === []) {
-            return [
-                'lat' => 0.0,
-                'lng' => 0.0,
-            ];
-        }
-
-        return [
-            'lat' => array_sum(array_column($polygon, 'lat')) / count($polygon),
-            'lng' => array_sum(array_column($polygon, 'lng')) / count($polygon),
-        ];
-    }
-
-    /**
-     * @param  array<int, array<string, float>>  $polygon
-     */
-    private function calculateAreaSquareMeters(array $polygon): float
-    {
-        $count = count($polygon);
-
-        if ($count < 3) {
-            return 0;
-        }
-
-        $earthRadius = 6378137.0;
-        $averageLatRadians = deg2rad(array_sum(array_column($polygon, 'lat')) / $count);
-
-        $projected = array_map(function (array $point) use ($earthRadius, $averageLatRadians): array {
-            $lat = deg2rad((float) $point['lat']);
-            $lng = deg2rad((float) $point['lng']);
-
-            return [
-                'x' => $earthRadius * $lng * cos($averageLatRadians),
-                'y' => $earthRadius * $lat,
-            ];
-        }, $polygon);
-
-        $area = 0.0;
-
-        for ($index = 0; $index < $count; $index++) {
-            $next = ($index + 1) % $count;
-            $area += ($projected[$index]['x'] * $projected[$next]['y'])
-                - ($projected[$next]['x'] * $projected[$index]['y']);
-        }
-
-        return abs($area) / 2;
     }
 }

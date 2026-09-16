@@ -13,10 +13,6 @@
 .hero-intro { margin: 0; max-width: 58ch; font-size: 0.98rem; line-height: 1.55; }
 .hero-cta { display: inline-flex; align-items: center; gap: 30px; margin-top: 28px; padding: 14px 26px; border-radius: 999px; background: var(--white-warm); color: var(--forest-950); font-weight: 600; font-size: 0.92rem; }
 .hero-cta:hover { background: var(--sage-200); color: var(--forest-950); }
-.nav-button { position: absolute; top: 16px; right: 20px; border: 1px solid rgba(250, 248, 241, 0.4); border-radius: 999px; padding: 8px 14px; background: transparent; color: var(--white-warm); font: inherit; font-size: 0.8rem; cursor: pointer; }
-.nav-button:hover { background: var(--forest-900); color: var(--white-warm); }
-.header-admin-link { display: inline-block; margin-top: 16px; text-decoration: underline; }
-.admin-session-banner { padding: 8px 16px; background: var(--forest-900); font-size: 0.85rem; }
 .site-header a:focus-visible, .site-header button:focus-visible { outline: 3px solid var(--sage-200); outline-offset: 5px; }
 @media (max-width: 640px) {
   .home-hero { min-height: 480px; }

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateLocationRequest;
+use App\Modules\Location\Data\LocationData;
 use App\Modules\Property\Models\Property;
 use App\Services\LocationService;
 use Illuminate\Http\JsonResponse;
@@ -14,13 +15,12 @@ final class LocationController extends Controller
 {
     public function __construct(
         private readonly LocationService $locationService,
-    ) {
-    }
+    ) {}
 
     public function update(UpdateLocationRequest $request, Property $property): JsonResponse
     {
         return response()->json(
-            $this->locationService->replace($property, $request->validated())
+            $this->locationService->replace($property, LocationData::fromRequest($request))
         );
     }
 }

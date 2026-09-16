@@ -1,9 +1,11 @@
+import { IconPlus, IconFileDescription } from "@tabler/icons-react";
 import { useRef, useState, type ChangeEvent } from "react";
 import type { PendingDocument } from "./types";
 import "./PendingDocuments.css";
 
 type PendingDocumentsProps = {
   documents: PendingDocument[];
+  showHeading?: boolean;
   onChange: (documents: PendingDocument[]) => void;
 };
 
@@ -19,7 +21,7 @@ function titleFromFile(file: File): string {
   return file.name.replace(/\.pdf$/i, "");
 }
 
-export function PendingDocuments({ documents, onChange }: PendingDocumentsProps) {
+export function PendingDocuments({ documents, onChange, showHeading = true }: PendingDocumentsProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,14 +59,15 @@ export function PendingDocuments({ documents, onChange }: PendingDocumentsProps)
 
   return (
     <section className="pending-documents document-form">
-      <div className="create-section-copy">
-        <strong>Dokument</strong>
+      <div className="admin-card-heading"><div>
+        {showHeading && <h2>Dokument</h2>}
         <p>Lägg till en eller flera PDF:er. De laddas upp först när fastigheten sparas.</p>
-      </div>
+      </div><button type="button" className="admin-button" onClick={() => fileInputRef.current?.click()}><IconPlus size={18} />Lägg till dokument</button></div>
 
-      <div className="form-field">
-        <label htmlFor="pending-documents">PDF-dokument</label>
+      <div>
         <input
+          hidden
+          aria-label="Välj PDF-dokument"
           ref={fileInputRef}
           id="pending-documents"
           type="file"
@@ -78,6 +81,7 @@ export function PendingDocuments({ documents, onChange }: PendingDocumentsProps)
         <div className="pending-documents-list">
           {documents.map((document) => (
             <article className="pending-document-card" key={document.uiId}>
+              <IconFileDescription size={22} aria-hidden="true" />
               <div className="form-field">
                 <label htmlFor={`pending-document-title-${document.uiId}`}>Dokumentnamn</label>
                 <input

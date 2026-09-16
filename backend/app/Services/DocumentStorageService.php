@@ -81,8 +81,15 @@ final class DocumentStorageService
             true
         );
 
+        $prefix = config('filesystems.object_storage_prefix');
+
+        if (!is_string($prefix)) {
+            throw new \RuntimeException('Invalid object storage prefix.');
+        }
+
         return sprintf(
-            'properties/%d/documents/%s/%s.%s',
+            '%s/properties/%d/documents/%s/%s.%s',
+            $prefix,
             $propertyId,
             $type ?: 'general',
             $fileName,

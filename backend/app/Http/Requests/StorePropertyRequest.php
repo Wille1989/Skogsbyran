@@ -15,17 +15,29 @@ final class StorePropertyRequest extends FormRequest
         return true;
     }
 
+    /** @return list<\Closure(\Illuminate\Validation\Validator): void> */
+    public function after(): array
+    {
+        return [fn (\Illuminate\Validation\Validator $validator) => PublicationValidation::validate($this, $validator, 'details.')];
+    }
+
     protected function prepareForValidation(): void
     {
         $details = $this->decodeJsonArray($this->input('details'));
         $areas = $this->decodeJsonArray($this->input('areas'));
         $details = $this->normalizeDetails($details);
+        $location = $this->has('location') ? $this->decodeJsonArray($this->input('location')) : null;
+        if ($location !== null) {
+            $location['postal_code'] = $location['postal_code'] ?? $location['postalCode'] ?? null;
+            $location['country_code'] = $location['country_code'] ?? $location['countryCode'] ?? 'SE';
+            $location['google_place_id'] = $location['google_place_id'] ?? $location['googlePlaceId'] ?? null;
+        }
 
         $images = $this->input('images', []);
 
         if (is_array($images)) {
             foreach ($images as $index => $image) {
-                if (!is_array($image)) {
+                if (! is_array($image)) {
                     continue;
                 }
 
@@ -41,6 +53,7 @@ final class StorePropertyRequest extends FormRequest
 
         $this->merge([
             'details' => $details,
+            'location' => $location,
             'areas' => $areas,
             'images' => $images,
         ]);
@@ -48,7 +61,21 @@ final class StorePropertyRequest extends FormRequest
 
     public function rules(): array
     {
+        $locationRules = [];
+        if ($this->input('location') !== null) {
+            foreach ((new UpdateLocationRequest)->rules() as $key => $rules) {
+                $locationRules['location.'.$key] = array_map(
+                    static fn (string $rule): string => str_starts_with($rule, 'required_with:')
+                        ? str_replace('required_with:', 'required_with:location.', $rule) : $rule,
+                    $rules,
+                );
+            }
+        }
+
         return [
+            ...PublicationValidation::rules('details.'),
+            ...$locationRules,
+            'location' => ['nullable', 'array'],
             'details' => [
                 'required',
                 'array',
@@ -62,6 +89,7 @@ final class StorePropertyRequest extends FormRequest
             'details.caption' => [
                 'required',
                 'string',
+                'max:700',
             ],
 
             'details.price' => [
@@ -191,18 +219,19 @@ final class StorePropertyRequest extends FormRequest
             ],
 
             'areas.*.marker' => [
+                'sometimes',
                 'required',
                 'array',
             ],
 
             'areas.*.marker.lat' => [
-                'required',
+                'required_with:areas.*.marker',
                 'numeric',
                 'between:-90,90',
             ],
 
             'areas.*.marker.lng' => [
-                'required',
+                'required_with:areas.*.marker',
                 'numeric',
                 'between:-180,180',
             ],
@@ -215,7 +244,7 @@ final class StorePropertyRequest extends FormRequest
             return $value;
         }
 
-        if (!is_string($value) || $value === '') {
+        if (! is_string($value) || $value === '') {
             return [];
         }
 
@@ -249,12 +278,19 @@ final class StorePropertyRequest extends FormRequest
         $details['size_hectares'] = $details['size_hectares']
             ?? $this->decimalString($details['size'] ?? null);
 
+        foreach (['publishAt' => 'publish_at', 'scheduledListingStatus' => 'scheduled_listing_status', 'scheduledStatusAt' => 'scheduled_status_at'] as $client => $column) {
+            if (array_key_exists($client, $details)) {
+                $details[$column] = $details[$client];
+                unset($details[$client]);
+            }
+        }
+
         return $details;
     }
 
     private function wholeCurrencyUnits(mixed $value): ?int
     {
-        if (!is_scalar($value)) {
+        if (! is_scalar($value)) {
             return null;
         }
 
@@ -269,7 +305,7 @@ final class StorePropertyRequest extends FormRequest
 
     private function decimalString(mixed $value): ?string
     {
-        if (!is_scalar($value)) {
+        if (! is_scalar($value)) {
             return null;
         }
 

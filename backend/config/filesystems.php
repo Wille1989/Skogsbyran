@@ -1,5 +1,6 @@
 <?php
 
+
 $backblazeEndpoint = static function (?string $endpoint): ?string {
     if ($endpoint === null || $endpoint === '') {
         return null;
@@ -33,6 +34,8 @@ $backblazeRegionFromEndpoint = static function (?string $endpoint) use ($backbla
 };
 
 return [
+
+    'object_storage_prefix' => env('OBJECT_STORAGE_PREFIX', 'development'),
 
     /*
     |--------------------------------------------------------------------------

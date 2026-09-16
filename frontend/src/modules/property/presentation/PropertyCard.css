@@ -16,10 +16,8 @@
 .property-card .caption { margin: 0; font-size: 0.92rem; line-height: 1.45; color: var(--text-secondary); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
 .property-card .cta { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; flex-shrink: 0; margin-left: auto; border-radius: 50%; background: var(--sage-200); color: var(--forest-950); }
 .property-card .card-link:hover .cta { background: var(--sage-100); }
-.property-card .edit { position: absolute; left: calc(54.5% - 48px); top: 12px; z-index: 2; padding: 8px; border-radius: 50%; background: var(--forest-900); color: var(--white-warm); }
 .property-card a:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
 @media (max-width: 760px) {
-  .property-card .edit { left: auto; right: 12px; }
   .property-card .card-link { grid-template-columns: 1fr; }
   .property-card .image-frame { min-height: 230px; }
   .property-card .body { padding: 20px; }

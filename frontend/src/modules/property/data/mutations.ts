@@ -2,8 +2,6 @@ import { useMutation } from "@tanstack/react-query";
 import { patchDetails } from "../details/api";
 import { uploadDocument } from "@/modules/document/api";
 import { uploadImages } from "@/modules/image/data/api";
-import { updateLocation } from "@/modules/location/api";
-import { createArea } from "@/modules/location/map/data/api";
 import { create, getById } from "./api";
 import type { CreatePropertyInput } from "./types";
 
@@ -18,13 +16,12 @@ export function useCreatePropertyMutation() {
     return useMutation({
         mutationFn: async (input: CreatePropertyInput) => {
             const shouldPublish = input.details.isVisible;
+            const hasSchedule = input.details.publishAt !== null || input.details.scheduledStatusAt !== null;
             const totalSteps =
                 1 +
                 (input.images.length > 0 ? 1 : 0) +
                 input.documents.length +
-                (input.location ? 1 : 0) +
-                input.areas.length +
-                (shouldPublish ? 1 : 0) +
+                (shouldPublish || hasSchedule ? 1 : 0) +
                 1;
             let completedSteps = 0;
 
@@ -35,9 +32,11 @@ export function useCreatePropertyMutation() {
                 details: {
                     ...input.details,
                     isVisible: false,
+                    publishAt: null,
+                    scheduledListingStatus: null,
+                    scheduledStatusAt: null,
                 },
                 images: [],
-                areas: [],
             });
             const propertyId = created.property.propertyId;
             completedSteps += 1;
@@ -60,27 +59,16 @@ export function useCreatePropertyMutation() {
                 reportProgress(input, completedSteps, totalSteps, `Dokument ${index + 1} är uppladdat.`);
             }
 
-            if (input.location) {
-                reportProgress(input, completedSteps, totalSteps, "Sparar plats och POIs...");
-                await updateLocation(propertyId, input.location);
-                completedSteps += 1;
-                reportProgress(input, completedSteps, totalSteps, "Plats och POIs är sparade.");
-            }
-
-            for (const [index, area] of input.areas.entries()) {
-                reportProgress(input, completedSteps, totalSteps, `Sparar område ${index + 1} av ${input.areas.length}...`);
-                await createArea(propertyId, area);
-                completedSteps += 1;
-                reportProgress(input, completedSteps, totalSteps, `Område ${index + 1} är sparat.`);
-            }
-
-            if (shouldPublish) {
-                reportProgress(input, completedSteps, totalSteps, "Publicerar fastigheten...");
+            if (shouldPublish || hasSchedule) {
+                reportProgress(input, completedSteps, totalSteps, "Sparar publiceringsinställningar...");
                 await patchDetails(propertyId, {
-                    isVisible: true,
+                    isVisible: shouldPublish,
+                    publishAt: input.details.publishAt,
+                    scheduledListingStatus: input.details.scheduledListingStatus,
+                    scheduledStatusAt: input.details.scheduledStatusAt,
                 });
                 completedSteps += 1;
-                reportProgress(input, completedSteps, totalSteps, "Fastigheten är publicerad.");
+                reportProgress(input, completedSteps, totalSteps, "Publiceringsinställningarna är sparade.");
             }
 
             reportProgress(input, completedSteps, totalSteps, "Hämtar färdig fastighet...");

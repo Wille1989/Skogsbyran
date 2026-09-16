@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Modules\Activity\Enums\EventType;
 use App\Modules\Image\Models\Image;
 use App\Modules\Property\Models\Property;
 use Illuminate\Database\Eloquent\Collection;
@@ -15,7 +16,8 @@ use RuntimeException;
 final class ImageService
 {
     public function __construct(
-        private readonly ImageStorageService $storageService
+        private readonly ImageStorageService $storageService,
+        private readonly ActivityService $activityService
     ) {
     }
 
@@ -38,6 +40,11 @@ final class ImageService
 
                     $details = $imageData['details'];
                     $adjustments = $imageData['adjustments'];
+
+                    // An explicit primary must replace a fallback from an earlier upload batch.
+                    if ($imageData['isPrimary']) {
+                        $property->images()->where('is_primary', true)->update(['is_primary' => false]);
+                    }
 
                     $image = Image::query()->create([
                         'property_id' => $property->id,
@@ -70,6 +77,10 @@ final class ImageService
                 }
 
                 $this->ensureSinglePrimaryImage($property);
+
+                if ($validated['images'] !== []) {
+                    $this->activityService->record(EventType::ImagesUploaded, $property);
+                }
 
                 return $property
                     ->images()

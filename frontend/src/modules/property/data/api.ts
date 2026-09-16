@@ -9,7 +9,6 @@ export function getById(propertyId: string): Promise<ResponseGetProperty> {
     return apiFetch<ResponseGetProperty>(`${baseURL}/property/${propertyId}`,
         {
             method: "GET",
-            credentials: "omit",
         }
     );
 }
@@ -35,6 +34,8 @@ export function create(input: CreatePropertyInput): Promise<ResponseGetProperty>
         "areas",
         JSON.stringify(input.areas)
     );
+
+    if (input.location) formData.append("location", JSON.stringify(input.location));
 
     input.images.forEach((image, index) => {
         formData.append(
@@ -77,4 +78,8 @@ export function remove(propertyId: string): Promise<void> {
             method: "DELETE",
         }
     );
+}
+
+export function getAdminProperties(): Promise<ResponseGetProperties> {
+    return apiFetch<ResponseGetProperties>(`${baseURL}/admin/properties`);
 }

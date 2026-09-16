@@ -23,6 +23,8 @@ if not exist "%ROOT%frontend\package.json" (
 start "Skogsbyran Backend" powershell -NoExit -Command "Set-Location '%ROOT%backend'; & '%PHP_EXE%' artisan serve --host=127.0.0.1 --port=8020"
 start "Skogsbyran Frontend" powershell -NoExit -Command "Set-Location '%ROOT%frontend'; npm.cmd run dev"
 
-echo Backend and Frontend is now running!
+powershell -NoProfile -Command "Start-Process -FilePath '%PHP_EXE%' -ArgumentList 'artisan','schedule:work' -WorkingDirectory '%ROOT%backend' -WindowStyle Hidden"
+
+echo Backend, Frontend and Scheduler are now running!
 
 endlocal

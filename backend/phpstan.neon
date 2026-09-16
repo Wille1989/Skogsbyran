@@ -1,0 +1,22 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 6
+    paths:
+        - app/Modules/Analytics
+        - app/Services/AnalyticsService.php
+        - app/Http/Controllers/Api/AnalyticsController.php
+        - app/Http/Requests/StoreAnalyticsEventRequest.php
+        - app/Http/Requests/AnalyticsStatisticsRequest.php
+        - database/migrations/2026_09_16_120000_create_analytics_events_table.php
+        - app/Modules/Activity
+        - app/Services/ActivityService.php
+        - app/Presenters/ActivityPresenter.php
+        - app/Http/Controllers/Api/ActivityController.php
+        - database/migrations/2026_09_16_130000_create_activity_events_table.php
+        - app/Services/PropertyPublicationService.php
+        - app/Http/Requests/PublicationValidation.php
+        - app/Console/Commands/ApplyPropertySchedules.php
+        - database/migrations/2026_09_16_140000_add_property_schedules.php
+    tmpDir: storage/framework/cache/phpstan

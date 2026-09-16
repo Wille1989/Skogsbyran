@@ -46,18 +46,19 @@ final class UpdateAreaRequest extends FormRequest
             ],
 
             'marker' => [
+                'sometimes',
                 'required',
                 'array',
             ],
 
             'marker.lat' => [
-                'required',
+                'required_with:marker',
                 'numeric',
                 'between:-90,90',
             ],
 
             'marker.lng' => [
-                'required',
+                'required_with:marker',
                 'numeric',
                 'between:-180,180',
             ],

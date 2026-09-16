@@ -8,11 +8,12 @@ import { LoadingSpinner } from "@/shared/presentation/LoadingSpinner.tsx";
  * REACT SPECIFIK
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Outlet, Link } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 /**
  * TSX
  */
+import { adminLoginPath } from "@/modules/auth/data/adminAccess";
 import { AdminRoute } from "@/modules/auth/presentation/Middleware.tsx";
 import { IndexPage }  from "@/modules/property/presentation/IndexPage.tsx";
 import { ShowPage }   from "@/modules/property/presentation/ShowPage.tsx";
@@ -22,27 +23,39 @@ const AuthPage = lazy(() => import("@/modules/auth/presentation/Form.tsx").then(
 const CreatePage = lazy(() => import("@/modules/property/presentation/CreatePage.tsx").then((module) => ({ default: module.CreatePage })));
 const EditPage = lazy(() => import("@/modules/property/presentation/EditPage.tsx").then((module) => ({ default: module.EditPage })));
 
+const AdminLayout = lazy(() => import("@/modules/admin/presentation/AdminLayout").then(module => ({ default: module.AdminLayout })));
+const OverviewPage = lazy(() => import("@/modules/admin/presentation/OverviewPage").then(module => ({ default: module.OverviewPage })));
+const PropertiesPage = lazy(() => import("@/modules/admin/presentation/PropertiesPage").then(module => ({ default: module.PropertiesPage })));
+
 const clientQuery = new QueryClient();
 
 function App() {
   return (
     <>
       <QueryClientProvider client={clientQuery}>
-        <Layout>
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
-              {/* ADMIN ROUTES */}
-              <Route path='/dashboard/property/create' element={<AdminRoute><CreatePage/></AdminRoute>}/>
-              <Route path='/dashboard/property/edit/:id' element={<AdminRoute><EditPage/></AdminRoute>}/>  
-
-              {/* GUEST ROUTES */}
+              <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                <Route index element={<OverviewPage />} />
+                <Route path="properties" element={<PropertiesPage />} />
+                <Route path="properties/create" element={<CreatePage />} />
+                <Route path="properties/:propertyId/edit" element={<EditPage />} />
+              </Route>
+              <Route element={<Layout><Outlet /></Layout>}>
               <Route path="/" element={<IndexPage/>}/>
               <Route path="/om-oss" element={<AboutPage/>}/>
               <Route path="/property/:propertyId" element={<ShowPage/>}/>
-              <Route path="/login" element={<AuthPage/>}/>
+              {adminLoginPath && <Route caseSensitive path={adminLoginPath} element={<AuthPage />} />}
+              <Route path="*" element={
+                <section className="auth-page">
+                  <h1>Sidan hittades inte</h1>
+                  <p>Adressen finns inte eller är inte tillgänglig.</p>
+                  <Link to="/">Till startsidan</Link>
+                </section>
+              } />
+              </Route>
             </Routes>
           </Suspense>
-        </Layout>
       </QueryClientProvider>
     </>
   )

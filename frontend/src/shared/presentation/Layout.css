@@ -31,3 +31,30 @@ body {
     padding: 0;
   }
 }
+
+.admin-return-control {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    z-index: 25;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 1px solid var(--sage-200);
+    border-radius: 6px;
+    background: var(--cream-50);
+    color: var(--forest-950);
+    box-shadow: 0 2px 8px #123c2d18;
+    font-size: 12px;
+}
+
+.admin-return-control:hover {
+    background: var(--sage-100);
+    color: var(--forest-950);
+}
+
+.admin-return-control:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}

@@ -15,6 +15,12 @@ class UpdateDetailsRequest extends FormRequest
         return true;
     }
 
+    /** @return list<\Closure(\Illuminate\Validation\Validator): void> */
+    public function after(): array
+    {
+        return [fn (\Illuminate\Validation\Validator $validator) => PublicationValidation::validate($this, $validator, '')];
+    }
+
     protected function prepareForValidation(): void
     {
         $this->merge($this->normalizeDetails($this->all()));
@@ -23,6 +29,7 @@ class UpdateDetailsRequest extends FormRequest
     public function rules(): array
     {
         return [
+            ...PublicationValidation::rules(''),
             'title' => [
                 'sometimes',
                 'string',
@@ -32,6 +39,7 @@ class UpdateDetailsRequest extends FormRequest
             'caption' => [
                 'sometimes',
                 'string',
+                'max:700',
             ],
 
             'price' => [
@@ -94,6 +102,13 @@ class UpdateDetailsRequest extends FormRequest
 
         if (array_key_exists('size', $details) && !array_key_exists('size_hectares', $details)) {
             $details['size_hectares'] = $this->decimalString($details['size']);
+        }
+
+        foreach (['publishAt' => 'publish_at', 'scheduledListingStatus' => 'scheduled_listing_status', 'scheduledStatusAt' => 'scheduled_status_at'] as $client => $column) {
+            if (array_key_exists($client, $details)) {
+                $details[$column] = $details[$client];
+                unset($details[$client]);
+            }
         }
 
         return $details;

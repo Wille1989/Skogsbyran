@@ -1,10 +1,14 @@
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { type FormDetails, type ListingStatus } from './types';
+import { PublicationFields } from "./PublicationFields";
+import { listingStatusOptions, localDateTime, publicationPayload } from "./publication";
+import { useEffect, type ReactNode } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { type FormDetails } from './types';
 import './Form.css';
 
 type FormProps = {
         initialValues?: FormDetails;
+        cover?: ReactNode;
+        isSaving?: boolean;
         onSubmit: (data: FormDetails) => void;
 };
 
@@ -15,28 +19,31 @@ const defaultValues: FormDetails = {
         size: '',
         slug: '',
         listingStatus: 'available',
-        isVisible: true
+        isVisible: false,
+        publishAt: null,
+        scheduledListingStatus: null,
+        scheduledStatusAt: null,
 };
 
-const listingStatusOptions: Array<{ value: ListingStatus; label: string }> = [
-        { value: 'upcoming', label: 'Kommande' },
-        { value: 'available', label: 'Till salu' },
-        { value: 'bidding', label: 'Budgivning' },
-        { value: 'reserved', label: 'Reserverad' },
-        { value: 'sold', label: 'Såld' },
-];
-
-export function DetailsForm({ initialValues, onSubmit }: FormProps) {
-        const {register, handleSubmit, reset, formState: { errors }, } = useForm<FormDetails>({defaultValues});
+export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false }: FormProps) {
+        const {register, handleSubmit, reset, control, setValue, setError, clearErrors, formState: { errors }, } = useForm<FormDetails>({defaultValues});
 
         useEffect(() => {
                 if (initialValues) {
-                        reset(initialValues ?? defaultValues);
+                        reset({ ...initialValues, publishAt: localDateTime(initialValues.publishAt), scheduledStatusAt: localDateTime(initialValues.scheduledStatusAt) });
                 }
         }, [initialValues, reset]);
 
+        const isVisible = useWatch({ control, name: "isVisible" });
+
         return (
-        <form id="property-form" onSubmit={handleSubmit(onSubmit)} className="form details-form">
+        <form id="property-form" onSubmit={handleSubmit((values, event) => {
+                clearErrors("root");
+                const submitter = (event?.nativeEvent as SubmitEvent | undefined)?.submitter;
+                const publishNow = submitter instanceof HTMLButtonElement && submitter.value === "publish";
+                try { onSubmit(publicationPayload(values, publishNow)); }
+                catch (error) { setError("root", { message: error instanceof Error ? error.message : "Kontrollera schemaläggningen." }); }
+        })} className="form details-form">
                 <div className="form-grid">
                         <div className="form-column">
                                 <div className="form-field">
@@ -74,6 +81,18 @@ export function DetailsForm({ initialValues, onSubmit }: FormProps) {
                                 </div>
 
                                 <div className="form-field">
+                                        <label htmlFor="caption">Fastighetsbeskrivning</label>
+                                        <textarea
+                                                id="caption"
+                                                rows={15}
+                                                maxLength={700}
+                                                placeholder="Beskriv fastigheten här"
+                                                {...register("caption", { maxLength: { value: 700, message: "Beskrivningen får innehålla högst 700 tecken." } })}
+                                        />
+                                        {errors.caption && <p className="form-error" role="alert">{errors.caption.message}</p>}
+                                </div>
+                        </div>
+                        <aside className="admin-details-side">                                <div className="form-field">
                                         <label htmlFor="listingStatus">Status</label>
                                         <select
                                                 id="listingStatus"
@@ -87,25 +106,13 @@ export function DetailsForm({ initialValues, onSubmit }: FormProps) {
                                         </select>
                                 </div>
 
-                                <div className="form-field form-field-checkbox">
-                                        <input
-                                                id="isVisible"
-                                                type="checkbox"
-                                                {...register("isVisible")}
-                                        />
-                                        <label htmlFor="isVisible">Synlig publikt</label>
-                                </div>
-
-                                <div className="form-field">
-                                        <label htmlFor="caption">Fastighetsbeskrivning</label>
-                                        <textarea
-                                                id="caption"
-                                                rows={15}
-                                                placeholder="Beskriv fastigheten här"
-                                                {...register("caption")}
-                                        />
-                                </div>
-                        </div>
+                                <p className="admin-status-hint">Status, publicering och schemaläggning sparas med fastigheten.</p>
+                                <PublicationFields control={control} setValue={setValue} cover={cover} /></aside>
+                </div>
+                {errors.root && <p className="form-error" role="alert">{errors.root.message}</p>}
+                <div className="publication-save-actions">
+                    <button className="admin-button" type="submit" disabled={isSaving}>Spara</button>
+                    {!isVisible && <button className="admin-button is-primary" type="submit" name="intent" value="publish" disabled={isSaving}>Spara och publicera</button>}
                 </div>
         </form>
         );

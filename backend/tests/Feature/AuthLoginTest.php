@@ -15,6 +15,15 @@ class AuthLoginTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Match the browser's stateful Sanctum request, independently of local .env values.
+        config(['sanctum.stateful' => ['localhost:5173']]);
+        $this->withHeader('Origin', 'http://localhost:5173');
+    }
+
     /**
      * Ensure the SPA can initialize Sanctum's CSRF cookie.
      */
@@ -112,5 +121,38 @@ class AuthLoginTest extends TestCase
             ->assertNoContent();
 
         $this->assertGuest();
+        $this->getJson('/auth/me')->assertUnauthorized();
+    }
+
+    public function test_login_is_limited_by_ip_even_when_email_changes(): void
+    {
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->postJson('/login', [
+                'email' => 'unknown'.$attempt.'@example.test',
+                'password' => 'wrong-password',
+            ])->assertUnauthorized();
+        }
+
+        $this->postJson('/login', [
+            'email' => 'another@example.test',
+            'password' => 'wrong-password',
+        ])->assertStatus(429)->assertHeader('Retry-After');
+
+        $this->travel(61)->seconds();
+        $this->postJson('/login', [
+            'email' => 'another@example.test',
+            'password' => 'wrong-password',
+        ])->assertUnauthorized();
+    }
+
+    public function test_login_limits_are_independent_for_different_ips(): void
+    {
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->postJson('/login', [])->assertUnprocessable();
+        }
+
+        $this->postJson('/login', [])->assertStatus(429);
+        $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.10'])
+            ->postJson('/login', [])->assertUnprocessable();
     }
 }

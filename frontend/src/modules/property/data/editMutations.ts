@@ -4,8 +4,9 @@ import { deleteDocument, updateDocumentTitle, uploadDocument } from "@/modules/d
 import { deleteImages, updateImages, uploadImages } from "@/modules/image/data/api";
 import { updateLocation } from "@/modules/location/api";
 import { createArea, deleteArea, updateArea } from "@/modules/location/map/data/api";
-import type { ResponseProperty } from "@/modules/property/data/types";
-import { getById } from "./api";
+import type { ResponseProperty, ResponseGetProperty, ResponseGetProperties } from "@/modules/property/data/types";
+import type { PropertyArea } from "@/modules/location/map/data/types";
+import { getById, remove } from "./api";
 import { propertyQueryKeys } from "./queryKeys";
 import {
   areaChanges,
@@ -19,6 +20,25 @@ function hasObjectKeys(value: object): boolean {
   return Object.keys(value).length > 0;
 }
 
+export function useDeletePropertyMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: remove,
+    retry: false,
+    onSuccess: async (_data, propertyId) => {
+      await queryClient.cancelQueries({ queryKey: propertyQueryKeys.byId(propertyId) });
+      await queryClient.cancelQueries({ queryKey: propertyQueryKeys.all });
+      queryClient.removeQueries({ queryKey: propertyQueryKeys.byId(propertyId) });
+      queryClient.setQueriesData<ResponseGetProperties>({ queryKey: propertyQueryKeys.all }, current => current
+        ? { ...current, properties: current.properties.filter(property => property.propertyId !== propertyId) }
+        : current);
+      void queryClient.invalidateQueries({ queryKey: propertyQueryKeys.all });
+      void queryClient.invalidateQueries({ queryKey: ["activity"] });
+      void queryClient.invalidateQueries({ queryKey: ["analytics"] });
+    },
+  });
+}
+
 export function useSavePropertyChangesMutation() {
   const queryClient = useQueryClient();
 
@@ -28,10 +48,21 @@ export function useSavePropertyChangesMutation() {
       const locationPatch = changedLocationPayload(input.initialLocation, input.location);
       const areas = areaChanges(input.initialAreas, input.areas);
       const documents = documentChanges(input.documents);
-
-      if (hasObjectKeys(detailsPatch)) {
-        await patchDetails(input.propertyId, detailsPatch);
-      }
+      // Keep acknowledged Area writes as the baseline if a later request fails.
+      // The page retains its draft, including the ID returned for a newly created area.
+      const rememberArea = (areaId: string, saved?: PropertyArea): void => {
+        queryClient.setQueryData<ResponseGetProperty>(propertyQueryKeys.byId(input.propertyId), current => {
+          if (!current) return current;
+          const storedAreas = current.property.areas;
+          let nextAreas = storedAreas.filter(area => area.id !== areaId);
+          if (saved) {
+            nextAreas = storedAreas.some(area => area.id === areaId)
+              ? storedAreas.map(area => area.id === areaId ? saved : area)
+              : [...storedAreas, saved];
+          }
+          return { ...current, property: { ...current.property, areas: nextAreas } };
+        });
+      };
 
       if (input.imageChanges.removedImageIds.length > 0) {
         await deleteImages({
@@ -60,14 +91,18 @@ export function useSavePropertyChangesMutation() {
 
       for (const areaId of areas.removedAreaIds) {
         await deleteArea(input.propertyId, areaId);
+        rememberArea(areaId);
       }
 
       for (const area of areas.updatedAreas) {
-        await updateArea(input.propertyId, area.areaId, area.payload);
+        const saved = await updateArea(input.propertyId, area.areaId, area.payload);
+        rememberArea(saved.id, saved);
       }
 
       for (const area of areas.createdAreas) {
-        await createArea(input.propertyId, area);
+        const saved = await createArea(input.propertyId, area.payload);
+        input.onAreaCreated?.(area.draft, saved);
+        rememberArea(saved.id, saved);
       }
 
       for (const documentId of documents.removedDocumentIds) {
@@ -80,6 +115,10 @@ export function useSavePropertyChangesMutation() {
 
       for (const document of input.pendingDocuments) {
         await uploadDocument(input.propertyId, undefined, document.file, document.title);
+      }
+
+      if (hasObjectKeys(detailsPatch)) {
+        await patchDetails(input.propertyId, detailsPatch);
       }
 
       const refreshed = await getById(input.propertyId);

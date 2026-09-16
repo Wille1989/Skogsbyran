@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Modules\Activity\Enums\EventType;
+use App\Modules\Location\Data\AreaData;
+use App\Modules\Location\Data\LocationData;
 use App\Modules\Property\Models\Property;
 use App\Presenters\PropertyPresenter;
 use Illuminate\Support\Facades\DB;
@@ -13,21 +16,24 @@ final class PropertyService
     public function __construct(
         private readonly ImageService $imageService,
         private readonly AreaService $areaService,
+        private readonly LocationService $locationService,
         private readonly PropertyPresenter $propertyPresenter,
-    ) {
-    }
+        private readonly ActivityService $activityService,
+        private readonly PropertyPublicationService $publicationService,
+        private readonly DocumentService $documentService,
+    ) {}
 
     /**
      * @return array<string, array<int, array<string, mixed>>>
      */
-    public function collection(): array
+    public function collection(bool $includeUnpublished = false): array
     {
         $properties = Property::query()
             ->with([
                 'primaryImage.variants',
                 'location',
             ])
-            ->where('is_visible', true)
+            ->when(!$includeUnpublished, fn ($query) => $query->where('is_visible', true))
             ->orderByDesc('id')
             ->get();
 
@@ -54,23 +60,28 @@ final class PropertyService
 
     /**
      * @param  array<string, mixed>  $validated
+     * @param  list<AreaData>  $areas
      * @return array<string, array<string, mixed>>
      */
-    public function create(array $validated): array
+    public function create(array $validated, array $areas = [], ?LocationData $location = null): array
     {
-        $property = DB::transaction(function () use ($validated): Property {
+        $property = DB::transaction(function () use ($validated, $areas, $location): Property {
             $property = Property::query()->create(
-                $validated['details']
+                [...$validated['details'], 'is_visible' => false]
             );
 
-            foreach ($validated['areas'] ?? [] as $area) {
+            if ($location !== null) {
+                $this->locationService->replace($property, $location);
+            }
+
+            foreach ($areas as $area) {
                 $this->areaService->create(
                     $property,
                     $area
                 );
             }
 
-            if (!empty($validated['images'])) {
+            if (! empty($validated['images'])) {
                 $this->imageService->store(
                     $property,
                     [
@@ -78,6 +89,10 @@ final class PropertyService
                     ]
                 );
             }
+
+            $this->activityService->record(EventType::PropertyCreated, $property);
+            $property->is_visible = (bool) ($validated['details']['is_visible'] ?? true);
+            $this->publicationService->save($property);
 
             return $property->load([
                 'images.metadata',
@@ -96,7 +111,20 @@ final class PropertyService
     public function delete(Property $property): void
     {
         DB::transaction(function () use ($property): void {
+            $property = Property::query()->lockForUpdate()->findOrFail($property->id);
+            $imageIds = $property->images()->pluck('id')->all();
+
+            DB::table('analytics_events')->where('property_id', $property->id)
+                ->orWhereIn('image_id', $imageIds)->delete();
+            DB::table('activity_events')->where('property_id', $property->id)->delete();
+
+            // Storage cannot roll back; retain DB references on failure so deletion can be retried.
+            $this->imageService->delete($property, ['imageIds' => $imageIds]);
+            foreach ($property->documents()->get() as $document) {
+                $this->documentService->delete($property, $document);
+            }
             $property->delete();
+            $this->activityService->recordDeletion();
         });
     }
 }

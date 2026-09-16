@@ -89,8 +89,15 @@ final class ImageStorageService
         string $baseName,
         string $variant
     ): string {
+        $prefix = config('filesystems.object_storage_prefix');
+
+        if (!is_string($prefix)) {
+            throw new \RuntimeException('Invalid object storage prefix.');
+        }
+
         return sprintf(
-            'properties/%d/images/%s_%s.webp',
+            '%sproperties/%d/images/%s_%s.webp',
+            $prefix,
             $propertyId,
             $baseName,
             $variant
