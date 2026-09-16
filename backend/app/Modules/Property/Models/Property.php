@@ -107,6 +107,7 @@ class Property extends Model
         return $this->hasMany(Image::class)->orderBy('sort_order');
     }
 
+    /** @return BelongsToMany<Document, $this> */
     public function documents(): BelongsToMany
     {
         return $this->belongsToMany(Document::class, 'property_documents')

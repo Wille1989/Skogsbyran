@@ -84,7 +84,7 @@ export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false }
                                         <label htmlFor="caption">Fastighetsbeskrivning</label>
                                         <textarea
                                                 id="caption"
-                                                rows={5}
+                                                rows={15}
                                                 maxLength={700}
                                                 placeholder="Beskriv fastigheten här"
                                                 {...register("caption", { maxLength: { value: 700, message: "Beskrivningen får innehålla högst 700 tecken." } })}

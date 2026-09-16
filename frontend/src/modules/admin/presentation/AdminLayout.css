@@ -163,6 +163,31 @@
     opacity: 0.5;
 }
 
+.admin-property-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 24px;
+}
+
+.admin-layout .admin-button.is-danger {
+    background: #b42318;
+    border-color: #b42318;
+    color: #fff;
+}
+
+.property-delete-dialog {
+    width: min(480px, calc(100vw - 32px));
+    padding: 28px;
+    border: 1px solid #d8ddd9;
+    border-radius: 10px;
+    color: #28352f;
+}
+
+.property-delete-dialog::backdrop { background: rgb(0 0 0 / 50%); }
+.property-delete-dialog .admin-property-actions { margin-top: 24px; }
+
 .admin-layout a:focus-visible,
 .admin-layout button:focus-visible,
 .admin-layout summary:focus-visible {

@@ -20,6 +20,7 @@ final class PropertyService
         private readonly PropertyPresenter $propertyPresenter,
         private readonly ActivityService $activityService,
         private readonly PropertyPublicationService $publicationService,
+        private readonly DocumentService $documentService,
     ) {}
 
     /**
@@ -110,7 +111,20 @@ final class PropertyService
     public function delete(Property $property): void
     {
         DB::transaction(function () use ($property): void {
+            $property = Property::query()->lockForUpdate()->findOrFail($property->id);
+            $imageIds = $property->images()->pluck('id')->all();
+
+            DB::table('analytics_events')->where('property_id', $property->id)
+                ->orWhereIn('image_id', $imageIds)->delete();
+            DB::table('activity_events')->where('property_id', $property->id)->delete();
+
+            // Storage cannot roll back; retain DB references on failure so deletion can be retried.
+            $this->imageService->delete($property, ['imageIds' => $imageIds]);
+            foreach ($property->documents()->get() as $document) {
+                $this->documentService->delete($property, $document);
+            }
             $property->delete();
+            $this->activityService->recordDeletion();
         });
     }
 }

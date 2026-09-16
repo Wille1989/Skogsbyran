@@ -28,6 +28,8 @@ type Props = {
     error?: string | null;
     progress?: CreatePropertyProgress | null;
     saved?: boolean;
+    onDelete?: () => void;
+    isDeleting?: boolean;
 };
 
 type SeoPreview = { title: string; description: string; slug: string; keywords: string };
@@ -48,7 +50,7 @@ export function PropertyForm(props: Props) {
         ? { lat: props.location.latitude, lng: props.location.longitude } : null;
     return <div className="admin-property-form" aria-busy={props.isSaving}>
         <Link to="/admin/properties" className="admin-back"><IconArrowLeft size={17} />Tillbaka till fastigheter</Link>
-        <header className="admin-page-heading"><div><h1>{props.title}</h1><p>{props.subtitle || "Fyll i informationen nedan för att skapa fastigheten."}</p></div><button type="submit" form="property-form" className="admin-button is-primary" disabled={props.isSaving}><IconDeviceFloppy size={18} />{props.isSaving ? "Sparar…" : props.submitLabel}</button></header>
+        <header className="admin-page-heading"><div><h1>{props.title}</h1><p>{props.subtitle || "Fyll i informationen nedan för att skapa fastigheten."}</p></div><div className="admin-property-actions">{props.onDelete && <button type="button" className="admin-button is-danger" disabled={props.isSaving} onClick={props.onDelete}>{props.isDeleting ? "Raderar..." : "Radera fastighet"}</button>}<button type="submit" form="property-form" className="admin-button is-primary" disabled={props.isSaving}><IconDeviceFloppy size={18} />{props.isDeleting ? "Raderar..." : props.isSaving ? "Sparar…" : props.submitLabel}</button></div></header>
         {props.error && <p className="admin-error" role="alert">{props.error}</p>}
         {props.saved && <p className="admin-notice" role="status">Förändringarna är sparade.</p>}
         {props.progress && <div className="admin-save-progress" role="status"><progress max={100} value={props.progress.percent} /><span>{props.progress.percent}% · {props.progress.label}</span></div>}

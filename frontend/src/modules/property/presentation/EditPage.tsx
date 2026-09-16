@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import type { ResponseProperty } from "@/modules/property/data/types";
 import { LoadingSpinner } from "@/shared/presentation/LoadingSpinner.tsx";
-import { useSavePropertyChangesMutation } from "../data/editMutations";
+import { useDeletePropertyMutation, useSavePropertyChangesMutation } from "../data/editMutations";
 import {
   areaDraftsFromProperty,
   documentDraftsFromProperty,
@@ -28,6 +28,10 @@ export function EditPage() {
   const { propertyId = "" } = useParams<{ propertyId: string }>();
   const { data, isPending, error } = usePropertyByIdQuery(propertyId);
   const saveChanges = useSavePropertyChangesMutation();
+  const deleteProperty = useDeletePropertyMutation();
+  const navigate = useNavigate();
+  const deleteDialog = useRef<HTMLDialogElement>(null);
+  const deleting = useRef(false);
   const imageFiles = useImageFiles();
   const { images, initializeImages } = imageFiles;
   const [editingImageId, setEditingImageId] = useState<string | null>(null);
@@ -70,6 +74,7 @@ export function EditPage() {
     !("file" in image) && image.imageId === editingImageId) ?? null;
 
   const handleSave = (details: FormDetails): void => {
+    if (deleting.current || saveChanges.isPending) return;
     saveChanges.mutate(
       {
         propertyId: property.propertyId,
@@ -97,16 +102,39 @@ export function EditPage() {
     );
   };
 
+  const handleDelete = (): void => {
+    if (deleting.current || saveChanges.isPending) return;
+    deleting.current = true;
+    deleteProperty.mutate(property.propertyId, {
+      onSuccess: () => navigate("/admin/properties", { replace: true }),
+      onError: () => { deleting.current = false; },
+    });
+  };
+
   return (
     <>
       <PropertyForm
         title="Redigera fastighet" subtitle={property.details.title} submitLabel="Spara ändringar"
         initialDetails={initialDetails(property) ?? undefined} onSubmit={handleSave}
-        imageFiles={imageFiles} onEditImage={setEditingImageId} isSaving={saveChanges.isPending}
+        imageFiles={imageFiles} onEditImage={setEditingImageId} isSaving={saveChanges.isPending || deleteProperty.isPending}
+        isDeleting={deleteProperty.isPending}
+        onDelete={() => { deleteProperty.reset(); deleteDialog.current?.showModal(); }}
         location={location} onLocationChange={setLocation} areas={areas} onAreasChange={setAreas}
         documents={<EditableDocuments documents={documents} pendingDocuments={pendingDocuments} onDocumentsChange={setDocuments} onPendingDocumentsChange={setPendingDocuments} />}
         error={saveChanges.error instanceof Error ? saveChanges.error.message : null} saved={saveChanges.isSuccess}
       />
+
+      <dialog ref={deleteDialog} className="property-delete-dialog" aria-labelledby="property-delete-title"
+        onCancel={event => { if (deleting.current) event.preventDefault(); }}>
+        <h2 id="property-delete-title">Radera fastigheten?</h2>
+        <p>Fastigheten samt tillhörande bilder, dokument och sparad data raderas permanent.</p>
+        <p>Åtgärden kan inte ångras.</p>
+        {deleteProperty.error && <p className="admin-error" role="alert">{deleteProperty.error.message}</p>}
+        <div className="admin-property-actions">
+          <button type="button" className="admin-button" autoFocus disabled={deleteProperty.isPending} onClick={() => deleteDialog.current?.close()}>Avbryt</button>
+          <button type="button" className="admin-button is-danger" disabled={deleteProperty.isPending} onClick={handleDelete}>{deleteProperty.isPending ? "Raderar..." : "Radera fastighet"}</button>
+        </div>
+      </dialog>
 
       {editingImage ? (
         <ImageEditDialog

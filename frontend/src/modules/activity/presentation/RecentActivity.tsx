@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { IconClock, IconEye, IconEyeOff, IconFileDescription, IconPhoto, IconPencil } from "@tabler/icons-react";
+import { IconClock, IconEye, IconEyeOff, IconFileDescription, IconPhoto, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useLatestActivity } from "../data/queries";
 import type { ActivityEventType } from "../data/types";
 import { relativeTime } from "./relativeTime";
 
 const presentation = {
     property_created: { title: "Ny fastighet skapad", icon: IconFileDescription },
+    property_deleted: { title: "Fastighet raderad", icon: IconTrash },
     property_updated: { title: "Fastighet uppdaterad", icon: IconPencil },
     images_uploaded: { title: "Bilder uppladdade", icon: IconPhoto },
     property_published: { title: "Publicerad på webbplatsen", icon: IconEye },
@@ -33,7 +34,7 @@ export function RecentActivity() {
                             : "Borttagen fastighet";
                         return <li key={activity.id}>
                             <span className="admin-round-icon"><Icon size={22} /></span>
-                            <div><strong>{title}</strong><span>{propertyText}</span></div>
+                            <div><strong>{title}</strong>{activity.eventType !== "property_deleted" && <span>{propertyText}</span>}</div>
                             <small><time dateTime={activity.occurredAt} title={new Date(activity.occurredAt).toLocaleString("sv-SE")}>{relativeTime(activity.occurredAt, now)}</time></small>
                         </li>;
                     })}</ul>}

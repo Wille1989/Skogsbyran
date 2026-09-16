@@ -1,5 +1,6 @@
 export type ActivityEventType =
     | "property_created"
+    | "property_deleted"
     | "property_updated"
     | "images_uploaded"
     | "property_published"

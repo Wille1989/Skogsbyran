@@ -4,9 +4,9 @@ import { deleteDocument, updateDocumentTitle, uploadDocument } from "@/modules/d
 import { deleteImages, updateImages, uploadImages } from "@/modules/image/data/api";
 import { updateLocation } from "@/modules/location/api";
 import { createArea, deleteArea, updateArea } from "@/modules/location/map/data/api";
-import type { ResponseProperty, ResponseGetProperty } from "@/modules/property/data/types";
+import type { ResponseProperty, ResponseGetProperty, ResponseGetProperties } from "@/modules/property/data/types";
 import type { PropertyArea } from "@/modules/location/map/data/types";
-import { getById } from "./api";
+import { getById, remove } from "./api";
 import { propertyQueryKeys } from "./queryKeys";
 import {
   areaChanges,
@@ -18,6 +18,25 @@ import {
 
 function hasObjectKeys(value: object): boolean {
   return Object.keys(value).length > 0;
+}
+
+export function useDeletePropertyMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: remove,
+    retry: false,
+    onSuccess: async (_data, propertyId) => {
+      await queryClient.cancelQueries({ queryKey: propertyQueryKeys.byId(propertyId) });
+      await queryClient.cancelQueries({ queryKey: propertyQueryKeys.all });
+      queryClient.removeQueries({ queryKey: propertyQueryKeys.byId(propertyId) });
+      queryClient.setQueriesData<ResponseGetProperties>({ queryKey: propertyQueryKeys.all }, current => current
+        ? { ...current, properties: current.properties.filter(property => property.propertyId !== propertyId) }
+        : current);
+      void queryClient.invalidateQueries({ queryKey: propertyQueryKeys.all });
+      void queryClient.invalidateQueries({ queryKey: ["activity"] });
+      void queryClient.invalidateQueries({ queryKey: ["analytics"] });
+    },
+  });
 }
 
 export function useSavePropertyChangesMutation() {

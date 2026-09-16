@@ -36,7 +36,9 @@ final class ObjectStorage
      */
     public function delete(string $disk, string|array $storageKeys): void
     {
-        $this->disk($disk)->delete($storageKeys);
+        if (! $this->disk($disk)->delete($storageKeys)) {
+            throw new \RuntimeException('Storage deletion failed.');
+        }
     }
 
     public function exists(string $disk, string $storageKey): bool

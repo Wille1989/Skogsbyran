@@ -12,6 +12,15 @@ use Illuminate\Support\Facades\DB;
 
 final class ActivityService
 {
+    public function recordDeletion(): void
+    {
+        ActivityEvent::query()->create([
+            'event_type' => EventType::PropertyDeleted,
+            'property_id' => null,
+            'occurred_at' => now(),
+        ]);
+    }
+
     public function record(EventType $type, Property $property): void
     {
         if (in_array($type, [EventType::PropertyUpdated, EventType::ImagesUploaded], true)) {

@@ -186,12 +186,12 @@ final class DocumentService
         );
 
         DB::transaction(
-            static function () use ($property, $document): void {
+            function () use ($property, $document): void {
+                $document = Document::query()->lockForUpdate()->findOrFail($document->id);
                 $property->documents()->detach($document->id);
+                $this->deleteDocumentIfUnused($document);
             }
         );
-
-        $this->deleteDocumentIfUnused($document);
     }
 
     private function ensureDocumentBelongsToProperty(Property $property, Document $document): void {
@@ -290,9 +290,10 @@ final class DocumentService
             ->values()
             ->all();
 
+        foreach ($storageKeys as $storageKey) {
+            $this->storageService->delete($storageKey);
+        }
         $document->delete();
-
-        $this->deleteStorageSafely($storageKeys);
     }
 
     /**
