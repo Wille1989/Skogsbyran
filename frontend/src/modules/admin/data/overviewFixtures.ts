@@ -1,11 +1,4 @@
 // Demonstration data only. These values are never sent to property APIs.
-export type StatisticsPeriod = "Vecka" | "Månad" | "Kvartal" | "År";
-export const statistics: Record<StatisticsPeriod, { clicks: number; visitors: number; views: number; changes: [number, number, number]; comparison: string }> = {
-    Vecka: { clicks: 1248, visitors: 892, views: 2401, changes: [12, 8, 15], comparison: "föregående vecka" },
-    Månad: { clicks: 4920, visitors: 3104, views: 9680, changes: [9, 6, 11], comparison: "föregående månad" },
-    Kvartal: { clicks: 14850, visitors: 9630, views: 28400, changes: [7, 10, 13], comparison: "föregående kvartal" },
-    År: { clicks: 58600, visitors: 36200, views: 112400, changes: [18, 14, 21], comparison: "föregående år" },
-};
 export const plannedEvents = [
     { day: "12", month: "okt", title: "Visning", property: "Tallvägen 12, Ljusdal", time: "14:00–16:00", category: "Visning", tone: "green" },
     { day: "14", month: "okt", title: "Fotografering", property: "Björkbacken 5, Sundsvall", time: "10:00–12:00", category: "Marknadsföring", tone: "blue" },

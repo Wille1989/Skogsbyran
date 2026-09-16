@@ -89,3 +89,9 @@ Route::middleware(['auth:web', 'admin'])->group(function (): void {
 */
 Route::get('/property/{property}/areas', [AreaController::class, 'index'])->middleware(EnsurePropertyVisible::class);
 Route::get('/property/{property}/area/{area}', [AreaController::class, 'show'])->middleware(EnsurePropertyVisible::class);
+
+// Anonymous event ingestion must not start a session or persist visitor identifiers.
+Route::post('/analytics/events', [\App\Http\Controllers\Api\AnalyticsController::class, 'store'])
+    ->withoutMiddleware(\Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class);
+Route::get('/analytics/statistics', [\App\Http\Controllers\Api\AnalyticsController::class, 'statistics'])
+    ->middleware(['auth:web', 'admin']);

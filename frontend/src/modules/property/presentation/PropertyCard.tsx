@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { recordEvent } from "@/modules/analytics/data/api";
 import { type PropertyListingItem } from "@/modules/property/data/types";
 import { formatHectares, formatPrice, listingStatusLabels, locationLabel } from "./propertyListing";
 import { IconArrowRight, IconMapPin, IconTrees } from "@tabler/icons-react";
@@ -12,7 +13,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
   return (
     <article className="property-card">
-      <Link to={`/property/${property.propertyId}`} className="card-link" aria-label={`Visa ${property.details.title}`}>
+      <Link to={`/property/${property.propertyId}`} onClick={() => recordEvent({ event_type: "property_click", property_id: property.propertyId })} onAuxClick={event => { if (event.button === 1) recordEvent({ event_type: "property_click", property_id: property.propertyId }); }} className="card-link" aria-label={`Visa ${property.details.title}`}>
         <div className="image-frame">
           <span className="status">{listingStatusLabels[property.details.listingStatus]}</span>
           {primaryImage ? (
