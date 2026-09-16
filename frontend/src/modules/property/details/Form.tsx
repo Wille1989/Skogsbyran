@@ -1,11 +1,14 @@
+import { PublicationFields } from "./PublicationFields";
+import { listingStatusOptions, localDateTime, publicationPayload } from "./publication";
 import { useEffect, type ReactNode } from 'react';
-import { useForm } from 'react-hook-form';
-import { type FormDetails, type ListingStatus } from './types';
+import { useForm, useWatch } from 'react-hook-form';
+import { type FormDetails } from './types';
 import './Form.css';
 
 type FormProps = {
         initialValues?: FormDetails;
         cover?: ReactNode;
+        isSaving?: boolean;
         onSubmit: (data: FormDetails) => void;
 };
 
@@ -16,28 +19,31 @@ const defaultValues: FormDetails = {
         size: '',
         slug: '',
         listingStatus: 'available',
-        isVisible: true
+        isVisible: false,
+        publishAt: null,
+        scheduledListingStatus: null,
+        scheduledStatusAt: null,
 };
 
-const listingStatusOptions: Array<{ value: ListingStatus; label: string }> = [
-        { value: 'upcoming', label: 'Kommande' },
-        { value: 'available', label: 'Till salu' },
-        { value: 'bidding', label: 'Budgivning' },
-        { value: 'reserved', label: 'Reserverad' },
-        { value: 'sold', label: 'Såld' },
-];
-
-export function DetailsForm({ initialValues, onSubmit, cover }: FormProps) {
-        const {register, handleSubmit, reset, formState: { errors }, } = useForm<FormDetails>({defaultValues});
+export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false }: FormProps) {
+        const {register, handleSubmit, reset, control, setValue, setError, clearErrors, formState: { errors }, } = useForm<FormDetails>({defaultValues});
 
         useEffect(() => {
                 if (initialValues) {
-                        reset(initialValues ?? defaultValues);
+                        reset({ ...initialValues, publishAt: localDateTime(initialValues.publishAt), scheduledStatusAt: localDateTime(initialValues.scheduledStatusAt) });
                 }
         }, [initialValues, reset]);
 
+        const isVisible = useWatch({ control, name: "isVisible" });
+
         return (
-        <form id="property-form" onSubmit={handleSubmit(onSubmit)} className="form details-form">
+        <form id="property-form" onSubmit={handleSubmit((values, event) => {
+                clearErrors("root");
+                const submitter = (event?.nativeEvent as SubmitEvent | undefined)?.submitter;
+                const publishNow = submitter instanceof HTMLButtonElement && submitter.value === "publish";
+                try { onSubmit(publicationPayload(values, publishNow)); }
+                catch (error) { setError("root", { message: error instanceof Error ? error.message : "Kontrollera schemaläggningen." }); }
+        })} className="form details-form">
                 <div className="form-grid">
                         <div className="form-column">
                                 <div className="form-field">
@@ -98,16 +104,13 @@ export function DetailsForm({ initialValues, onSubmit, cover }: FormProps) {
                                         </select>
                                 </div>
 
-                                <div className="form-field form-field-checkbox">
-                                        <input
-                                                id="isVisible"
-                                                type="checkbox"
-                                                {...register("isVisible")}
-                                        />
-                                        <label htmlFor="isVisible">Synlig publikt</label>
-                                </div>
-
-<p className="admin-status-hint">Status och synlighet sparas med fastigheten. Du kan ändra dem senare.</p>{cover}</aside>
+                                <p className="admin-status-hint">Status, publicering och schemaläggning sparas med fastigheten.</p>
+                                <PublicationFields control={control} setValue={setValue} cover={cover} /></aside>
+                </div>
+                {errors.root && <p className="form-error" role="alert">{errors.root.message}</p>}
+                <div className="publication-save-actions">
+                    <button className="admin-button" type="submit" disabled={isSaving}>Spara</button>
+                    {!isVisible && <button className="admin-button is-primary" type="submit" name="intent" value="publish" disabled={isSaving}>Spara och publicera</button>}
                 </div>
         </form>
         );

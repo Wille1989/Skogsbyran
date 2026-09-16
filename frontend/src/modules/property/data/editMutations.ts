@@ -45,10 +45,6 @@ export function useSavePropertyChangesMutation() {
         });
       };
 
-      if (hasObjectKeys(detailsPatch)) {
-        await patchDetails(input.propertyId, detailsPatch);
-      }
-
       if (input.imageChanges.removedImageIds.length > 0) {
         await deleteImages({
           propertyId: input.propertyId,
@@ -100,6 +96,10 @@ export function useSavePropertyChangesMutation() {
 
       for (const document of input.pendingDocuments) {
         await uploadDocument(input.propertyId, undefined, document.file, document.title);
+      }
+
+      if (hasObjectKeys(detailsPatch)) {
+        await patchDetails(input.propertyId, detailsPatch);
       }
 
       const refreshed = await getById(input.propertyId);

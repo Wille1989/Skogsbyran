@@ -19,19 +19,20 @@ final class PropertyService
         private readonly LocationService $locationService,
         private readonly PropertyPresenter $propertyPresenter,
         private readonly ActivityService $activityService,
+        private readonly PropertyPublicationService $publicationService,
     ) {}
 
     /**
      * @return array<string, array<int, array<string, mixed>>>
      */
-    public function collection(): array
+    public function collection(bool $includeUnpublished = false): array
     {
         $properties = Property::query()
             ->with([
                 'primaryImage.variants',
                 'location',
             ])
-            ->where('is_visible', true)
+            ->when(!$includeUnpublished, fn ($query) => $query->where('is_visible', true))
             ->orderByDesc('id')
             ->get();
 
@@ -65,7 +66,7 @@ final class PropertyService
     {
         $property = DB::transaction(function () use ($validated, $areas, $location): Property {
             $property = Property::query()->create(
-                $validated['details']
+                [...$validated['details'], 'is_visible' => false]
             );
 
             if ($location !== null) {
@@ -89,6 +90,8 @@ final class PropertyService
             }
 
             $this->activityService->record(EventType::PropertyCreated, $property);
+            $property->is_visible = (bool) ($validated['details']['is_visible'] ?? true);
+            $this->publicationService->save($property);
 
             return $property->load([
                 'images.metadata',

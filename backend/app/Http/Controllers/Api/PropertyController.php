@@ -25,6 +25,11 @@ class PropertyController extends Controller
         return response()->json($payload);
     }
 
+    public function adminIndex(): JsonResponse
+    {
+        return response()->json($this->propertyService->collection(includeUnpublished: true));
+    }
+
     public function show(Property $property): JsonResponse
     {
         return response()->json($this->propertyService->find($property));

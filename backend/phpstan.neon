@@ -15,4 +15,8 @@ parameters:
         - app/Presenters/ActivityPresenter.php
         - app/Http/Controllers/Api/ActivityController.php
         - database/migrations/2026_09_16_130000_create_activity_events_table.php
+        - app/Services/PropertyPublicationService.php
+        - app/Http/Requests/PublicationValidation.php
+        - app/Console/Commands/ApplyPropertySchedules.php
+        - database/migrations/2026_09_16_140000_add_property_schedules.php
     tmpDir: storage/framework/cache/phpstan

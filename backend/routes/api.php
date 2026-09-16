@@ -38,6 +38,7 @@ Route::get('/property/{property}', [PropertyController::class, 'show'])->middlew
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:web', 'admin'])->group(function (): void {
+    Route::get('/admin/properties', [PropertyController::class, 'adminIndex']);
     Route::get('/activity', [ActivityController::class, 'index']);
 
     Route::post('/property', [PropertyController::class, 'store']);

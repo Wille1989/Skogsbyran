@@ -13,4 +13,7 @@ export type FormDetails = {
       slug: string;
       listingStatus: ListingStatus;
       isVisible: boolean;
+      publishAt: string | null;
+      scheduledListingStatus: ListingStatus | null;
+      scheduledStatusAt: string | null;
 };

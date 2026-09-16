@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { propertyQueryKeys } from "./queryKeys";
-import { getAll, getById } from "./api";
+import { getAll, getById, getAdminProperties } from "./api";
 import { type ResponseGetProperty } from "@/modules/property/data/types";
 
 export function usePropertiesQuery() {
@@ -9,6 +9,10 @@ export function usePropertiesQuery() {
                 queryFn: getAll,
         })
 };
+
+export function useAdminPropertiesQuery() {
+        return useQuery({ queryKey: [...propertyQueryKeys.all, "admin"], queryFn: getAdminProperties });
+}
 
 export function usePropertyByIdQuery(propertyId: string) {
         return useQuery<ResponseGetProperty>({

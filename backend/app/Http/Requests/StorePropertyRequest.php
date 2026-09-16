@@ -15,6 +15,12 @@ final class StorePropertyRequest extends FormRequest
         return true;
     }
 
+    /** @return list<\Closure(\Illuminate\Validation\Validator): void> */
+    public function after(): array
+    {
+        return [fn (\Illuminate\Validation\Validator $validator) => PublicationValidation::validate($this, $validator, 'details.')];
+    }
+
     protected function prepareForValidation(): void
     {
         $details = $this->decodeJsonArray($this->input('details'));
@@ -67,6 +73,7 @@ final class StorePropertyRequest extends FormRequest
         }
 
         return [
+            ...PublicationValidation::rules('details.'),
             ...$locationRules,
             'location' => ['nullable', 'array'],
             'details' => [
@@ -269,6 +276,13 @@ final class StorePropertyRequest extends FormRequest
 
         $details['size_hectares'] = $details['size_hectares']
             ?? $this->decimalString($details['size'] ?? null);
+
+        foreach (['publishAt' => 'publish_at', 'scheduledListingStatus' => 'scheduled_listing_status', 'scheduledStatusAt' => 'scheduled_status_at'] as $client => $column) {
+            if (array_key_exists($client, $details)) {
+                $details[$column] = $details[$client];
+                unset($details[$client]);
+            }
+        }
 
         return $details;
     }

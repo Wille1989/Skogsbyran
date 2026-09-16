@@ -16,11 +16,12 @@ export function useCreatePropertyMutation() {
     return useMutation({
         mutationFn: async (input: CreatePropertyInput) => {
             const shouldPublish = input.details.isVisible;
+            const hasSchedule = input.details.publishAt !== null || input.details.scheduledStatusAt !== null;
             const totalSteps =
                 1 +
                 (input.images.length > 0 ? 1 : 0) +
                 input.documents.length +
-                (shouldPublish ? 1 : 0) +
+                (shouldPublish || hasSchedule ? 1 : 0) +
                 1;
             let completedSteps = 0;
 
@@ -31,6 +32,9 @@ export function useCreatePropertyMutation() {
                 details: {
                     ...input.details,
                     isVisible: false,
+                    publishAt: null,
+                    scheduledListingStatus: null,
+                    scheduledStatusAt: null,
                 },
                 images: [],
             });
@@ -55,13 +59,16 @@ export function useCreatePropertyMutation() {
                 reportProgress(input, completedSteps, totalSteps, `Dokument ${index + 1} är uppladdat.`);
             }
 
-            if (shouldPublish) {
-                reportProgress(input, completedSteps, totalSteps, "Publicerar fastigheten...");
+            if (shouldPublish || hasSchedule) {
+                reportProgress(input, completedSteps, totalSteps, "Sparar publiceringsinställningar...");
                 await patchDetails(propertyId, {
-                    isVisible: true,
+                    isVisible: shouldPublish,
+                    publishAt: input.details.publishAt,
+                    scheduledListingStatus: input.details.scheduledListingStatus,
+                    scheduledStatusAt: input.details.scheduledStatusAt,
                 });
                 completedSteps += 1;
-                reportProgress(input, completedSteps, totalSteps, "Fastigheten är publicerad.");
+                reportProgress(input, completedSteps, totalSteps, "Publiceringsinställningarna är sparade.");
             }
 
             reportProgress(input, completedSteps, totalSteps, "Hämtar färdig fastighet...");

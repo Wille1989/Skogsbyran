@@ -54,8 +54,11 @@ final class PropertyPresenter
                 'price' => (string) ($property->price_whole_units ?? $property->price ?? ''),
                 'size' => (string) ($property->size_hectares ?? $property->size ?? ''),
                 'slug' => $property->slug ?? '',
-                'listingStatus' => $property->listing_status?->value ?? 'available',
+                'listingStatus' => $property->listing_status->value,
                 'isVisible' => $property->is_visible ?? true,
+                'publishAt' => $property->publish_at?->utc()->format('Y-m-d\TH:i:s.v\Z'),
+                'scheduledListingStatus' => $property->scheduled_listing_status?->value,
+                'scheduledStatusAt' => $property->scheduled_status_at?->utc()->format('Y-m-d\TH:i:s.v\Z'),
             ],
             'primaryImage' => $primaryImage instanceof Image
                 ? $this->listingImage($primaryImage)
@@ -99,8 +102,11 @@ final class PropertyPresenter
                 'price' => (string) ($property->price_whole_units ?? $property->price ?? ''),
                 'size' => (string) ($property->size_hectares ?? $property->size ?? ''),
                 'slug' => $property->slug ?? '',
-                'listingStatus' => $property->listing_status?->value ?? 'available',
+                'listingStatus' => $property->listing_status->value,
                 'isVisible' => $property->is_visible ?? true,
+                'publishAt' => $property->publish_at?->utc()->format('Y-m-d\TH:i:s.v\Z'),
+                'scheduledListingStatus' => $property->scheduled_listing_status?->value,
+                'scheduledStatusAt' => $property->scheduled_status_at?->utc()->format('Y-m-d\TH:i:s.v\Z'),
             ],
             'images' => $property->images
                 ->map(fn (Image $image): array => $this->image($image))

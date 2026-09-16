@@ -17,6 +17,12 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
+/**
+ * @property \Carbon\CarbonImmutable|null $publish_at
+ * @property ListingStatus $listing_status
+ * @property ListingStatus|null $scheduled_listing_status
+ * @property \Carbon\CarbonImmutable|null $scheduled_status_at
+ */
 class Property extends Model
 {
     use HasFactory;
@@ -31,6 +37,9 @@ class Property extends Model
         'size_hectares',
         'listing_status',
         'is_visible',
+        'publish_at',
+        'scheduled_listing_status',
+        'scheduled_status_at',
     ];
 
     protected function casts(): array
@@ -42,6 +51,9 @@ class Property extends Model
             'size_hectares' => 'decimal:4',
             'listing_status' => ListingStatus::class,
             'is_visible' => 'boolean',
+            'publish_at' => 'immutable_datetime',
+            'scheduled_listing_status' => ListingStatus::class,
+            'scheduled_status_at' => 'immutable_datetime',
         ];
     }
 

@@ -14,7 +14,7 @@ use App\Modules\Property\Models\Property;
  */
 class DetailsService
 {
-    public function __construct(private readonly PropertyPresenter $propertyPresenter, private readonly ActivityService $activityService)
+    public function __construct(private readonly PropertyPresenter $propertyPresenter, private readonly ActivityService $activityService, private readonly PropertyPublicationService $publicationService)
     {
     }
 
@@ -43,9 +43,9 @@ class DetailsService
     public function update(Property $property, array $validated): void
     {
         DB::transaction(function () use ($property, $validated): void {
+            $property = Property::query()->lockForUpdate()->findOrFail($property->id);
             $property->fill($validated);
-            if ($property->isDirty()) {
-                $property->save();
+            if ($this->publicationService->save($property)) {
                 $this->activityService->record(EventType::PropertyUpdated, $property);
             }
         });

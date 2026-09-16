@@ -79,3 +79,7 @@ export function remove(propertyId: string): Promise<void> {
         }
     );
 }
+
+export function getAdminProperties(): Promise<ResponseGetProperties> {
+    return apiFetch<ResponseGetProperties>(`${baseURL}/admin/properties`);
+}

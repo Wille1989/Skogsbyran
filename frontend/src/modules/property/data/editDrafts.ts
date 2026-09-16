@@ -86,11 +86,16 @@ export function changedDetails(
   initialDetails: ResponseProperty["details"],
   currentDetails: ResponseProperty["details"],
 ): Partial<ResponseProperty["details"]> {
-  return Object.fromEntries(
+  const patch = Object.fromEntries(
     Object.entries(currentDetails).filter(([key, value]) =>
       initialDetails[key as keyof typeof initialDetails] !== value
     ),
   ) as Partial<ResponseProperty["details"]>;
+  if ("scheduledListingStatus" in patch || "scheduledStatusAt" in patch) {
+    patch.scheduledListingStatus = currentDetails.scheduledListingStatus;
+    patch.scheduledStatusAt = currentDetails.scheduledStatusAt;
+  }
+  return patch;
 }
 
 export function changedLocationPayload(
