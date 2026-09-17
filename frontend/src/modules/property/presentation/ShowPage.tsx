@@ -21,7 +21,7 @@ export function ShowPage() {
   const mapDialog = useRef<HTMLDialogElement>(null);
   const [mapOpen, setMapOpen] = useState(false);
   if (isPending) return <LoadingSpinner />;
-  if (error || !data?.property) return <section className="property-detail-page"><Link to="/">Tillbaka</Link><h1>Fastigheten kunde inte hämtas</h1><p>Det gick inte att läsa in fastigheten just nu.</p></section>;
+  if (error || !data?.property) return <section className="property-detail-page"><Link to="/">Tillbaka</Link><h1>Fastigheten kunde inte hämtas</h1><p role="alert">{error instanceof Error ? error.message : "Det gick inte att läsa in fastigheten just nu."}</p></section>;
   const property = data.property;
   const { details, location, areas } = property;
   const place = locationLabel(property);

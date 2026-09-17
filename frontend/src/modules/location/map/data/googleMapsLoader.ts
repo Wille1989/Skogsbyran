@@ -6,8 +6,12 @@ export const googleMapsMapId = (import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as strin
 
 let googleMapsLoader: Promise<typeof google> | null = null;
 let optionsAreSet = false;
+let authenticationFailed = false;
+export const mapsAuthErrorEvent = "property-map-auth-error";
+export const mapsAuthErrorMessage = "Google Maps nekade åtkomst. Kontrollera API-nyckel, tillåtna webbplatser och aktiverade Google API:er.";
 
 export function loadGoogleMaps(): Promise<typeof google> {
+  if (authenticationFailed) return Promise.reject(new Error(mapsAuthErrorMessage));
   if (!apiKey) {
     return Promise.reject(new Error("Google Maps API key saknas i frontendens miljovariabler."));
   }
@@ -16,6 +20,13 @@ export function loadGoogleMaps(): Promise<typeof google> {
 
   if (!googleMapsLoader) {
     if (!optionsAreSet) {
+      const mapsWindow = window as Window & { gm_authFailure?: () => void };
+      const previous = mapsWindow.gm_authFailure;
+      mapsWindow.gm_authFailure = () => {
+        authenticationFailed = true;
+        window.dispatchEvent(new Event(mapsAuthErrorEvent));
+        previous?.();
+      };
       setOptions({
         key: apiKey,
         v: "weekly",

@@ -5,12 +5,17 @@ import {
     type ResponseGetProperties } from "@/modules/property/data/types";
 import { type CreatePropertyInput } from "./types";
 
+import { validatePropertyMap } from "@/modules/location/map/data/validatePropertyMap";
+
 export function getById(propertyId: string): Promise<ResponseGetProperty> {
     return apiFetch<ResponseGetProperty>(`${baseURL}/property/${propertyId}`,
         {
             method: "GET",
         }
-    );
+    ).then(response => {
+        validatePropertyMap(response.property);
+        return response;
+    });
 }
 
 export function getAll(): Promise<ResponseGetProperties> {

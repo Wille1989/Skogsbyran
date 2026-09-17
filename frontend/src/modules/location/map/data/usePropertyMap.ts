@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { googleMapsMapId, loadGoogleMaps } from "./googleMapsLoader";
+import { googleMapsMapId, loadGoogleMaps, mapsAuthErrorEvent, mapsAuthErrorMessage } from "./googleMapsLoader";
 import type { Coordinates } from "./types";
 import type { PropertyLocationPayload } from "../../types";
 
@@ -25,11 +25,14 @@ export function usePropertyMap(options: PropertyMapOptions) {
   const syncing = useRef(false);
   const fitted = useRef<string | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [mapSize, setMapSize] = useState("");
   const [error, setError] = useState<string | null>(null);
   useEffect(() => { latest.current = options; }, [options]);
 
   useEffect(() => {
     let disposed = false;
+    const authError = () => setError(mapsAuthErrorMessage);
+    window.addEventListener(mapsAuthErrorEvent, authError);
     let overlay: google.maps.Polygon | null = null;
     const listeners: google.maps.MapsEventListener[] = [];
     void loadGoogleMaps().then(() => {
@@ -75,11 +78,21 @@ export function usePropertyMap(options: PropertyMapOptions) {
     });
     return () => {
       disposed = true;
+      window.removeEventListener(mapsAuthErrorEvent, authError);
       listeners.forEach(listener => listener.remove());
       overlay?.setMap(null);
       polygonRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (!map || !elementRef.current) return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width && entry.contentRect.height) setMapSize(entry.contentRect.width + "," + entry.contentRect.height);
+    });
+    observer.observe(elementRef.current);
+    return () => observer.disconnect();
+  }, [map]);
 
   useEffect(() => {
     const overlay = polygonRef.current;
@@ -106,7 +119,7 @@ export function usePropertyMap(options: PropertyMapOptions) {
   useEffect(() => {
     if (!map) return;
     const markers: google.maps.marker.AdvancedMarkerElement[] = [];
-    const listeners: google.maps.MapsEventListener[] = [];
+    const removeListeners: Array<() => void> = [];
     const createMarker = (position: Coordinates, title: string, label: string | null, move?: (point: Coordinates) => void): void => {
       const marker = new google.maps.marker.AdvancedMarkerElement({
         map, position, title, gmpDraggable: !options.readOnly && !!move,
@@ -118,9 +131,17 @@ export function usePropertyMap(options: PropertyMapOptions) {
         flag.textContent = `⚑ ${label}`;
         marker.append(flag);
       }
-      if (!options.readOnly && move) listeners.push(marker.addListener("dragend", (event: google.maps.MapMouseEvent) => {
-        if (event.latLng) move(event.latLng.toJSON());
-      }));
+      if (!options.readOnly && move) {
+        const dragEnd = () => {
+          const position = marker.position;
+          if (position) move({
+            lat: typeof position.lat === "function" ? position.lat() : position.lat,
+            lng: typeof position.lng === "function" ? position.lng() : position.lng,
+          });
+        };
+        marker.addEventListener("gmp-dragend", dragEnd);
+        removeListeners.push(() => marker.removeEventListener("gmp-dragend", dragEnd));
+      }
       markers.push(marker);
     };
     if (options.marker) createMarker(options.marker, "Fastighetens huvudposition", null,
@@ -130,7 +151,7 @@ export function usePropertyMap(options: PropertyMapOptions) {
       options.onMovePoi ? point => latest.current.onMovePoi?.(index, point) : undefined,
     ));
     return () => {
-      listeners.forEach(listener => listener.remove());
+      removeListeners.forEach(remove => remove());
       markers.forEach(marker => { marker.map = null; });
     };
   }, [map, options.marker, options.pois, options.readOnly, options.onSetMarker, options.onMovePoi]);
@@ -142,10 +163,11 @@ export function usePropertyMap(options: PropertyMapOptions) {
       ...(options.marker ? [options.marker] : []),
       ...(options.pois?.map(poi => ({ lat: poi.latitude, lng: poi.longitude })) ?? []),
     ];
-    const signature = JSON.stringify(points);
+    const signature = JSON.stringify(points) + (options.readOnly ? mapSize : "");
     if (options.readOnly ? fitted.current === signature : fitted.current !== null) return;
     if (!points.length) {
-      if (options.readOnly) { map.setCenter(DEFAULT_CENTER); map.setZoom(6); fitted.current = signature; }
+      fitted.current = signature;
+      if (options.readOnly) { map.setCenter(DEFAULT_CENTER); map.setZoom(6); }
       return;
     }
     fitted.current = signature;
@@ -155,8 +177,8 @@ export function usePropertyMap(options: PropertyMapOptions) {
       map.setCenter(points[0]);
       map.setZoom(15);
     } else {
-      map.fitBounds(bounds, 40);
+      map.fitBounds(bounds, { top: 48, right: 80, bottom: 40, left: 80 });
     }
-  }, [map, options.polygon, options.otherPolygons, options.marker, options.pois, options.readOnly]);
+  }, [map, options.polygon, options.otherPolygons, options.marker, options.pois, options.readOnly, mapSize]);
   return { elementRef, map, error };
 }

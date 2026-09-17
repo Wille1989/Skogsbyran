@@ -1,97 +1,65 @@
 # Kartfunktion för fastigheter
 
-## Befintlig implementation och identifierade luckor
+## Slutstatus 2026-09-17
 
-Undersökningen följde Create/Edit/Show/Index, deras komponenter och mutations, API-klienterna, routes, controllers, Form Requests, tjänster, presenters, modeller och migrations.
+Google Maps används i ett gemensamt redigeringsflöde och ett separat låst visningsläge. Static Maps är inte implementerat. Inga dependencies, miljönycklar eller databasscheman ändrades i denna slutföring. Inga nya tester ingår i den senaste ändringen, enligt användarens instruktion.
 
-- `Property` har en `Location`, flera `Area` via Location och angiven `size_hectares`.
-- `locations` innehåller huvudposition, adressfält och Google place ID. `location_pois` innehåller flera namngivna punkter. `location_areas` och ordnade `area_points` innehåller polygonerna. Dessa tabeller behövde inte ändras.
-- Area-controller och AreaService har motsvarande CRUD-metoder. Kontrollen av områdestillhörighet kastade däremot ett allmänt undantag, som nu ersatts med HTTP 404.
-- `Area.marker` i svar är ett beräknat polygoncentrum. Det är inte en sparad POI eller en separat huvudposition. Äldre create-anrop kunde initialisera Location med `Area.marker`; den kompatibiliteten finns kvar, men nya klienten skriver huvudpositionen via Location.
-- Backend kunde skapa Areas i property-create-transaktionen. Frontend skickade ändå separata create-anrop. Location/POI saknades i samma create-kontrakt.
-- Frontend hade Maps-loader, Google-typer, Terra Draw och en äldre Places Autocomplete. Kartor för plats respektive områden var separata implementationer. Show visade inte POI och prioriterade polygoncentrum framför huvudposition.
-- `details.size` är angiven hektar: presentern hämtar `size_hectares`, med befintlig bakåtkompatibilitet för `size`. Migrationsfilen för listingfält kopierade äldre `size` till `size_hectares`.
-- Skrivroutes skyddades redan av `auth:web` och `admin`. Publika detalj- och Area-läsningar saknade kontroll av `is_visible`.
+## Arkitektur och gränssnitt
 
-## Datakontrakt och ansvar
+- PropertyForm visar PropertyMapEditor med en kompakt, låst förhandsvisning. Ett klick öppnar en stor dialog med adressökning, polygonritning, POI, huvudposition, avsluta verktyg och stäng. Adress- och POI-metadata finns i dialogen.
+- CreatePage/EditPage äger location- och areas-utkasten. Dialogen äger bara valt verktyg och UI-tillstånd. Stängning bevarar utkastet; formulärets sparknapp persisterar det.
+- PropertyAreaMap och usePropertyMap synkroniserar domändata till Google Map, Polygon och AdvancedMarkerElement och städar overlays/lyssnare. Kartobjekten är inte primär datakälla.
+- MapAddressSearch använder riktig PlaceAutocompleteElement med Sverige som region, gmp-select och fetchFields. Inga mockade adressresultat används.
+- ShowPage öppnar PropertyMapView utan redigeringsverktyg. Den rena funktionen filterMapData väljer Område, POI eller Allt före rendering. Denna separation kan återanvändas av en framtida Static Maps-renderare. POI-läget inkluderar eventuell huvudposition.
+- Visningskartor anpassar utsnittet när geometri, filter eller kartans storlek ändras. Redigeringskartor behåller utsnittet medan man ritar. Mobilens dialogrubrik och stängknapp ryms efter rättningen.
 
-| Data | API och källa |
+## Datakontrakt och sparning
+
+| Data | Källa och kontrakt |
 | --- | --- |
-| Huvudposition | `location.latitude`, `location.longitude`, båda tal eller båda null. Lagras i `locations`. Vid Maps-gränsen konverteras de till `{lat, lng}`. |
-| Polygon | Area `{name, polygon: [{lat, lng}, ...]}`. Minst tre olika giltiga punkter. Lagras som ordnade `area_points.latitude/longitude`. En upprepad slutpunkt accepteras av backend och tas bort före lagring. |
-| POI | `location.pois: [{id?, name, description, latitude, longitude}]`. Lagras i `location_pois`. `uiId` finns bara i frontendutkastet. |
-| Hektar | `details.size` från fastighetens angivna `size_hectares`. Ingen automatisk överskrivning från polygonerna. |
-| Kartarea | Befintlig ungefärlig beräkning från polygonen. AreaService äger backendberäkning och serialisering; PropertyPresenter återanvänder den. Frontendens rena `areaMath` ger förhandsvisning. |
+| Huvudposition | location.latitude/longitude, båda tal eller båda null; sparas i locations. |
+| Polygon | Area med namn och ordnad polygon av lat/lng. Minst tre olika giltiga punkter. Sparas i area_points. Backend accepterar och tar bort en upprepad slutpunkt. |
+| POI | location.pois med name, description, latitude/longitude och valfritt id; sparas i location_pois. uiId skickas inte. |
+| Area.marker | Beräknat polygoncentrum, inte en sparad POI. |
+| Hektar | Angiven details.size är separat från beräknad kartarea. |
 
-Flera områden visas samtidigt i Show. Area-collection summerar områdenas kartarea; överlapp räknas i varje område, alltså ingen geometrisk union. Summan används inte som fastighetens angivna hektar.
+Create skickar location och areas som JSON i befintlig POST /property och sparar dem i samma backendtransaktion. Edit använder PUT /property/:id/location samt befintliga Area POST/PUT/DELETE. POI-listan ersätts och kan få nya databas-ID:n. Bekräftade nya Area-ID:n behålls vid delvis misslyckad sparning. Hela Edit-formuläret är fortfarande inte en gemensam transaktion.
 
-`AreaData` och `LocationData` ger typade kontrakt mellan validerade requests och tjänster. Inga Google-objekt skickas till backend. Ingen migration eller dependency har lagts till.
+validatePropertyMap kontrollerar hämtad geometri innan formulärhydrering eller rendering: ogiltiga koordinater, ofullständiga polygoner och felaktiga POI ger ett synligt fel i stället för tyst korrigering. Google-autentiseringsfel visas tydligt och kartytan döljs vid fel. Befintlig servervalidering och adminbehörighet gäller fortsatt.
 
-## Vyer och sparning
+## Genomförd kontroll i riktig lokal app
 
-- **Create:** adressökning, huvudposition och POI i platskartan; polygoner i områdesredigeraren. Områdeskartan visar huvudpositionen som referens. `location` och `areas` skickas i befintligt property-create-anrop och sparas i samma databastransaktion. Enbart adress/position/POI går att spara utan polygon.
-- **Edit:** Location PUT ersätter huvudposition och POI. Befintliga Area POST/PUT/DELETE används för polygoner. Tomma befintliga polygoner och ofullständiga polygoner avvisas. Ett explicit borttaget område raderas. Utkastet finns kvar vid fel. Bekräftade Area-svar och nya områdes-ID:n bevaras om ett senare anrop misslyckas, så ett återförsök inte skapar samma bekräftade område igen.
-- **Show:** alla polygoner, korrekt huvudposition och namngivna POI. Kartan anpassar utsnittet till sparad geometri. Ingen redigering, inga skrivcallbacks eller sökverktyg. POI finns också som textlista för överlappande flaggor. Fastigheter utan kartdata får en tomstatus.
-- **Index:** svenska hektartal, exempelvis `42,6 ha`, från angiven fastighetsareal.
+Frontend kördes på localhost:5173 och API på localhost:8020. Både Google-nyckel och map ID finns lokalt; deras värden har inte ändrats.
 
-Ritningen använder `google.maps.Polygon`, klick för hörn och Googles redigerbara hörn/mittpunkter. Högerklick tar bort ett hörn; knapp tar bort sista hörnet. Huvudmarkör och POI använder `AdvancedMarkerElement`. POI kan även väljas i listan och flyttas genom ett kartklick, vilket fungerar vid överlapp.
+- Tom förhandsvisning öppnades; karta och verktyg laddades från Google. Ett initialiseringsfel med tom polygon rättades tidigare genom setPath efter konstruktion.
+- En fyrhörnig polygon och två namngivna POI skapades genom kartinteraktion. En POI flyttades via listans flyttverktyg. Dialogen stängdes/öppnades utan förlorat utkast.
+- Dold lokal fastighet 15, ”Kartverifiering 2026-09-17”, skapades: POST 201 och efterföljande GET 200. Polygonens ordning och POI-koordinater överlevde lagring med backendens avrundning till sju decimaler.
+- Efter omladdning visades samma data. Låst visning med Område, POI och Allt visade respektive geometri/textlista utan redigeringsverktyg eller skrivningar.
+- AdvancedMarker använder nu gmp-dragend. En POI flyttades med Googles tangentbordsdragning; longituden ändrades från 18.0681051 till 18.068148. Polygonens sista hörn ersattes och kartarean blev 10,0459 ha.
+- PUT location och PUT area/5/update gav 200. GET 200 och full omladdning visade fyra punkter och två POI med uppdaterade värden. Polygonens sista punkt blev lat 59.3331244, lng 18.0692795.
+- Mobilbredd 390 × 844 kontrollerades i redigeringsdialogen: stängknapp, verktyg, polygon och båda POI synliga.
+- Riktiga svenska Places-förslag för Drottninggatan i Stockholm observerades. Användaren rapporterade att alla verktyg fungerade vid egen körning och att Drottninggatan 14 valts. Verktyget kan inte själv välja i Googles stängda shadow DOM; full adressval–koordinat-kontroll samt småortsadress är därför inte självständigt verifierade. Ingen sådan kontroll påstås vara genomförd.
 
-Kartans komponent äger presentationen, `usePropertyMap` synkroniserar Maps-objekt och städar lyssnare/overlays, och `MapAddressSearch` hanterar Places-resultat. Domäntyper och payloadvalidering ligger utanför presentationen.
+Den dolda lokala fastigheten 15 finns kvar för granskning; den har inte publicerats. Tidigare befintliga fastigheter 12 och 13 saknade kartdata. Befintliga fastigheters data ändrades inte.
 
-## Behörighet
+## Kontroller och begränsningar
 
-Alla Property-, Area- och Location-skrivningar går fortsatt genom `auth:web` och `admin`, där adminflaggan kontrolleras på servern. Form Requests validerar koordinater, namn och övrig indata. AreaService kontrollerar att området tillhör fastigheten.
+- Slutlig npm run lint: passerar.
+- Slutlig npm run build: TypeScript och Vite-produktionsbygge passerar.
+- Tidigare i uppgiften, före instruktionen att inte skriva tester: fem befintliga frontendtester passerade och backendens fyra berörda featurefiler gav 13 passerande tester, 124 assertions. Backend har inte ändrats i denna slutföring. Inga nya testfall kvarstår i aktuell diff.
+- Tillfällig MAP_HTTP/MAP_DRAFT/Google-resursdiagnostik är borttagen från källkoden.
+- Polygonhörnens dragning har inte självständigt verifierats i sista webbläsarkörningen; ritning, ångra och nytt hörn har verifierats. Google-konfigurationsfel har fått felhantering men inget avsiktligt fel har injicerats i den fungerande nyckeln.
+- Kartarea är approximativ. Självkorsning och överlapp har ingen topologisk kontroll. Edit kan fortfarande delvis sparas vid nätverksfel eftersom flera endpoints används.
 
-Ny `EnsurePropertyVisible` skyddar detalj- och Area-läsning: publika läsare ser endast synliga fastigheter; admin kan läsa dolda fastigheter. Property-klienten skickar sessionen även vid detaljhämtning. De äldre Location-testerna har anpassats från borttagen tokeninloggning till projektets sessionsinloggning.
+## Filer i slutföringen
 
-## Google-konfiguration
+Tidigare sparad implementation: PropertyMapEditor.tsx, PropertyMapView.tsx, mapPresentation.ts, PropertyForm.tsx, LocationEditor.tsx, ShowPage.tsx, usePropertyMap.ts och googleMap.css.
 
-- `VITE_GOOGLE_MAPS_API_KEY`: Maps JavaScript API samt Places API (New) måste vara aktiverade för projektet.
-- `VITE_GOOGLE_MAPS_MAP_ID`: eget map ID krävs för produktion. Utvecklingsläget använder Googles `DEMO_MAP_ID` om variabeln saknas.
-- Inga miljöfiler eller nycklar har ändrats. Kontrollen av den lokala miljön visade en nyckel men inget map ID.
-- Sökningen använder `PlaceAutocompleteElement`, `gmp-select` och `fetchFields`. Fel och resultat utan koordinater visas för administratören.
+Senaste ändringarna:
 
-Referenser: [Places-widget](https://developers.google.com/maps/documentation/javascript/place-autocomplete-new), [redigerbara former](https://developers.google.com/maps/documentation/javascript/shapes), [flyttbara Advanced Markers](https://developers.google.com/maps/documentation/javascript/advanced-markers/draggable-markers).
-
-## Verifiering
-
-| Kommando | Resultat |
-| --- | --- |
-| `php artisan test tests/Feature/PropertyMapTest.php tests/Feature/LocationModuleTest.php tests/Feature/AdminAuthorizationTest.php tests/Feature/PropertyListingFieldsTest.php` i backend | 12 tester passerar, 97 assertions. SQLite i minnet. |
-| `node --test tests/propertyMap.test.mjs` i frontend | 5 tester passerar: koordinater, polygoner, POI, hektar och återförsök efter delvis misslyckad sparning. |
-| `npm run lint` i frontend | Passerar. |
-| `npm run build` i frontend | TypeScript strict och produktionsbygge passerar. Befintlig varning om `/images/woodland-placeholder.webp`. |
-| `git diff --check` | Passerar. |
-
-PHPStan saknas både som installerat verktyg och projektkonfiguration i detta backendprojekt. Ingen godkänd PHPStan-körning kan därför redovisas. Inga nya dependencies installerades för att ändra projektets kontrollverktyg.
-
-## Kvarvarande verifiering och begränsningar
-
-- Livekontroll i Google Maps kunde inte genomföras: webbläsarverktyget misslyckades med att skapa en testflik. Adressförslag, dragning, rendering och mobilinteraktion behöver därför verifieras manuellt med aktuell Google-konfiguration. Typkontroll är inte en ersättning för det.
-- Testerna verifierar migrationsschemat i en separat testdatabas. Ingen migration eller ändring av befintlig driftsdata kördes.
-- Kartarean är approximativ, inte lantmäterimätning. Självkorsande polygoner och överlapp mellan områden har ingen topologisk kontroll. Angiven hektar är fortfarande källa för fastighetsstorlek.
-- Edit består fortsatt av flera endpointanrop och är inte en transaktion för hela formuläret. Ett avbrutet nätverkssvar efter att servern redan sparat en ny post kan fortfarande kräva omladdning och kontroll innan återförsök. Bekräftade Area-svar hanteras i klienten.
-- Bilder/dokument använder det tidigare separata uppladdningsflödet. Fel där kan lämna en skapad, ännu opublicerad fastighet. Det flödet har inte byggts om.
-
-## Ändrade filer
-
-Backend:
-
-- `app/Http/Controllers/Api/{AreaController,LocationController,PropertyController}.php`
-- `app/Http/Requests/{StoreAreaRequest,UpdateAreaRequest,StorePropertyRequest,UpdateLocationRequest}.php`
-- `app/Http/Middleware/EnsurePropertyVisible.php` (ny)
-- `app/Modules/Location/Data/{AreaData,LocationData}.php` (nya)
-- `app/Services/{AreaService,LocationService,PropertyService}.php`
-- `app/Presenters/PropertyPresenter.php`
-- `routes/api.php`
-- `tests/Feature/LocationModuleTest.php`, `tests/Feature/PropertyMapTest.php` (ny)
-
-Frontend:
-
-- `src/modules/location/LocationEditor.tsx`, `types.ts`
-- `src/modules/location/map/data/{areaDraft,googleMapsLoader,types}.ts`, `usePropertyMap.ts` (ny)
-- `src/modules/location/map/presentation/{EditableAreas,PropertyAreaEditor,PropertyAreaMap}.tsx`, `MapAddressSearch.tsx` (ny), `googleMap.css`
-- Tidigare, nu oanvända `PropertyAreaDrawingTools.tsx`, `PropertyAreaForm.tsx` och `PropertyAreaMapModal.tsx` har tagits bort.
-- `src/modules/property/data/{api,mutations,editDrafts,editMutations}.ts`
-- `src/modules/property/presentation/{CreatePage,EditPage,ShowPage,PropertyCard}.tsx`, `propertyListing.ts`
-- `tests/propertyMap.test.mjs` och denna rapport (nya).
+- src/modules/location/map/data/validatePropertyMap.ts (ny), googleMapsLoader.ts och usePropertyMap.ts
+- src/modules/location/map/presentation/PropertyAreaMap.tsx, PropertyMapEditor.tsx och googleMap.css
+- src/modules/location/LocationEditor.tsx
+- src/modules/property/data/api.ts
+- src/modules/property/presentation/EditPage.tsx, ShowPage.tsx och PropertyDetail.css
+- docs/property-map.md

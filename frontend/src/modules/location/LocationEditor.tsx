@@ -1,6 +1,4 @@
-import { type ChangeEvent } from "react";
-
-
+import type { ChangeEvent } from "react";
 import type { LocationPoiDraft, PropertyLocationDraft } from "./types";
 import "./LocationEditor.css";
 

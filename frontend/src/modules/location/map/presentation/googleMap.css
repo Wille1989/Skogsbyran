@@ -212,7 +212,7 @@
 .property-map-tools p, .map-draft-summary { margin: 8px 0; font-size: .875rem; }
 .property-map-tools button[aria-pressed="true"], .map-filter button[aria-pressed="true"] { background: #14532d; color: #fff; border-color: #14532d; }
 .property-map-editor-dialog .google-map { height: 52dvh; min-height: 300px; }
-.property-map-editor-dialog .map-address-search { position: sticky; top: 100px; z-index: 6; background: #fff; border-radius: 8px; }
+.property-map-editor-dialog .map-address-search { background: #fff; border-radius: 8px; }
 .map-area-tools label { display: flex; align-items: center; gap: 8px; }
 .map-area-tools select { max-width: 220px; padding: 8px; font: inherit; }
 .map-metadata { padding: 12px; border: 1px solid #ddd; border-radius: 12px; }

@@ -65,7 +65,7 @@ export function EditPage() {
       <section className="property-detail-shell-section">
         <h1>Redigering kunde inte öppnas</h1>
 
-        <p>Fastigheten gick inte att läsa in.</p>
+        <p role="alert">{error instanceof Error ? error.message : "Fastigheten gick inte att läsa in."}</p>
       </section>
     );
   }

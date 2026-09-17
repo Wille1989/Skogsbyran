@@ -46,3 +46,11 @@
   .detail-gallery .property-viewer-preview-image { aspect-ratio: 1.6; }
   .detail-gallery .property-viewer-thumb { flex-basis: 110px; height: 72px; }
 }
+
+.detail-map-dialog { box-sizing: border-box; }
+.detail-map-dialog > header h2 { min-width: 0; overflow-wrap: anywhere; font-size: clamp(1.2rem, 2.8vw, 2rem); }
+.detail-map-dialog > header button { flex-shrink: 0; }
+@media (max-width: 600px) {
+  .detail-map-dialog { padding: 16px; }
+  .detail-map-dialog > header { gap: 8px; }
+}

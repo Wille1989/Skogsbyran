@@ -81,7 +81,7 @@ export function PropertyMapEditor({ location, onLocationChange, areas, onAreasCh
           <button type="button" className="admin-button" disabled={!marker} onClick={() => onLocationChange({ ...location, latitude: null, longitude: null })}>Ta bort huvudposition</button>
           {areas.map((item, index) => <div className="map-area-metadata" key={item.id ?? index}>
             <label>Namn på område {index + 1}<input maxLength={120} value={item.name} onChange={event => onAreasChange(areas.map((current, i) => i === index ? { ...current, name: event.target.value } : current))} /></label>
-            <button type="button" className="admin-button" onClick={() => { setSelectedArea(index); activate("polygon"); if (details.current) details.current.open = false; }}>Redigera gräns</button>
+            <button type="button" className="admin-button" onClick={() => { setSelectedArea(index); setMovingPoi(null); setTool("polygon"); if (details.current) details.current.open = false; }}>Redigera gräns</button>
             <button type="button" className="admin-button is-danger" onClick={() => { onAreasChange(areas.filter((_, i) => i !== index)); setSelectedArea(0); activate("navigate"); }}>Ta bort område</button>
           </div>)}
           <p>Kartarean är ungefärlig. Fastighetens angivna areal ändras inte.</p>

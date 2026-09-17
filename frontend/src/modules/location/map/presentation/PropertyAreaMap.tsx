@@ -17,15 +17,15 @@ function LoadedPropertyAreaMap(props: Props) {
   const { elementRef, map, error } = usePropertyMap(props);
   return (
     <div className="mock-map-shell">
-      {!props.readOnly && props.showSearch !== false && map && <MapAddressSearch onSelect={(address) => {
+      {!error && !props.readOnly && props.showSearch !== false && map && <MapAddressSearch onSelect={(address) => {
         map.panTo(address.position);
         map.setZoom(15);
         props.onAddressSelect?.(address);
       }} />}
       {error ? <p className="form-error" role="alert">{error}</p> : !map && <p role="status">Kartan laddas…</p>}
-      <div ref={elementRef} className={`mock-map google-map${props.readOnly ? " is-readonly" : ""}`} aria-label="Karta över fastigheten" />
+      <div ref={elementRef} hidden={!!error} className={`mock-map google-map${props.readOnly ? " is-readonly" : ""}`} aria-label="Karta över fastigheten" />
       {props.readOnly && !props.marker && !props.polygon.length && !props.otherPolygons?.length && !props.pois?.length
-        ? <p>Ingen kartdata har sparats för fastigheten.</p> : null}
+        ? <p>Ingen kartdata att visa med detta urval.</p> : null}
     </div>
   );
 }
