@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { preparingProgress, PropertySaveError } from "../data/saveProgress";
+import type { SavePropertyProgress } from "../data/types";
 import type { ResponseProperty } from "@/modules/property/data/types";
 import { LoadingSpinner } from "@/shared/presentation/LoadingSpinner.tsx";
 import { useDeletePropertyMutation, useSavePropertyChangesMutation } from "../data/editMutations";
@@ -32,6 +34,10 @@ export function EditPage() {
   const navigate = useNavigate();
   const deleteDialog = useRef<HTMLDialogElement>(null);
   const deleting = useRef(false);
+  const saving = useRef(false);
+  const [saveProgress, setSaveProgress] = useState<SavePropertyProgress | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const failure = saveChanges.error instanceof PropertySaveError ? saveChanges.error : null;
   const imageFiles = useImageFiles();
   const { images, initializeImages } = imageFiles;
   const [editingImageId, setEditingImageId] = useState<string | null>(null);
@@ -74,36 +80,53 @@ export function EditPage() {
     !("file" in image) && image.imageId === editingImageId) ?? null;
 
   const handleSave = (details: FormDetails): void => {
-    if (deleting.current || saveChanges.isPending) return;
-    saveChanges.mutate(
-      {
-        propertyId: property.propertyId,
-        details,
-        initialDetails: property.details,
-        imageChanges: imageFiles.buildChanges(),
-        location,
-        initialLocation: property.location,
-        areas,
-        initialAreas: property.areas,
-        onAreaCreated: (draft, saved) => setAreas(current => current.map(area => area === draft ? { ...area, id: saved.id } : area)),
-        documents,
-        pendingDocuments,
-      },
-      {
-        onSuccess: (savedProperty) => {
-          initializeImages(savedProperty.images);
-          setLocation(locationDraftFromProperty(savedProperty));
-          setAreas(areaDraftsFromProperty(savedProperty));
-          setDocuments(documentDraftsFromProperty(savedProperty));
-          setPendingDocuments([]);
-          setLoadedPropertyId(savedProperty.propertyId);
+    if (deleting.current || saving.current || failure?.requiresReview) return;
+    saving.current = true;
+    setValidationError(null);
+    setSaveProgress(preparingProgress(false));
+    try {
+      saveChanges.mutate(
+        {
+          propertyId: property.propertyId,
+          details,
+          initialDetails: property.details,
+          onProgress: setSaveProgress,
+          imageChanges: imageFiles.buildChanges(),
+          location,
+          initialLocation: property.location,
+          areas,
+          initialAreas: property.areas,
+          onAreaCreated: (draft, saved) => setAreas(current => current.map(area => area === draft ? { ...area, id: saved.id } : area)),
+          documents,
+          pendingDocuments,
         },
-      },
-    );
+        {
+          onSettled: () => { saving.current = false; },
+          onError: error => {
+            if (!(error instanceof PropertySaveError)) {
+              setSaveProgress(null);
+              setValidationError("Kontrollera kartområden, koordinater och bilduppgifter innan du sparar igen.");
+            }
+          },
+          onSuccess: (savedProperty) => {
+            initializeImages(savedProperty.images);
+            setLocation(locationDraftFromProperty(savedProperty));
+            setAreas(areaDraftsFromProperty(savedProperty));
+            setDocuments(documentDraftsFromProperty(savedProperty));
+            setPendingDocuments([]);
+            setLoadedPropertyId(savedProperty.propertyId);
+          },
+        },
+      );
+    } catch {
+      saving.current = false;
+      setSaveProgress(null);
+      setValidationError("Kontrollera bilduppgifterna innan du sparar igen.");
+    }
   };
 
   const handleDelete = (): void => {
-    if (deleting.current || saveChanges.isPending) return;
+    if (deleting.current || saving.current || saveChanges.isPending) return;
     deleting.current = true;
     deleteProperty.mutate(property.propertyId, {
       onSuccess: () => navigate("/admin/properties", { replace: true }),
@@ -121,7 +144,9 @@ export function EditPage() {
         onDelete={() => { deleteProperty.reset(); deleteDialog.current?.showModal(); }}
         location={location} onLocationChange={setLocation} areas={areas} onAreasChange={setAreas}
         documents={<EditableDocuments documents={documents} pendingDocuments={pendingDocuments} onDocumentsChange={setDocuments} onPendingDocumentsChange={setPendingDocuments} />}
-        error={saveChanges.error instanceof Error ? saveChanges.error.message : null} saved={saveChanges.isSuccess}
+        error={validationError} progress={saveProgress} saveBlocked={!!failure?.requiresReview}
+        fieldErrors={failure?.fieldErrors}
+        reviewUrl={failure?.requiresReview ? "/admin/properties/" + property.propertyId + "/edit" : undefined}
       />
 
       <dialog ref={deleteDialog} className="property-delete-dialog" aria-labelledby="property-delete-title"

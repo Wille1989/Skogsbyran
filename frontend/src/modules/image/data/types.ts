@@ -45,9 +45,13 @@ export type UpdateImagesInput = {
     images: UpdateImageInput[];
 };
 
+export type ImageUploadProgress = { fraction: number; title: string; detail: string };
+
 export type UploadImagesInput = {
     propertyId: string;
     images: NewImageFile[];
+    onProgress?: (progress: ImageUploadProgress) => void;
+    onBatchSaved?: (detail: string) => void;
 };
 
 export type DeleteImagesInput = {

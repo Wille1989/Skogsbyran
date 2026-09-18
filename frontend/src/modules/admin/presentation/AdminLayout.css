@@ -1213,3 +1213,11 @@
         left: 155px;
     }
 }
+
+.admin-save-progress { display: grid; gap: 6px; align-items: start; font-size: 14px; position: sticky; top: 12px; z-index: 20; padding: 16px; border-radius: 12px; background: #f1f6f2; border: 1px solid #b8cdbd; }
+.admin-save-progress progress { width: 100%; accent-color: #24553b; }
+.admin-save-progress strong { display: block; margin-top: 8px; }
+.admin-save-progress p { margin: 6px 0 0; overflow-wrap: anywhere; }
+.admin-save-progress.is-error { background: #fff4f0; border-color: #d2a79a; }
+
+.details-form [aria-invalid="true"] { border-color: #ad3b2d; outline-color: #ad3b2d; }

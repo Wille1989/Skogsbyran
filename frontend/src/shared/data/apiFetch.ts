@@ -91,3 +91,39 @@ function getErrorMessage(errorData: unknown): string | null {
 
     return null;
 }
+
+export type UploadProgress = { loaded: number; total: number | null; sent: boolean };
+
+// Fetch does not expose browser upload progress. Keep session/error handling here
+// and use the browser's native transport for multipart uploads that need it.
+export function apiUpload<T>(url: string, body: FormData, onProgress: (progress: UploadProgress) => void): Promise<T> {
+    return new Promise((resolve, reject) => {
+        const request = new XMLHttpRequest();
+        let lastUpdate = 0;
+        const report = (event: ProgressEvent, sent = false) => {
+            const now = performance.now();
+            if (!sent && now - lastUpdate < 250 && event.loaded !== event.total) return;
+            lastUpdate = now;
+            onProgress({ loaded: event.loaded, total: event.lengthComputable ? event.total : null, sent });
+        };
+        request.upload.onprogress = event => report(event);
+        request.upload.onload = event => report(event, true);
+        request.onerror = () => reject(new ApiError("Upload network failure"));
+        request.onabort = () => reject(new ApiError("Upload interrupted"));
+        request.ontimeout = () => reject(new ApiError("Upload timed out"));
+        request.onload = () => {
+            let data: unknown = null;
+            try { data = request.responseText ? JSON.parse(request.responseText) as unknown : null; }
+            catch { reject(new ApiError("Invalid upload response", request.status >= 400 ? request.status : undefined)); return; }
+            if (request.status < 200 || request.status >= 300) {
+                reject(new ApiError(getErrorMessage(data) ?? "Upload failed", request.status, data));
+            } else if (data === null && request.status !== 204) {
+                reject(new ApiError("Missing upload response"));
+            } else resolve(data as T);
+        };
+        request.open("POST", url);
+        request.withCredentials = true;
+        buildRequestHeaders({ method: "POST" }).forEach((value, key) => request.setRequestHeader(key, value));
+        request.send(body);
+    });
+}

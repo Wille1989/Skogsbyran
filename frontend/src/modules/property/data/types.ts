@@ -37,9 +37,12 @@ export type PropertyListingItem = {
     } | null;
 };
 
-export type CreatePropertyProgress = {
+export type SavePropertyProgress = {
+    status: "saving" | "success" | "error";
+    phase: "preparing" | "details" | "images" | "location" | "areas" | "documents" | "finalizing";
     percent: number;
-    label: string;
+    title: string;
+    detail: string;
 };
 
 export type CreatePropertyInput = {
@@ -48,5 +51,5 @@ export type CreatePropertyInput = {
     areas: PropertyAreaPayload[];
     location: PropertyLocationPayload | null;
     documents: PendingDocument[];
-    onProgress?: (progress: CreatePropertyProgress) => void;
+    onProgress?: (progress: SavePropertyProgress) => void;
 };
