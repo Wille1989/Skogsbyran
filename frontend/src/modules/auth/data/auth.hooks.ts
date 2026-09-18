@@ -66,7 +66,7 @@ export function useAuth() {
             }
 
             setSuccessMessage('Du loggas in!');
-            await delay(1000);
+            await delay(600);
             navigate(authUser.isAdmin ? '/admin' : '/', { replace: true });
         } catch (error) {
             setErrorMessage(getErrorMessage(error, 'Kunde inte logga in användaren'));

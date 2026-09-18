@@ -1,8 +1,7 @@
 import { useAuth } from '../data/auth.hooks.ts';
 import "./Form.css";
 import { LoadingSpinner } from '@/shared/presentation/LoadingSpinner';
-import { Link, Navigate } from 'react-router-dom';
-import { IconArrowLeft } from '@tabler/icons-react';
+import { Navigate } from 'react-router-dom';
 
 export function AuthPage() {
   const {
@@ -21,7 +20,6 @@ export function AuthPage() {
 
   return (
     <div className="auth-page">
-      <Link to="/" className="detail-pill detail-back"><IconArrowLeft size={19} aria-hidden="true" />Tillbaka</Link>
       <form onSubmit={onLogin} className="form auth-form">
         <h1 className="auth-title">Logga in</h1>
 
