@@ -1,3 +1,4 @@
+import "./ImageViewer.css";
 import {
       useEffect,
       useId,
@@ -8,7 +9,7 @@ import { createPortal } from "react-dom";
 import { calculateImageIndex } from "../data/calculateIndex";
 import { ImageEditDialog } from "./ImageEditDialog";
 import type { ImageFile } from "../data/types";
-import { IconPhoto } from "@tabler/icons-react";
+import { IconArrowsMaximize, IconChevronLeft, IconChevronRight, IconX, IconCheck, IconPencil } from "@tabler/icons-react";
 import { recordEvent } from "@/modules/analytics/data/api";
 
 type ImageViewerProps = {
@@ -31,6 +32,7 @@ export function ImageViewer({
       const [editingImage, setEditingImage] = useState<ImageFile | null>(null);
       const closeButtonRef =useRef<HTMLButtonElement | null>(null);
       const lightboxRef = useRef<HTMLDivElement | null>(null);
+      const thumbnailListRef = useRef<HTMLDivElement | null>(null);
       const previousFocusRef = useRef<HTMLElement | null>(null);
       const safeActiveIndex = images.length > 0 ? Math.min(activeIndex, images.length - 1) : 0;
       const activeImage = images[safeActiveIndex] ?? null;
@@ -87,6 +89,7 @@ export function ImageViewer({
                   }
 
                   if (event.key === "ArrowLeft") {
+                        event.preventDefault();
                         setActiveIndex((currentIndex) =>
                               calculateImageIndex(
                                     currentIndex,
@@ -99,6 +102,7 @@ export function ImageViewer({
                   }
 
                   if (event.key === "ArrowRight") {
+                        event.preventDefault();
                         setActiveIndex((currentIndex) =>
                               calculateImageIndex(
                                     currentIndex,
@@ -144,6 +148,12 @@ export function ImageViewer({
             }
       }, [editingImage, images]);
 
+      useEffect(() => {
+            if (!isLightboxOpen) return;
+            thumbnailListRef.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')
+                  ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+      }, [isLightboxOpen, safeActiveIndex]);
+
       if (!activeImage) {
             return null;
       }
@@ -176,225 +186,71 @@ export function ImageViewer({
 
       const lightbox = isLightboxOpen
             ? createPortal(
-                  <div
-                        className="property-lightbox-overlay"
-                        onClick={closeLightbox}
-                        role="presentation"
-                  >
-                        <div
-                              className="property-lightbox-dialog"
-                              ref={lightboxRef}
-                              onClick={(event) =>
-                                    event.stopPropagation()
-                              }
-                              role="dialog"
-                              aria-modal="true"
-                              aria-labelledby={dialogTitleId}
-                              tabIndex={-1}
-                        >
-                              <button
-                                    ref={closeButtonRef}
-                                    type="button"
-                                    className="property-lightbox-close"
-                                    onClick={closeLightbox}
-                                    aria-label="Stäng bildvyn"
-                              >
-                                    ×
-                              </button>
-
-                              <h2
-                                    id={dialogTitleId}
-                                    className="sr-only"
-                              >
-                                    Bildgalleri för {propertyTitle}
-                              </h2>
-
-                              <div className="property-lightbox-stage">
-                                    {images.length > 1 && (
-                                          <button
-                                                type="button"
-                                                className="property-lightbox-nav"
-                                                onClick={() =>
-                                                      navigate(-1)
-                                                }
-                                                aria-label="Visa föregående bild"
-                                          >
-                                                {"<"}
-                                          </button>
-                                    )}
-
-                                    <div className="property-lightbox-frame">
-                                          <img
-                                                className="property-lightbox-image"
-                                                src={
-                                                      activeImage.urls
-                                                            .large
-                                                }
-                                                alt={
-                                                      activeImage.details
-                                                            .altText ||
-                                                      propertyTitle
-                                                }
-                                                decoding="async"
-                                          />
-
-                                          {canEdit && (
-                                                <button
-                                                      type="button"
-                                                      className="image-action image-edit"
-                                                      onClick={() =>
-                                                            setEditingImage(
-                                                                  activeImage
-                                                            )
-                                                      }
-                                                      aria-label="Redigera bild"
-                                                >
-                                                      E
+                  <div className="property-gallery-overlay" onClick={closeLightbox} role="presentation">
+                        <div className="property-gallery-dialog" ref={lightboxRef}
+                              onClick={event => event.stopPropagation()} role="dialog" aria-modal="true"
+                              aria-labelledby={dialogTitleId} tabIndex={-1}>
+                              <header className="property-gallery-header">
+                                    <h2 id={dialogTitleId}>Fastighetsbilder</h2>
+                                    <span className="property-gallery-counter" aria-live="polite" aria-atomic="true">{safeActiveIndex + 1} / {images.length}</span>
+                                    <button ref={closeButtonRef} type="button" className="property-gallery-close"
+                                          onClick={closeLightbox} aria-label="Stäng bildvyn">
+                                          <IconX size={24} aria-hidden="true" />
+                                    </button>
+                              </header>
+                              <div className="property-gallery-body">
+                                    <div className="property-gallery-thumbnails" ref={thumbnailListRef} role="group" aria-label="Välj bild">
+                                          {images.map((image, index) => (
+                                                <button key={image.imageId} type="button" className="property-gallery-thumb"
+                                                      onClick={() => selectImage(index)} aria-pressed={index === safeActiveIndex}
+                                                      aria-label={'Visa bild ' + (index + 1)}>
+                                                      <img src={image.urls.thumbnail} alt="" loading="lazy" decoding="async" />
+                                                      {index === safeActiveIndex && <span className="property-gallery-selected"><IconCheck size={14} aria-hidden="true" /></span>}
                                                 </button>
-                                          )}
+                                          ))}
                                     </div>
-
-                                    {images.length > 1 && (
-                                          <button
-                                                type="button"
-                                                className="property-lightbox-nav"
-                                                onClick={() =>
-                                                      navigate(1)
-                                                }
-                                                aria-label="Visa nästa bild"
-                                          >
-                                                {">"}
-                                          </button>
-                                    )}
-                              </div>
-
-                              <div className="property-viewer-summary">
-                                    <div className="property-image-caption">
-                                          <span>
-                                                {activeImage.details
-                                                      .caption ||
-                                                      "Ingen bildbeskrivning"}
-                                          </span>
-                                    </div>
-
-                                    <span className="property-viewer-counter">
-                                          {safeActiveIndex + 1} /{" "}
-                                          {images.length}
-                                    </span>
-                              </div>
-
-                              {images.length > 1 && (
-                                    <div className="property-viewer-thumbnails">
-                                          {images.map(
-                                                (image, index) => (
-                                                      <button
-                                                            key={
-                                                                  image.imageId
-                                                            }
-                                                            type="button"
-                                                            className={`property-viewer-thumb ${index ===
-                                                                        safeActiveIndex
-                                                                        ? "is-active"
-                                                                        : ""
-                                                                  }`}
-                                                            onClick={() =>
-                                                                  selectImage(
-                                                                        index
-                                                                  )
-                                                            }
-                                                            aria-pressed={index === safeActiveIndex} aria-label={`Visa bild ${index + 1
-                                                                  }`}
-                                                      >
-                                                            <img
-                                                                  src={
-                                                                        image
-                                                                              .urls
-                                                                              .thumbnail
-                                                                  }
-                                                                  alt={
-                                                                        image
-                                                                              .details
-                                                                              .altText ||
-                                                                        `${propertyTitle} bild ${index +
-                                                                        1
-                                                                        }`
-                                                                  }
-                                                                  loading="lazy"
-                                                                  decoding="async"
-                                                            />
+                                    <div className="property-gallery-main">
+                                          <div className="property-gallery-frame">
+                                                <img className="property-gallery-image" src={activeImage.urls.large}
+                                                      alt={activeImage.details.altText || propertyTitle} decoding="async" />
+                                                {images.length > 1 && <>
+                                                      <button type="button" className="property-gallery-nav property-gallery-previous"
+                                                            onClick={() => navigate(-1)} aria-label="Visa föregående bild">
+                                                            <IconChevronLeft size={28} aria-hidden="true" />
                                                       </button>
-                                                )
-                                          )}
+                                                      <button type="button" className="property-gallery-nav property-gallery-next"
+                                                            onClick={() => navigate(1)} aria-label="Visa nästa bild">
+                                                            <IconChevronRight size={28} aria-hidden="true" />
+                                                      </button>
+                                                </>}
+                                                {canEdit && <button type="button" className="property-gallery-edit"
+                                                      onClick={() => setEditingImage(activeImage)} aria-label="Redigera bild">
+                                                      <IconPencil size={20} aria-hidden="true" />
+                                                </button>}
+                                          </div>
+                                          {activeImage.details.caption.trim() && <p className="property-gallery-caption">{activeImage.details.caption}</p>}
                                     </div>
-                              )}
+                              </div>
                         </div>
-                  </div>,
-                  document.body
-            )
-            : null;
+                  </div>, document.body,
+            ) : null;
 
       return (
             <>
-                  <section className="property-viewer-shell">
-                        <button
-                              type="button"
-                              className="property-viewer-preview"
-                              onClick={() =>
-                                    openLightbox(safeActiveIndex)
-                              }
-                              aria-label="Öppna bildgalleri"
-                        >
-                              <img
-                                    className="property-viewer-preview-image"
-                                    src={activeImage.urls.large}
-                                    alt={
-                                          activeImage.details.altText ||
-                                          propertyTitle
-                                    }
-                                    decoding="async"
-                              />
-
-                              <span className="property-viewer-preview-label">
-                                    <IconPhoto size={19} aria-hidden="true" /> Visa alla bilder
-                              </span>
+                  <section className="property-mosaic" aria-label="Bilder på fastigheten" data-count={Math.min(images.length, 8)}>
+                        <button type="button" className="property-mosaic-main" onClick={() => openLightbox(0)} aria-label="Öppna bildgalleri">
+                              <img src={images[0].urls.large} alt={images[0].details.altText || propertyTitle} decoding="async" />
+                              <span className="property-mosaic-expand"><IconArrowsMaximize size={22} aria-hidden="true" /></span>
                         </button>
-
-                        {images.length > 1 && (
-                              <div className="property-viewer-thumbnails">
-                                    {images.map((image, index) => (
-                                          <button
-                                                key={image.imageId}
-                                                type="button"
-                                                className={`property-viewer-thumb ${index ===
-                                                            safeActiveIndex
-                                                            ? "is-active"
-                                                            : ""
-                                                      }`}
-                                                onClick={() =>
-                                                      selectImage(index)
-                                                }
-                                                aria-pressed={index === safeActiveIndex}
-                                                aria-label={`Visa bild ${index + 1
-                                                      }`}
-                                          >
-                                                <img
-                                                      src={
-                                                            image.urls
-                                                                  .thumbnail
-                                                      }
-                                                      alt={
-                                                            image.details
-                                                                  .altText ||
-                                                            `${propertyTitle} bild ${index + 1
-                                                            }`
-                                                      }
-                                                      loading="lazy"
-                                                      decoding="async"
-                                                />
-                                          </button>
-                                    ))}
-                              </div>
-                        )}
+                        {images.length > 1 && <div className="property-mosaic-previews">
+                              {images.slice(1, 8).map((image, index) => (
+                                    <button key={image.imageId} type="button" onClick={() => openLightbox(index + 1)} aria-label={index === 6 && images.length > 8 ? 'Visa alla ' + images.length + ' bilder' : 'Visa bild ' + (index + 2)}>
+                                          <img src={image.urls.medium} alt={image.details.altText || propertyTitle + ' bild ' + (index + 2)} loading="lazy" decoding="async" />
+                                          {index === 6 && images.length > 8 && <span className="property-mosaic-more"><strong>+{images.length - 7}</strong><span>Visa alla bilder</span></span>}
+                                    </button>
+                              ))}
+                        </div>}
+                        <button type="button" className="property-mosaic-all" onClick={() => openLightbox(0)}>Visa alla bilder ({images.length})</button>
                   </section>
 
                   {lightbox}
