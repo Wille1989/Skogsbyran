@@ -3,79 +3,37 @@ import { patchDetails } from "../details/api";
 import { uploadDocument } from "@/modules/document/api";
 import { uploadImages } from "@/modules/image/data/api";
 import { create, getById } from "./api";
-import type { CreatePropertyInput } from "./types";
-
-function reportProgress(input: CreatePropertyInput, completedSteps: number, totalSteps: number, label: string): void {
-    input.onProgress?.({
-        percent: Math.min(100, Math.round((completedSteps / totalSteps) * 100)),
-        label,
-    });
-}
+import type { CreatePropertyInput, ResponseGetProperty } from "./types";
+import { runSaveSteps, type SaveStep } from "./saveProgress";
 
 export function useCreatePropertyMutation() {
     return useMutation({
+        retry: false,
         mutationFn: async (input: CreatePropertyInput) => {
-            const shouldPublish = input.details.isVisible;
-            const hasSchedule = input.details.publishAt !== null || input.details.scheduledStatusAt !== null;
-            const totalSteps =
-                1 +
-                (input.images.length > 0 ? 1 : 0) +
-                input.documents.length +
-                (shouldPublish || hasSchedule ? 1 : 0) +
-                1;
-            let completedSteps = 0;
-
-            reportProgress(input, completedSteps, totalSteps, "Skapar fastigheten...");
-
-            const created = await create({
-                ...input,
-                details: {
-                    ...input.details,
-                    isVisible: false,
-                    publishAt: null,
-                    scheduledListingStatus: null,
-                    scheduledStatusAt: null,
-                },
-                images: [],
-            });
-            const propertyId = created.property.propertyId;
-            completedSteps += 1;
-            reportProgress(input, completedSteps, totalSteps, "Fastigheten är skapad.");
-
-            if (input.images.length > 0) {
-                reportProgress(input, completedSteps, totalSteps, "Laddar upp bilder...");
-                await uploadImages({
-                    propertyId,
-                    images: input.images,
-                });
-                completedSteps += 1;
-                reportProgress(input, completedSteps, totalSteps, "Bilderna är uppladdade.");
+            let propertyId: string | undefined;
+            let result: ResponseGetProperty | undefined;
+            const steps: SaveStep[] = [{ phase: "details", title: "Skapar fastigheten", run: async () => {
+                const created = await create({ ...input, details: { ...input.details, isVisible: false,
+                    publishAt: null, scheduledListingStatus: null, scheduledStatusAt: null }, images: [] });
+                propertyId = created.property.propertyId;
+            } }];
+            const id = () => { if (!propertyId) throw new Error("Missing property ID"); return propertyId; };
+            if (input.images.length) steps.push({ phase: "images", title: "Laddar upp bilder", weight: 75,
+                run: (report, acknowledge) => uploadImages({ propertyId: id(), images: input.images,
+                    onProgress: progress => report(progress.fraction, progress.detail, progress.title), onBatchSaved: acknowledge }) });
+            for (const [index, document] of input.documents.entries()) steps.push({ phase: "documents",
+                title: "Sparar dokument " + (index + 1) + " av " + input.documents.length,
+                run: () => uploadDocument(id(), undefined, document.file, document.title) });
+            if (input.details.isVisible || input.details.publishAt !== null || input.details.scheduledStatusAt !== null) {
+                steps.push({ phase: "details", title: "Sparar publiceringsinställningar", run: () => patchDetails(id(), {
+                    isVisible: input.details.isVisible, publishAt: input.details.publishAt,
+                    scheduledListingStatus: input.details.scheduledListingStatus, scheduledStatusAt: input.details.scheduledStatusAt }) });
             }
-
-            for (const [index, document] of input.documents.entries()) {
-                reportProgress(input, completedSteps, totalSteps, `Laddar upp dokument ${index + 1} av ${input.documents.length}...`);
-                await uploadDocument(propertyId, undefined, document.file, document.title);
-                completedSteps += 1;
-                reportProgress(input, completedSteps, totalSteps, `Dokument ${index + 1} är uppladdat.`);
-            }
-
-            if (shouldPublish || hasSchedule) {
-                reportProgress(input, completedSteps, totalSteps, "Sparar publiceringsinställningar...");
-                await patchDetails(propertyId, {
-                    isVisible: shouldPublish,
-                    publishAt: input.details.publishAt,
-                    scheduledListingStatus: input.details.scheduledListingStatus,
-                    scheduledStatusAt: input.details.scheduledStatusAt,
-                });
-                completedSteps += 1;
-                reportProgress(input, completedSteps, totalSteps, "Publiceringsinställningarna är sparade.");
-            }
-
-            reportProgress(input, completedSteps, totalSteps, "Hämtar färdig fastighet...");
-            const property = await getById(propertyId);
-            reportProgress(input, totalSteps, totalSteps, "Klart.");
-
-            return property;
+            steps.push({ phase: "finalizing", title: "Kontrollerar den sparade fastigheten", write: false,
+                run: async () => { result = await getById(id());
+                    if (result?.property?.propertyId !== id()) throw new Error("Unexpected property response"); } });
+            await runSaveSteps(steps, input.onProgress, "Fastigheten är skapad", () => propertyId);
+            return result!;
         },
     });
 }

@@ -1,5 +1,5 @@
 import { baseURL } from "@/shared/data/baseURL.ts";
-import {  apiFetch } from "@/shared/data/apiFetch.ts";
+import { apiFetch, apiUpload } from "@/shared/data/apiFetch.ts";
 import {
       type DeleteImagesInput,
       type ImageFile,
@@ -43,14 +43,37 @@ export function buildUploadFormData(images: NewImageFile[]): FormData {
       return formData;
 }
 
-export async function uploadImages({propertyId, images}: UploadImagesInput): Promise<ImageFile[]> {
+export async function uploadImages({propertyId, images, onProgress, onBatchSaved}: UploadImagesInput): Promise<ImageFile[]> {
+      onProgress?.({ fraction: 0, title: "Förbereder " + images.length + " bilder", detail: "Delar upp bilderna i bildserier." });
+      const batches = batchImages(images);
+      const totalBytes = images.reduce((sum, image) => sum + image.file.size, 0);
+      let confirmedBytes = 0;
+      let confirmedImages = 0;
       let uploaded: ImageFile[] = [];
-      for (const batch of batchImages(images)) {
-            // Each response contains the property's complete image collection.
-            uploaded = await apiFetch<ImageFile[]>(`${baseURL}/property/${propertyId}/images`, {
-                  method: "POST",
-                  body: buildUploadFormData(batch)
-            });
+      const megabytes = (bytes: number) => (bytes / (1024 * 1024)).toLocaleString("sv-SE", { maximumFractionDigits: 1 });
+      for (const [index, batch] of batches.entries()) {
+            const batchBytes = batch.reduce((sum, image) => sum + image.file.size, 0);
+            const series = "Bildserie " + (index + 1) + " av " + batches.length + " · " + batch.length + " bilder";
+            const fraction = (bytes: number) => totalBytes ? bytes / totalBytes : index / batches.length;
+            onProgress?.({ fraction: fraction(confirmedBytes), title: "Paketerar bilder", detail: series });
+            const body = buildUploadFormData(batch);
+            onProgress?.({ fraction: fraction(confirmedBytes), title: "Laddar upp bilder", detail: series + " · " + confirmedImages + " av " + images.length + " bilder sparade" });
+            // Multipart progress includes field overhead; map its fraction onto the
+            // batch's file bytes. Reserve 5% for server acknowledgement per batch.
+            uploaded = await apiUpload<ImageFile[]>(
+                  baseURL + "/property/" + propertyId + "/images", body, progress => {
+                        const ratio = progress.sent ? 1 : progress.total ? Math.min(1, progress.loaded / progress.total) : 0;
+                        const bytes = confirmedBytes + batchBytes * ratio;
+                        onProgress?.({ fraction: fraction(confirmedBytes + batchBytes * ratio * 0.95),
+                              title: progress.sent ? "Bearbetar bilder" : "Laddar upp bilder",
+                              detail: series + " · " + (progress.sent ? "Filerna är skickade. Väntar på att bilderna sparas." : progress.total ? megabytes(bytes) + " av " + megabytes(totalBytes) + " MB skickade" : megabytes(progress.loaded) + " MB skickade i denna bildserie; total storlek saknas.") });
+                  });
+            if (!Array.isArray(uploaded)) throw new Error("Invalid image collection response");
+            confirmedBytes += batchBytes;
+            confirmedImages += batch.length;
+            onBatchSaved?.("Bildserie " + (index + 1) + " av " + batches.length + " sparad (" + batch.length + " bilder)");
+            onProgress?.({ fraction: totalBytes ? confirmedBytes / totalBytes : (index + 1) / batches.length,
+                  title: "Bilder sparade", detail: confirmedImages + " av " + images.length + " bilder sparade" });
       }
       return uploaded;
 }

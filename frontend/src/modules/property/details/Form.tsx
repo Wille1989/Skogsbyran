@@ -9,6 +9,7 @@ type FormProps = {
         initialValues?: FormDetails;
         cover?: ReactNode;
         isSaving?: boolean;
+        serverErrors?: Record<string, string>;
         onSubmit: (data: FormDetails) => void;
 };
 
@@ -25,7 +26,7 @@ const defaultValues: FormDetails = {
         scheduledStatusAt: null,
 };
 
-export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false }: FormProps) {
+export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false, serverErrors }: FormProps) {
         const {register, handleSubmit, reset, control, setValue, setError, clearErrors, formState: { errors }, } = useForm<FormDetails>({defaultValues});
 
         useEffect(() => {
@@ -33,6 +34,13 @@ export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false }
                         reset({ ...initialValues, publishAt: localDateTime(initialValues.publishAt), scheduledStatusAt: localDateTime(initialValues.scheduledStatusAt) });
                 }
         }, [initialValues, reset]);
+
+        useEffect(() => {
+                if (!serverErrors) return;
+                for (const [field, message] of Object.entries(serverErrors)) {
+                        if (field in defaultValues) setError(field as keyof FormDetails, { type: "server", message });
+                }
+        }, [serverErrors, setError]);
 
         const isVisible = useWatch({ control, name: "isVisible" });
 
@@ -66,6 +74,7 @@ export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false }
                                         <label htmlFor="price">Pris (SEK)</label>
                                         <input
                                                 id="price"
+                                                aria-invalid={!!errors.price}
                                                 placeholder="Ex. 3 500 000"
                                                 {...register("price")}
                                         />
@@ -75,6 +84,7 @@ export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false }
                                          <label htmlFor="size">Storlek (hektar)</label>
                                         <input
                                                 id="size"
+                                                aria-invalid={!!errors.size}
                                                 placeholder="Ex. 135"
                                                 {...register("size")}
                                         />

@@ -6,6 +6,7 @@ import { updateLocation } from "@/modules/location/api";
 import { createArea, deleteArea, updateArea } from "@/modules/location/map/data/api";
 import type { ResponseProperty, ResponseGetProperty, ResponseGetProperties } from "@/modules/property/data/types";
 import type { PropertyArea } from "@/modules/location/map/data/types";
+import { runSaveSteps, type SaveStep } from "./saveProgress";
 import { getById, remove } from "./api";
 import { propertyQueryKeys } from "./queryKeys";
 import {
@@ -43,6 +44,7 @@ export function useSavePropertyChangesMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    retry: false,
     mutationFn: async (input: EditPropertyInput): Promise<ResponseProperty> => {
       const detailsPatch = changedDetails(input.initialDetails, input.details);
       const locationPatch = changedLocationPayload(input.initialLocation, input.location);
@@ -64,65 +66,48 @@ export function useSavePropertyChangesMutation() {
         });
       };
 
-      if (input.imageChanges.removedImageIds.length > 0) {
-        await deleteImages({
-          propertyId: input.propertyId,
-          imageIds: input.imageChanges.removedImageIds,
+      const steps: SaveStep[] = [];
+      const add = (phase: SaveStep["phase"], title: string, run: SaveStep["run"]) => steps.push({ phase, title, run });
+      if (input.imageChanges.removedImageIds.length) add("images", "Tar bort " + input.imageChanges.removedImageIds.length + " bilder",
+        () => deleteImages({ propertyId: input.propertyId, imageIds: input.imageChanges.removedImageIds }));
+      if (input.imageChanges.updatedImages.length) {
+        const updates = input.imageChanges.updatedImages;
+        const changes = [
+          updates.some(image => image.position !== undefined) ? "bildordning" : "",
+          updates.some(image => image.isPrimary !== undefined) ? "huvudbild" : "",
+          updates.some(image => image.details !== undefined) ? "bildtexter" : "",
+          updates.some(image => image.adjustments !== undefined) ? "bildjusteringar" : "",
+        ].filter(Boolean);
+        add("images", "Sparar bildändringar", report => {
+          report(0, changes.join(" · "));
+          return updateImages({ propertyId: input.propertyId, images: updates });
         });
       }
-
-      if (input.imageChanges.updatedImages.length > 0) {
-        await updateImages({
-          propertyId: input.propertyId,
-          images: input.imageChanges.updatedImages,
-        });
-      }
-
-      if (input.imageChanges.newImages.length > 0) {
-        await uploadImages({
-          propertyId: input.propertyId,
-          images: input.imageChanges.newImages,
-        });
-      }
-
-      if (locationPatch) {
-        await updateLocation(input.propertyId, locationPatch);
-      }
-
-      for (const areaId of areas.removedAreaIds) {
-        await deleteArea(input.propertyId, areaId);
-        rememberArea(areaId);
-      }
-
-      for (const area of areas.updatedAreas) {
-        const saved = await updateArea(input.propertyId, area.areaId, area.payload);
-        rememberArea(saved.id, saved);
-      }
-
-      for (const area of areas.createdAreas) {
+      if (input.imageChanges.newImages.length) steps.push({ phase: "images", title: "Laddar upp nya bilder", weight: 75,
+        run: (report, acknowledge) => uploadImages({ propertyId: input.propertyId, images: input.imageChanges.newImages,
+          onProgress: progress => report(progress.fraction, progress.detail, progress.title), onBatchSaved: acknowledge }) });
+      if (locationPatch) add("location", "Sparar adress och kartpunkter", () => updateLocation(input.propertyId, locationPatch));
+      for (const areaId of areas.removedAreaIds) add("areas", "Tar bort kartområde", async () => {
+        await deleteArea(input.propertyId, areaId); rememberArea(areaId);
+      });
+      for (const area of areas.updatedAreas) add("areas", "Uppdaterar kartområde", async () => {
+        const saved = await updateArea(input.propertyId, area.areaId, area.payload); rememberArea(saved.id, saved);
+      });
+      for (const area of areas.createdAreas) add("areas", "Sparar nytt kartområde", async () => {
         const saved = await createArea(input.propertyId, area.payload);
-        input.onAreaCreated?.(area.draft, saved);
-        rememberArea(saved.id, saved);
-      }
-
-      for (const documentId of documents.removedDocumentIds) {
-        await deleteDocument(input.propertyId, documentId);
-      }
-
-      for (const document of documents.renamedDocuments) {
-        await updateDocumentTitle(input.propertyId, document.documentId, document.title);
-      }
-
-      for (const document of input.pendingDocuments) {
-        await uploadDocument(input.propertyId, undefined, document.file, document.title);
-      }
-
-      if (hasObjectKeys(detailsPatch)) {
-        await patchDetails(input.propertyId, detailsPatch);
-      }
-
-      const refreshed = await getById(input.propertyId);
-      return refreshed.property;
+        input.onAreaCreated?.(area.draft, saved); rememberArea(saved.id, saved);
+      });
+      for (const documentId of documents.removedDocumentIds) add("documents", "Tar bort dokument", () => deleteDocument(input.propertyId, documentId));
+      for (const document of documents.renamedDocuments) add("documents", "Sparar dokumentnamn", () => updateDocumentTitle(input.propertyId, document.documentId, document.title));
+      for (const [index, document] of input.pendingDocuments.entries()) add("documents", "Laddar upp dokument " + (index + 1) + " av " + input.pendingDocuments.length,
+        () => uploadDocument(input.propertyId, undefined, document.file, document.title));
+      if (hasObjectKeys(detailsPatch)) add("details", "Sparar fastighetsinformation", () => patchDetails(input.propertyId, detailsPatch));
+      let refreshed: ResponseProperty | undefined;
+      steps.push({ phase: "finalizing", title: "Kontrollerar de sparade ändringarna", write: false,
+        run: async () => { refreshed = (await getById(input.propertyId)).property;
+          if (refreshed?.propertyId !== input.propertyId) throw new Error("Unexpected property response"); } });
+      await runSaveSteps(steps, input.onProgress, "Ändringarna är sparade", () => input.propertyId);
+      return refreshed!;
     },
     onSuccess: async (property, variables) => {
       queryClient.setQueryData(propertyQueryKeys.byId(variables.propertyId), { property });

@@ -33,6 +33,7 @@ export type EditPropertyInput = {
   initialAreas: PropertyArea[];
   documents: EditableDocumentDraft[];
   pendingDocuments: PendingDocument[];
+  onProgress?: (progress: import("./types").SavePropertyProgress) => void;
   onAreaCreated?: (draft: EditableAreaDraft, saved: PropertyArea) => void;
 };
 
