@@ -22,6 +22,7 @@ export function usePropertyMap(options: PropertyMapOptions) {
   const elementRef = useRef<HTMLDivElement>(null);
   const latest = useRef(options);
   const polygonRef = useRef<google.maps.Polygon | null>(null);
+  const pathRef = useRef<google.maps.MVCArray<google.maps.LatLng> | null>(null);
   const syncing = useRef(false);
   const fitted = useRef(false);
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -39,12 +40,17 @@ export function usePropertyMap(options: PropertyMapOptions) {
         streetViewControl: false, mapTypeControl: true, fullscreenControl: false,
         clickableIcons: false, gestureHandling: "cooperative",
       });
+      // Keep one explicit ring even when it has no vertices. An empty paths array
+      // can leave Polygon.getPath() undefined.
+      const path = new google.maps.MVCArray<google.maps.LatLng>(
+        latest.current.polygon.map(point => new google.maps.LatLng(point)),
+      );
       overlay = new google.maps.Polygon({
-        map: instance, paths: latest.current.polygon,
+        map: instance, paths: new google.maps.MVCArray([path]),
         strokeColor: "#14532d", strokeWeight: 3, fillColor: "#14532d", fillOpacity: 0.18,
       });
       polygonRef.current = overlay;
-      const path = overlay.getPath();
+      pathRef.current = path;
       const change = (): void => {
         if (!syncing.current && !latest.current.readOnly) latest.current.onPolygonChange?.(path.getArray().map(point => point.toJSON()));
       };
@@ -74,21 +80,32 @@ export function usePropertyMap(options: PropertyMapOptions) {
       listeners.forEach(listener => listener.remove());
       overlay?.setMap(null);
       polygonRef.current = null;
+      pathRef.current = null;
     };
   }, []);
 
   useEffect(() => {
     const overlay = polygonRef.current;
-    if (!map || !overlay) return;
+    const path = pathRef.current;
+    if (!map || !overlay || !path) return;
     overlay.setEditable(!options.readOnly && options.mode === "polygon");
     overlay.setOptions({ clickable: !options.readOnly && options.mode === "polygon" });
-    const path = overlay.getPath();
-    const current = path.getArray().map(point => point.toJSON());
+    // Google can invalidate Maps objects after an asynchronous authorization failure.
+    const vertices = path.getArray();
+    if (!Array.isArray(vertices)) {
+      setError("Kartan är inte tillgänglig. Kontrollera Google Maps-konfigurationen. Övriga fastighetsuppgifter kan fortfarande sparas.");
+      setMap(null);
+      return;
+    }
+    const current = vertices.map(point => point.toJSON());
     if (JSON.stringify(current) === JSON.stringify(options.polygon)) return;
     syncing.current = true;
-    path.clear();
-    options.polygon.forEach(point => path.push(new google.maps.LatLng(point)));
-    syncing.current = false;
+    try {
+      path.clear();
+      options.polygon.forEach(point => path.push(new google.maps.LatLng(point)));
+    } finally {
+      syncing.current = false;
+    }
   }, [map, options.polygon, options.mode, options.readOnly]);
 
   useEffect(() => {
