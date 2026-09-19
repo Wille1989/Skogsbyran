@@ -1,12 +1,4 @@
-import type { Coordinates } from '../data/types';
-
-export type ScreenPoint = { x: number; y: number };
-
-export type MapBounds = { north: number; south: number; east: number; west: number };
-
-export type Basemap = { id: string; label: string };
-
-export type MapViewState = { center: Coordinates; zoom: number };
+import type { Coordinates, MapBounds, MapViewState } from '../data/types';
 
 export const DEFAULT_VIEW: MapViewState = { center: { lat: 59.3293, lng: 18.0686 }, zoom: 6 };
 

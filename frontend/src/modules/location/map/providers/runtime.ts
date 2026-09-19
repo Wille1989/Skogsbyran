@@ -1,7 +1,4 @@
-import type { MapFactory } from '../adapters/MapAdapter';
-import type { GeocoderFactory } from '../adapters/GeocoderAdapter';
-
-export type MapRuntime = { createMap: MapFactory; createGeocoder: GeocoderFactory };
+import type { MapRuntime } from '../data/types';
 
 // Only this composition root selects dependencies. UI and features accept contracts.
 const provider = import.meta.env.VITE_MAP_PROVIDER || 'google';

@@ -1,6 +1,6 @@
+import type { Coordinates, MapBounds, ScreenPoint } from '../../data/types';
 import type { MapAdapter, MapFactory, MapIssueListener } from '../../adapters/MapAdapter';
-import type { Coordinates } from '../../data/types';
-import type { MapBounds, ScreenPoint } from '../../domain/map';
+
 import { DEFAULT_VIEW } from '../../domain/map';
 import { loadMapLibrary, mapsAuthErrorEvent, mapsAuthErrorMessage } from './loader';
 

@@ -1,23 +1,9 @@
+import type { MapIssue, Coordinates, PropertyMapOptions } from './types';
 import { useEffect, useRef, useState } from 'react';
-import type { MapAdapter, MapFactory, MapIssue } from '../adapters/MapAdapter';
+import type { MapAdapter, MapFactory } from '../adapters/MapAdapter';
 import { mapRuntime } from '../providers/runtime';
 import { fitProperty } from '../features/view';
 import { editPolygon } from '../features/drawing';
-import type { Coordinates } from './types';
-import type { PropertyLocationPayload } from '../../types';
-
-export type PropertyMapOptions = {
-    polygon: Coordinates[];
-    otherPolygons?: Coordinates[][];
-    marker: Coordinates | null;
-    pois?: PropertyLocationPayload['pois'];
-    mode?: 'polygon' | 'marker' | 'poi' | 'navigate';
-    readOnly?: boolean;
-    onPolygonChange?: (polygon: Coordinates[]) => void;
-    onSetMarker?: (marker: Coordinates) => void;
-    onAddPoi?: (position: Coordinates) => void;
-    onMovePoi?: (index: number, position: Coordinates) => void;
-};
 
 export function mapPoints(options: PropertyMapOptions): Coordinates[] {
     return [
@@ -93,7 +79,10 @@ export function usePropertyMap(
                             return;
                         }
                         if (current.mode === 'polygon') {
-                            const polygon = editPolygon(current.polygon, { type: 'add', position: point });
+                            const polygon = editPolygon(current.polygon, {
+                                type: 'add',
+                                position: point,
+                            });
                             // Consecutive input events may arrive before React commits props.
                             latest.current = { ...current, polygon };
                             current.onPolygonChange?.(polygon);

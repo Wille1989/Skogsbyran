@@ -1,3 +1,4 @@
+import type { Coordinates, ScreenPoint, HandleInteraction } from '../data/types';
 import {
     useEffect,
     useRef,
@@ -6,20 +7,6 @@ import {
     type PointerEvent,
     type ButtonHTMLAttributes,
 } from 'react';
-import type { MapAdapter } from '../adapters/MapAdapter';
-import type { Coordinates } from '../data/types';
-import type { ScreenPoint } from '../domain/map';
-
-export type HandleInteraction = {
-    map: MapAdapter;
-    position: Coordinates;
-    screen: ScreenPoint;
-    onMove?: (position: Coordinates) => void;
-    onStart?: () => void;
-    onCancel?: () => void;
-    onRemove?: () => void;
-    onActivate?: () => void;
-};
 
 export function useMapHandle({
     map,

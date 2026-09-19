@@ -1,4 +1,5 @@
-import type { AddressSearchResult, GeocoderAdapter } from '../../adapters/GeocoderAdapter';
+import type { AddressSearchResult } from '../../data/types';
+import type { GeocoderAdapter } from '../../adapters/GeocoderAdapter';
 import { isValidCoordinate } from '../../data/areaDraft';
 
 function record(value: unknown): Record<string, unknown> {

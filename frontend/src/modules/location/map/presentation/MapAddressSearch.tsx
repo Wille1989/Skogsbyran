@@ -1,12 +1,6 @@
+import type { AddressSearchResult, AddressSuggestion } from '../data/types';
 import { useEffect, useId, useRef, useState } from 'react';
-import type {
-    AddressSearchResult,
-    AddressSuggestion,
-    GeocoderAdapter,
-    GeocoderFactory,
-} from '../adapters/GeocoderAdapter';
-
-export type SelectedAddress = AddressSearchResult;
+import type { GeocoderAdapter, GeocoderFactory } from '../adapters/GeocoderAdapter';
 
 export function MapAddressSearch({
     onSelect,

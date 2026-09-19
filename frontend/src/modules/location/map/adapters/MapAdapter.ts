@@ -1,5 +1,4 @@
-import type { Coordinates } from '../data/types';
-import type { Basemap, MapBounds, ScreenPoint } from '../domain/map';
+import type { Coordinates, Basemap, MapBounds, ScreenPoint, MapIssue } from '../data/types';
 
 // Only camera, projection and map input cross the engine boundary.
 // Geometry, editing and POI rendering belong to the shared features/UI.
@@ -20,11 +19,6 @@ export interface MapAdapter {
     resize(): void;
     destroy(): void;
 }
-
-export type MapIssue = {
-    kind: 'fatal' | 'layer';
-    message: string;
-};
 
 export type MapIssueListener = (issue: MapIssue | null) => void;
 

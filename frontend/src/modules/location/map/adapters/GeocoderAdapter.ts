@@ -1,19 +1,4 @@
-import type { Coordinates } from '../data/types';
-import type { MapBounds } from '../domain/map';
-
-export type AddressSuggestion = { id: string; label: string };
-
-export type AddressSearchResult = {
-    label: string;
-    coordinates: Coordinates;
-    bounds?: MapBounds;
-    address: string;
-    postalCode: string;
-    city: string;
-    municipality: string;
-    countryCode: string;
-    source?: { provider: string; id: string };
-};
+import type { AddressSuggestion, AddressSearchResult } from '../data/types';
 
 export interface GeocoderAdapter {
     readonly autocomplete: boolean;

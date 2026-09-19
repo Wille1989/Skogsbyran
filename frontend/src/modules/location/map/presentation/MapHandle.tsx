@@ -1,5 +1,6 @@
+import type { HandleInteraction } from '../data/types';
 import { IconFlag, IconMapPin } from '@tabler/icons-react';
-import { useMapHandle, type HandleInteraction } from '../features/useMapHandle';
+import { useMapHandle } from '../features/useMapHandle';
 
 type Props = HandleInteraction & {
     label: string;

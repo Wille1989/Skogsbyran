@@ -1,5 +1,6 @@
+import type { MapData, MapFilter } from '../data/types';
 import { useState } from 'react';
-import { filterMapData, type MapData, type MapFilter } from '../data/mapPresentation';
+import { filterMapData } from '../data/mapPresentation';
 import { PropertyAreaMap } from './PropertyAreaMap';
 
 export function PropertyMapView({ data }: { data: MapData }) {

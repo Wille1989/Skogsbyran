@@ -8,6 +8,13 @@ These XML files are developer documentation, not public SEO sitemaps. Paths are
 relative to the XML file containing them. Add new module inventories to the root
 index and update the Map inventory whenever files are added, renamed or removed.
 
+Shared map data types live in `src/modules/location/map/data/types.ts`, including
+view geometry, editing options/actions, address results and map errors. Consumers
+import these directly rather than importing types from hooks or UI components.
+Adapter interfaces/factories remain in `adapters/`; component props and
+provider-specific implementation types remain local. Existing location and POI
+types are reused from the parent location module.
+
 ## Responsibilities and data flow
 
 - `PropertyMapEditor` owns the open dialog, selected area and active tool.

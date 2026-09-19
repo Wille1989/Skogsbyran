@@ -1,9 +1,8 @@
+import type { Coordinates, PropertyMapOptions, ScreenPoint } from '../data/types';
 import type { MapAdapter } from '../adapters/MapAdapter';
-import type { Coordinates } from '../data/types';
-import type { PropertyMapOptions } from '../data/usePropertyMap';
+
 import { usePolygonEditing } from '../features/usePolygonEditing';
 import { MapHandle } from './MapHandle';
-import type { ScreenPoint } from '../domain/map';
 
 export function MapOverlays({ map, options }: { map: MapAdapter; options: PropertyMapOptions }) {
     const { editing, change } = usePolygonEditing(options);
@@ -63,7 +62,10 @@ export function MapOverlays({ map, options }: { map: MapAdapter; options: Proper
                     if (!edgeStart || !edgeEnd) {
                         return null;
                     }
-                    const screen = { x: (edgeStart.x + edgeEnd.x) / 2, y: (edgeStart.y + edgeEnd.y) / 2 };
+                    const screen = {
+                        x: (edgeStart.x + edgeEnd.x) / 2,
+                        y: (edgeStart.y + edgeEnd.y) / 2,
+                    };
                     const position = map.unproject(screen);
                     if (!position) {
                         return null;

@@ -5,16 +5,16 @@
 
     <group name="domain">
         <file path="domain/map.ts">
-            <purpose>Provider-neutral screen coordinates, map bounds and default view.</purpose>
+            <purpose>Default camera view and bounding-box calculation; shared types live in data/types.ts.</purpose>
         </file>
     </group>
 
     <group name="adapters">
         <file path="adapters/MapAdapter.ts">
-            <purpose>Map engine contract, lifecycle and typed map errors.</purpose>
+            <purpose>Map engine interface, lifecycle and factory contracts; error data comes from data/types.ts.</purpose>
         </file>
         <file path="adapters/GeocoderAdapter.ts">
-            <purpose>Independent address search and result contract.</purpose>
+            <purpose>Independent geocoder interface and factory; result data comes from data/types.ts.</purpose>
         </file>
     </group>
 
@@ -59,7 +59,7 @@
             <purpose>Area query hooks.</purpose>
         </file>
         <file path="data/types.ts">
-            <purpose>Existing coordinates, area models and payload types.</purpose>
+            <purpose>Shared coordinates, areas, view geometry, editing options/actions, address results and map errors.</purpose>
         </file>
         <file path="data/usePropertyMap.ts">
             <purpose>Own map instances, event subscriptions, resize and initial framing.</purpose>

@@ -1,6 +1,7 @@
+import type { PropertyMapOptions, DrawingAction } from '../data/types';
 import { useEffect, useRef } from 'react';
-import type { PropertyMapOptions } from '../data/usePropertyMap';
-import { editPolygon, type DrawingAction } from './drawing';
+
+import { editPolygon } from './drawing';
 
 export function usePolygonEditing(options: PropertyMapOptions) {
     const latest = useRef(options);

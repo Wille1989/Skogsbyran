@@ -1,12 +1,6 @@
-import type { Coordinates } from '../data/types';
-import { isValidCoordinate } from '../data/areaDraft';
+import type { Coordinates, DrawingAction } from '../data/types';
 
-export type DrawingAction =
-    | { type: 'add'; position: Coordinates }
-    | { type: 'move'; index: number; position: Coordinates }
-    | { type: 'insert'; index: number; position: Coordinates }
-    | { type: 'remove'; index: number }
-    | { type: 'clear' };
+import { isValidCoordinate } from '../data/areaDraft';
 
 export function editPolygon(polygon: readonly Coordinates[], action: DrawingAction): Coordinates[] {
     if ('position' in action && !isValidCoordinate(action.position)) {

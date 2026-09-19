@@ -1,7 +1,7 @@
-import type { Coordinates } from '../data/types';
+import type { Coordinates, AddressSearchResult } from '../data/types';
+
 import type { MapAdapter } from '../adapters/MapAdapter';
 import { boundsFor, DEFAULT_VIEW } from '../domain/map';
-import type { AddressSearchResult } from '../adapters/GeocoderAdapter';
 
 export function fitProperty(map: MapAdapter, points: Coordinates[]) {
     const bounds = boundsFor(points);

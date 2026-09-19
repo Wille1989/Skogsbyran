@@ -80,6 +80,13 @@ For non-trivial tasks:
 * Trace data to its source before defining or changing types
 * Reuse existing domain types only when they represent the same concept
 
+### Type Ownership
+
+* Identify the concept and check whether an existing type already represents it
+* Prefer deriving accurate variations with `Pick`, `Omit`, `Partial`, indexed access, or similar tools instead of duplicating fields
+* Create a new type only when it represents a genuinely different concept, lifecycle state, API contract, or local implementation detail
+* Keep truly file-specific types local; share types only when the underlying concept is reusable
+
 ### React
 
 * Keep components focused on presentation and light orchestration
@@ -89,7 +96,6 @@ For non-trivial tasks:
 * Separate responsibilities when API communication, complex logic, state orchestration, and rendering make a component unnecessarily large
 
 ## Backend
-
 ### PHP
 
 * Follow the repository's PHP version, formatting, static-analysis, and coding standards

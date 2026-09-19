@@ -1,4 +1,5 @@
-import type { AddressSearchResult } from '../adapters/GeocoderAdapter';
+import type { AddressSearchResult } from './types';
+
 import type { PropertyLocationDraft } from '../../types';
 
 // Compatibility boundary: the persisted API still names its optional source ID googlePlaceId.

@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import type { MapMode } from '../data/types';
 import {
     IconSearch,
     IconPolygon,
@@ -31,7 +32,7 @@ type Props = {
     reviewUrl?: string;
 };
 
-type Tool = 'navigate' | 'search' | 'polygon' | 'poi' | 'marker';
+type Tool = MapMode | 'search';
 
 export function PropertyMapEditor({
     location,

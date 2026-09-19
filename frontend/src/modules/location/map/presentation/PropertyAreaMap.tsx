@@ -1,7 +1,8 @@
-import { MapAddressSearch, type SelectedAddress } from './MapAddressSearch';
-import { usePropertyMap, mapPoints, type PropertyMapOptions } from '../data/usePropertyMap';
+import type { AddressSearchResult, PropertyMapOptions, MapRuntime } from '../data/types';
+import { MapAddressSearch } from './MapAddressSearch';
+import { usePropertyMap, mapPoints } from '../data/usePropertyMap';
 import { isValidCoordinate } from '../data/areaDraft';
-import { mapRuntime, type MapRuntime } from '../providers/runtime';
+import { mapRuntime } from '../providers/runtime';
 import { fitProperty, showAddress } from '../features/view';
 import { MapOverlays } from './MapOverlays';
 import { MapControls } from './MapControls';
@@ -9,7 +10,7 @@ import './map.css';
 
 type Props = PropertyMapOptions & {
     showSearch?: boolean;
-    onAddressSelect?: (address: SelectedAddress) => void;
+    onAddressSelect?: (address: AddressSearchResult) => void;
     runtime?: MapRuntime;
 };
 

@@ -1,4 +1,5 @@
-import type { AddressSuggestion, GeocoderAdapter } from '../../adapters/GeocoderAdapter';
+import type { AddressSuggestion } from '../../data/types';
+import type { GeocoderAdapter } from '../../adapters/GeocoderAdapter';
 import { loadPlacesLibrary } from './loader';
 
 export async function createGoogleGeocoder(): Promise<GeocoderAdapter> {
