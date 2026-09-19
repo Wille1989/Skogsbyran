@@ -47,7 +47,7 @@
         text-wrap: balance;
     }
 }
-.home-about { margin-top: 50px; background: var(--cream-50); padding: 36px 0 44px; }
+.home-about { margin-top: 100px; background: var(--cream-50); padding: 36px 0 44px; }
 .home-about-inner { width: min(1200px, calc(100% - 48px)); margin: auto; display: grid; grid-template-columns: 1fr 1.1fr; gap: 64px; align-items: center; }
 .home-about-eyebrow { display: flex; align-items: center; gap: 16px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em; color: var(--forest-900); }
 .home-about-eyebrow::after { content: ''; width: 60px; height: 1px; background: var(--sage-200); }
