@@ -1,6 +1,6 @@
-import type { AddressSearchResult } from '../../data/types';
+import type { AddressSearchResult } from '../../types/types';
 import type { GeocoderAdapter } from '../../adapters/GeocoderAdapter';
-import { isValidCoordinate } from '../../data/areaDraft';
+import { isValidCoordinate } from '../../helpers/areaDraft';
 
 function record(value: unknown): Record<string, unknown> {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {

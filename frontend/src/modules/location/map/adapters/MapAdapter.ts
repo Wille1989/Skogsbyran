@@ -1,4 +1,4 @@
-import type { Coordinates, Basemap, MapBounds, ScreenPoint, MapIssue } from '../data/types';
+import type { Coordinates, Basemap, MapBounds, ScreenPoint, MapIssue } from '../types/types';
 
 // Only camera, projection and map input cross the engine boundary.
 // Geometry, editing and POI rendering belong to the shared features/UI.

@@ -1,4 +1,4 @@
-import type { AddressSuggestion, AddressSearchResult } from '../data/types';
+import type { AddressSuggestion, AddressSearchResult } from '../types/types';
 
 export interface GeocoderAdapter {
     readonly autocomplete: boolean;

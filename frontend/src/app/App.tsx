@@ -2,8 +2,8 @@
  * CSS
  */
 import './App.css'
-import Layout from "@/shared/presentation/Layout.tsx";
-import { LoadingSpinner } from "@/shared/presentation/LoadingSpinner.tsx";
+import Layout from "@/shared/components/Layout.tsx";
+import { LoadingSpinner } from "@/shared/components/LoadingSpinner.tsx";
 /**
  * REACT SPECIFIK
  */
@@ -13,19 +13,19 @@ import { lazy, Suspense } from 'react';
 /**
  * TSX
  */
-import { adminLoginPath } from "@/modules/auth/data/adminAccess";
-import { AdminRoute } from "@/modules/auth/presentation/Middleware.tsx";
-import { IndexPage }  from "@/modules/property/presentation/IndexPage.tsx";
-import { ShowPage }   from "@/modules/property/presentation/ShowPage.tsx";
-import { AboutPage } from "@/modules/about/presentation/AboutPage.tsx";
+import { adminLoginPath } from "@/modules/auth/config/adminAccess";
+import { AdminRoute } from "@/modules/auth/components/AdminRoute.tsx";
+import { IndexPage }  from "@/modules/property/pages/IndexPage.tsx";
+import { ShowPage }   from "@/modules/property/pages/ShowPage.tsx";
+import { AboutPage } from "@/modules/about/pages/AboutPage.tsx";
 
-const AuthPage = lazy(() => import("@/modules/auth/presentation/Form.tsx").then((module) => ({ default: module.AuthPage })));
-const CreatePage = lazy(() => import("@/modules/property/presentation/CreatePage.tsx").then((module) => ({ default: module.CreatePage })));
-const EditPage = lazy(() => import("@/modules/property/presentation/EditPage.tsx").then((module) => ({ default: module.EditPage })));
+const AuthPage = lazy(() => import("@/modules/auth/pages/AuthPage.tsx").then((module) => ({ default: module.AuthPage })));
+const CreatePage = lazy(() => import("@/modules/property/pages/CreatePage.tsx").then((module) => ({ default: module.CreatePage })));
+const EditPage = lazy(() => import("@/modules/property/pages/EditPage.tsx").then((module) => ({ default: module.EditPage })));
 
-const AdminLayout = lazy(() => import("@/modules/admin/presentation/AdminLayout").then(module => ({ default: module.AdminLayout })));
-const OverviewPage = lazy(() => import("@/modules/admin/presentation/OverviewPage").then(module => ({ default: module.OverviewPage })));
-const PropertiesPage = lazy(() => import("@/modules/admin/presentation/PropertiesPage").then(module => ({ default: module.PropertiesPage })));
+const AdminLayout = lazy(() => import("@/modules/admin/components/AdminLayout").then(module => ({ default: module.AdminLayout })));
+const OverviewPage = lazy(() => import("@/modules/admin/pages/OverviewPage").then(module => ({ default: module.OverviewPage })));
+const PropertiesPage = lazy(() => import("@/modules/admin/pages/PropertiesPage").then(module => ({ default: module.PropertiesPage })));
 
 const clientQuery = new QueryClient();
 

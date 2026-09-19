@@ -2,7 +2,7 @@
 
 ## Ändring
 
-Create och Edit använder SavePropertyProgress och den sekventiella stegkörningen i property/data/saveProgress.ts. Endast operationer som behövs ingår. Bilddelen väger 75 enheter, övriga steg 5 vardera. Inga timers flyttar procenten. Procenten är monoton och begränsad till 99 tills avslutande hämtning verifierat fastighetens ID.
+Create och Edit använder SavePropertyProgress och den sekventiella stegkörningen i property/services/saveProgress.ts. Endast operationer som behövs ingår. Bilddelen väger 75 enheter, övriga steg 5 vardera. Inga timers flyttar procenten. Procenten är monoton och begränsad till 99 tills avslutande hämtning verifierat fastighetens ID.
 
 Bildklienten behåller befintliga batchar med högst 6 MiB sammanlagda filbytes (en enskild större fil skickas ensam). Varje batch skickas sekventiellt. apiUpload i den befintliga HTTP-modulen använder XMLHttpRequest med samma sessionscookies, XSRF-header och ApiError-kontrakt som apiFetch. Uppladdningsevent begränsas till cirka 250 ms; slut-event levereras direkt. Multipart-byteandelen räknas om till respektive batchs filstorlek så stora och små filer viktas efter bytes. Fem procent av varje batchs vikt reserveras för serverns bekräftelse. Vid saknad totalstorlek visas skickade bytes utan uppdiktad procent.
 
@@ -33,7 +33,7 @@ Webbläsarkontrollen av filval för flera bildbatchar avbröts innan resultat ku
 
 Den nuvarande checkouten visar också ett befintligt fel vid tom Google-polygon (addListener på undefined). Kartkoden har inte ändrats inom denna uppgift. Verifieringsfastighet 16 finns kvar opublicerad.
 
-Berörda filer: property/data/{types,editDrafts,mutations,editMutations,saveProgress}.ts; property/presentation/{CreatePage,EditPage}.tsx; property/details/Form.tsx; image/data/{api,types}.ts; shared/data/apiFetch.ts; admin/presentation/{PropertyForm.tsx,AdminLayout.css}; tsconfig.app.json.
+Berörda filer: property/types/types.ts; property/helpers/editDrafts.ts; property/hooks/{mutations,editMutations}.ts; property/services/saveProgress.ts; property/pages/{CreatePage,EditPage}.tsx; property/details/components/DetailsForm.tsx; image/api/api.ts; image/types/types.ts; shared/api/apiFetch.ts; property/components/PropertyForm.tsx; admin/components/AdminLayout.css; tsconfig.app.json.
 
 ## Slutförande utan webbläsarfönster
 

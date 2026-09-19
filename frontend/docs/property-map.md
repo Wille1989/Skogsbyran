@@ -8,7 +8,7 @@ These XML files are developer documentation, not public SEO sitemaps. Paths are
 relative to the XML file containing them. Add new module inventories to the root
 index and update the Map inventory whenever files are added, renamed or removed.
 
-Shared map data types live in `src/modules/location/map/data/types.ts`, including
+Shared map data types live in `src/modules/location/map/types/types.ts`, including
 view geometry, editing options/actions, address results and map errors. Consumers
 import these directly rather than importing types from hooks or UI components.
 Adapter interfaces/factories remain in `adapters/`; component props and
@@ -29,7 +29,7 @@ types are reused from the parent location module.
 - `MapAdapter` exposes camera, projection, events and basemaps. Google types
   are confined to `providers/google`; MapLibre types to `providers/maplibre`.
 - `MapAddressSearch` calls `GeocoderAdapter`. A selected neutral result navigates
-  through `features/view` and converts through `locationFromAddress`.
+  through `helpers/view` and converts through `locationFromAddress`.
 - `PropertyMapView` is the public read-only consumer. Its filters never change
   stored geometry. The editor preview remains frozen while its dialog is open.
 

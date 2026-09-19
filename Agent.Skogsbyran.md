@@ -72,6 +72,15 @@ For non-trivial tasks:
 
 ## Frontend
 
+### Frontend structure
+
+* Feature modules use responsibility-based directories only when needed: `api/`, `components/`, `pages/`, `hooks/`, `helpers/`, `types/`, `services/`, `state/`, `config/`, `context/`, `fixtures/`, `adapters/`, `providers/`. Do not create directories merely for symmetry.
+* Route-level React components belong in `pages/`; reusable/non-route components in `components/`; React hooks and React Query hooks in `hooks/`; raw HTTP functions and API query keys in `api/`.
+* `helpers/` contains stateless reusable logic, not arbitrary `.ts` files. Shared contracts belong in `types/`, non-React workflow orchestration in `services/`, reducers in `state/`, environment logic in `config/`, React contexts in `context/`, and explicit demo data in `fixtures/`.
+* Technology-neutral external interfaces belong in `adapters/`; concrete implementations and provider composition belong in `providers/`.
+* Put code in `shared/` only when it is genuinely cross-module. Specialized submodules such as `location/map` and `property/details` use the same responsibility-based structure internally.
+* Keep CSS colocated with the component/page it styles unless genuinely shared.
+
 ### TypeScript
 
 * Follow the repository's strict TypeScript configuration

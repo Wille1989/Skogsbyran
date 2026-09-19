@@ -1,4 +1,4 @@
-import type { AddressSuggestion } from '../../data/types';
+import type { AddressSuggestion } from '../../types/types';
 import type { GeocoderAdapter } from '../../adapters/GeocoderAdapter';
 import { loadPlacesLibrary } from './loader';
 

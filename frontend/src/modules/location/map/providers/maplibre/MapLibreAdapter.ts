@@ -1,8 +1,8 @@
-import type { MapBounds, ScreenPoint, Coordinates } from '../../data/types';
+import type { MapBounds, ScreenPoint, Coordinates } from '../../types/types';
 import { Map as LibreMap, type StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { MapAdapter, MapFactory, MapIssueListener } from '../../adapters/MapAdapter';
-import { DEFAULT_VIEW } from '../../domain/map';
+import { DEFAULT_VIEW } from '../../helpers/map';
 
 import { lantmaterietBasemaps, type MapLibreBasemap } from '../lantmateriet/basemaps';
 

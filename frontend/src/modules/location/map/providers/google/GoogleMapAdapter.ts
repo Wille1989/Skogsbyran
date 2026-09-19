@@ -1,7 +1,7 @@
-import type { Coordinates, MapBounds, ScreenPoint } from '../../data/types';
+import type { Coordinates, MapBounds, ScreenPoint } from '../../types/types';
 import type { MapAdapter, MapFactory, MapIssueListener } from '../../adapters/MapAdapter';
 
-import { DEFAULT_VIEW } from '../../domain/map';
+import { DEFAULT_VIEW } from '../../helpers/map';
 import { loadMapLibrary, mapsAuthErrorEvent, mapsAuthErrorMessage } from './loader';
 
 export const createGoogleMap: MapFactory = async (element, onError) => {

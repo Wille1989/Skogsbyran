@@ -1,4 +1,4 @@
-import type { Basemap } from '../../data/types';
+import type { Basemap } from '../../types/types';
 
 export type StyleBasemap = Basemap & { kind: 'style'; url: string };
 

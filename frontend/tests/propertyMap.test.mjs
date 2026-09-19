@@ -23,10 +23,10 @@ function load(file) {
   new Function('module', 'exports', 'require', code)(module, module.exports, require);
   return module.exports;
 }
-const { buildAreaPayload, isValidCoordinate } = load('modules/location/map/data/areaDraft');
-const { filterMapData } = load('modules/location/map/data/mapPresentation');
-const { buildLocationPayload, createDefaultLocationDraft } = load('modules/location/types');
-const { areaChanges, locationDraftFromProperty, areaDraftsFromProperty } = load('modules/property/data/editDrafts');
+const { buildAreaPayload, isValidCoordinate } = load('modules/location/map/helpers/areaDraft');
+const { filterMapData } = load('modules/location/map/helpers/mapPresentation');
+const { buildLocationPayload, createDefaultLocationDraft } = load('modules/location/types/types');
+const { areaChanges, locationDraftFromProperty, areaDraftsFromProperty } = load('modules/property/helpers/editDrafts');
 const polygon = [{ lat: 59.3, lng: 18.1 }, { lat: 59.31, lng: 18.12 }, { lat: 59.32, lng: 18.1 }];
 const poi = { id: '7', name: 'Brygga', description: 'Vid sjön', latitude: 59.31, longitude: 18.11 };
 
@@ -67,10 +67,10 @@ test('hydrated polygons retain identity; invalid edits fail before writes', () =
   assert.equal(areaChanges(saved, [{ ...draft[0], name: 'Ändrat' }]).updatedAreas[0].areaId, '1');
 });
 
-const { editPolygon } = load('modules/location/map/features/drawing');
-const { createPoi, updatePoi, removePoi } = load('modules/location/map/features/poi');
-const { locationFromAddress } = load('modules/location/map/data/locationFromAddress');
-const { fitProperty, showAddress } = load('modules/location/map/features/view');
+const { editPolygon } = load('modules/location/map/helpers/drawing');
+const { createPoi, updatePoi, removePoi } = load('modules/location/map/helpers/poi');
+const { locationFromAddress } = load('modules/location/map/helpers/locationFromAddress');
+const { fitProperty, showAddress } = load('modules/location/map/helpers/view');
 const { lantmaterietBasemaps } = load('modules/location/map/providers/lantmateriet/basemaps');
 
 test('own drawing handles empty drafts, insert, move, remove and clear without mutating saved geometry', () => {

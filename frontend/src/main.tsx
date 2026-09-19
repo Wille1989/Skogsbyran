@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './app/App.tsx'
-import { recordEvent } from './modules/analytics/data/api'
+import { recordEvent } from '@/modules/analytics/api/api'
 
 // Bootstrap once, outside React effects. Development never installs a worker.
 if (import.meta.env.PROD && window.isSecureContext && 'serviceWorker' in navigator) {

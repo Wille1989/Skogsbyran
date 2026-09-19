@@ -28,5 +28,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "src/property/images/.ts/useHandleFiles.ts", "src/property/images/.ts/useFileDropContainer.ts", "src/property/images/.ts/types.ts", "src/property/images/.ts/mutations.ts", "src/property/images/.ts/ImageViewer.ts", "src/property/images/.ts/drawImage.ts", "src/property/images/.ts/api.ts"]
+  "include": ["src"]
 }

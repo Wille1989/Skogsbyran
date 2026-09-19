@@ -1,4 +1,4 @@
-import type { MapRuntime } from '../data/types';
+import type { MapRuntime } from '../types/types';
 
 // Only this composition root selects dependencies. UI and features accept contracts.
 const provider = import.meta.env.VITE_MAP_PROVIDER || 'google';
