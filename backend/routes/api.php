@@ -99,3 +99,8 @@ Route::post('/analytics/events', [\App\Http\Controllers\Api\AnalyticsController:
     ->withoutMiddleware(\Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class);
 Route::get('/analytics/statistics', [\App\Http\Controllers\Api\AnalyticsController::class, 'statistics'])
     ->middleware(['auth:web', 'admin']);
+
+// Public contact submissions use rate limiting and validation without a login session.
+Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store'])
+    ->withoutMiddleware(\Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class)
+    ->middleware('throttle:contact');

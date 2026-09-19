@@ -124,3 +124,17 @@
     border-radius: 16px 16px 0 0;
   }
 }
+
+.contact-honeypot {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.contact-form .form-submit:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}

@@ -31,6 +31,14 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->ip() ?? 'unknown');
         });
 
+        RateLimiter::for('contact', function (Request $request): array {
+            return [
+                Limit::perMinute(3)->by('contact-minute:'.($request->ip() ?? 'unknown')),
+                Limit::perHour(10)->by('contact-hour:'.($request->ip() ?? 'unknown')),
+                Limit::perHour(100)->by('contact-global'),
+            ];
+        });
+
         if (! app()->isLocal()) {
             return;
         }
