@@ -2,7 +2,7 @@ import './ShowPage.css';
 import './PropertyDetail.css';
 import { lazy, Suspense, useContext } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { IconArrowLeft, IconArrowRight, IconCoins, IconTrees, IconMapPin, IconPhone, IconMail, IconTag } from '@tabler/icons-react';
+import { IconArrowLeft, IconArrowRight, IconCoins, IconTrees, IconMapPin, IconTag } from '@tabler/icons-react';
 import { useCurrentUserQuery } from '@/modules/auth/data/auth.hooks';
 import { usePropertyByIdQuery } from '../data/queries';
 import { Images } from '@/modules/image/presentation/Images';
@@ -46,7 +46,6 @@ export function ShowPage() {
       <div className="detail-columns">
         <div className="detail-content">
           <section className="detail-description"><h2>Beskrivning</h2><p>{details.caption || "Det finns ingen beskrivning av fastigheten ännu."}</p></section>
-          <Documents propertyId={property.propertyId} documents={property.documents} canManage={isAdmin} />
         </div>
         <aside className="detail-sidebar" aria-label="Fastighetsfakta och kontakt">
           <section className="detail-facts">
@@ -55,10 +54,10 @@ export function ShowPage() {
           </section>
           <section className="detail-contact">
             <div className="detail-contact-intro"><h2>Har du frågor<br />om fastigheten?</h2><p>Kontakta Skogsbyrån för mer information om fastigheten.</p>{openContact && <button type="button" className="detail-pill" onClick={openContact}>Kontakta oss <IconArrowRight size={20} aria-hidden="true" /></button>}</div>
-            <address><a href="tel:+46761354649"><IconPhone size={19} aria-hidden="true" />0761-35 46 49</a><a href="mailto:skogsbyran.jonkoping@telia.com"><IconMail size={19} aria-hidden="true" />skogsbyran.jonkoping@telia.com</a><a href="mailto:magnustrana@gmail.com"><IconMail size={19} aria-hidden="true" />magnustrana@gmail.com</a><span><IconMapPin size={19} aria-hidden="true" />Tranhult 11, 562 91 Månsarp</span></address>
           </section>
         </aside>
       </div>
+      <Documents propertyId={property.propertyId} documents={property.documents} canManage={isAdmin} />
       <section className="detail-map-section" aria-labelledby="detail-map-title">
         <h2 id="detail-map-title">Läge &amp; karta</h2>
         <p>{address ? address + '. ' : ''}{hasMap ? 'Utforska fastighetens läge och områden i kartan.' : 'Ingen kartdata har sparats för fastigheten.'}</p>

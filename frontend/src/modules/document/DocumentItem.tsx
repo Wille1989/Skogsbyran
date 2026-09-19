@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { IconFileTypePdf, IconDownload, IconEye } from '@tabler/icons-react';
+import { IconDownload } from '@tabler/icons-react';
+import { documentPresentation } from './documentPresentation';
 import { useDeleteDocumentMutation } from './mutations';
 import { downloadDocument } from './api';
 import type { DocumentItem as DocumentItemType } from './types';
@@ -7,6 +8,7 @@ import type { DocumentItem as DocumentItemType } from './types';
 type DocumentItemProps = { document: DocumentItemType; canManage?: boolean };
 
 export function DocumentItem({ document, canManage = false }: DocumentItemProps) {
+  const { icon: Icon, label } = documentPresentation(document);
   const deleteDocument = useDeleteDocumentMutation();
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState('');
@@ -30,11 +32,11 @@ export function DocumentItem({ document, canManage = false }: DocumentItemProps)
   }
   return (
     <article className="document-item">
-      <IconFileTypePdf size={25} stroke={1.4} aria-hidden="true" />
-      <div className="document-copy"><strong className="document-name">{document.title || document.originalName}</strong>
-      <span className="document-size">PDF{document.sizeBytes > 0 && <> · {new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 1 }).format(document.sizeBytes / 1024 / 1024)} MB</>}</span></div>
+      <a className="document-link" href={document.url} target="_blank" rel="noopener noreferrer" aria-label={`Öppna ${document.title || label} (PDF, ny flik)`}>
+        <Icon size={56} stroke={1.35} aria-hidden="true" />
+        <span className="document-name">{label}</span>
+      </a>
       <div className="document-item-actions">
-        <a href={document.url} target="_blank" rel="noopener noreferrer" aria-label={`Öppna ${document.title || document.originalName} (PDF)`}><span className="document-action-label">Öppna</span> <IconEye size={17} aria-hidden="true" /></a>
         <button type="button" onClick={handleDownload} disabled={downloading} aria-label={`Ladda ner ${document.title || document.originalName}`}><span className="document-action-label">{downloading ? 'Hämtar…' : 'Ladda ner'}</span> <IconDownload size={17} aria-hidden="true" /></button>
         {canManage && <button type="button" onClick={() => deleteDocument.mutate({propertyId: document.propertyId, documentId: document.documentId})} disabled={deleteDocument.isPending}>{deleteDocument.isPending ? 'Tar bort…' : 'Ta bort'}</button>}
       </div>
