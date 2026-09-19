@@ -6,13 +6,24 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libzip-dev \
     libonig-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
+    libwebp-dev \
+    && docker-php-ext-configure gd \
+        --with-jpeg \
+        --with-webp \
     && docker-php-ext-install \
         pdo_pgsql \
         mbstring \
         zip \
         bcmath \
+        gd \
+        exif \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
+
+RUN printf "upload_max_filesize=20M\npost_max_size=128M\nmax_file_uploads=50\n" \
+    > /usr/local/etc/php/conf.d/uploads.ini
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

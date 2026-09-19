@@ -19,6 +19,7 @@ export type EditableDocumentDraft = {
 };
 
 export type EditPropertyInput = {
+  scope?: "map";
   propertyId: string;
   details: ResponseProperty["details"];
   initialDetails: ResponseProperty["details"];
@@ -36,6 +37,17 @@ export type EditPropertyInput = {
   onProgress?: (progress: import("./types").SavePropertyProgress) => void;
   onAreaCreated?: (draft: EditableAreaDraft, saved: PropertyArea) => void;
 };
+
+// Reuse the save pipeline without including drafts from other editor sections.
+export function mapSaveInput(property: ResponseProperty, location: PropertyLocationDraft, areas: EditableAreaDraft[]): EditPropertyInput {
+  return {
+    scope: "map", propertyId: property.propertyId,
+    details: property.details, initialDetails: property.details,
+    imageChanges: { newImages: [], updatedImages: [], removedImageIds: [] },
+    documents: [], pendingDocuments: [],
+    location, initialLocation: property.location, areas, initialAreas: property.areas,
+  };
+}
 
 export function locationDraftFromProperty(property: ResponseProperty): PropertyLocationDraft {
   const location = property.location;

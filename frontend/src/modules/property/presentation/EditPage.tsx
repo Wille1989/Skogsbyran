@@ -9,6 +9,9 @@ import {
   areaDraftsFromProperty,
   documentDraftsFromProperty,
   locationDraftFromProperty,
+  mapSaveInput,
+  areaChanges,
+  changedLocationPayload,
   type EditableAreaDraft,
   type EditableDocumentDraft,
 } from "@/modules/property/data/editDrafts";
@@ -30,6 +33,7 @@ export function EditPage() {
   const { propertyId = "" } = useParams<{ propertyId: string }>();
   const { data, isPending, error } = usePropertyByIdQuery(propertyId);
   const saveChanges = useSavePropertyChangesMutation();
+  const saveMap = useSavePropertyChangesMutation();
   const deleteProperty = useDeletePropertyMutation();
   const navigate = useNavigate();
   const deleteDialog = useRef<HTMLDialogElement>(null);
@@ -37,6 +41,9 @@ export function EditPage() {
   const saving = useRef(false);
   const [saveProgress, setSaveProgress] = useState<SavePropertyProgress | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const [mapProgress, setMapProgress] = useState<SavePropertyProgress | null>(null);
+  const mapFailure = saveMap.error instanceof PropertySaveError ? saveMap.error : null;
   const failure = saveChanges.error instanceof PropertySaveError ? saveChanges.error : null;
   const imageFiles = useImageFiles();
   const { images, initializeImages } = imageFiles;
@@ -71,7 +78,7 @@ export function EditPage() {
       <section className="property-detail-shell-section">
         <h1>Redigering kunde inte öppnas</h1>
 
-        <p>Fastigheten gick inte att läsa in.</p>
+        <p role="alert">{error instanceof Error ? error.message : "Fastigheten gick inte att läsa in."}</p>
       </section>
     );
   }
@@ -80,7 +87,7 @@ export function EditPage() {
     !("file" in image) && image.imageId === editingImageId) ?? null;
 
   const handleSave = (details: FormDetails): void => {
-    if (deleting.current || saving.current || failure?.requiresReview) return;
+    if (deleting.current || saving.current || failure?.requiresReview || mapFailure?.requiresReview) return;
     saving.current = true;
     setValidationError(null);
     setSaveProgress(preparingProgress(false));
@@ -109,6 +116,9 @@ export function EditPage() {
             }
           },
           onSuccess: (savedProperty) => {
+            setMapError(null);
+            setMapProgress(null);
+            saveMap.reset();
             initializeImages(savedProperty.images);
             setLocation(locationDraftFromProperty(savedProperty));
             setAreas(areaDraftsFromProperty(savedProperty));
@@ -134,6 +144,32 @@ export function EditPage() {
     });
   };
 
+  let mapDirty = true;
+  try {
+    const changes = areaChanges(property.areas, areas);
+    mapDirty = !!changedLocationPayload(property.location, location)
+      || !!(changes.createdAreas.length || changes.updatedAreas.length || changes.removedAreaIds.length);
+  } catch { /* Invalid drafts still need the save action to display validation. */ }
+
+  const handleMapSave = async (): Promise<void> => {
+    if (saving.current || deleting.current || failure?.requiresReview || mapFailure?.requiresReview) return;
+    saving.current = true;
+    setMapError(null);
+    setMapProgress(preparingProgress(false));
+    try {
+      const savedProperty = await saveMap.mutateAsync({
+        ...mapSaveInput(property, location, areas),
+        onProgress: setMapProgress,
+        onAreaCreated: (draft, saved) => setAreas(current => current.map(area => area === draft ? { ...area, id: saved.id } : area)),
+      });
+      setLocation(locationDraftFromProperty(savedProperty));
+      setAreas(areaDraftsFromProperty(savedProperty));
+    } catch (error) {
+      setMapError(error instanceof Error ? error.message : "Kartan kunde inte sparas. Ditt utkast finns kvar.");
+      setMapProgress(null);
+    } finally { saving.current = false; }
+  };
+
   return (
     <>
       <PropertyForm
@@ -141,10 +177,15 @@ export function EditPage() {
         initialDetails={initialDetails(property) ?? undefined} onSubmit={handleSave}
         imageFiles={imageFiles} onEditImage={setEditingImageId} isSaving={saveChanges.isPending || deleteProperty.isPending}
         isDeleting={deleteProperty.isPending}
+        onSaveMap={handleMapSave} isMapSaving={saveMap.isPending}
+        mapSaveStatus={mapError ?? (saveMap.isPending ? mapProgress?.title ?? "Sparar karta…" : mapDirty ? "Kartan har osparade ändringar." : "Kartan är sparad.")}
+        mapSaveError={!!mapError} mapSaveBlocked={!!mapFailure?.requiresReview || !!failure?.requiresReview}
+        mapDirty={mapDirty}
+        mapReviewUrl={mapFailure?.requiresReview ? "/admin/properties/" + property.propertyId + "/edit" : undefined}
         onDelete={() => { deleteProperty.reset(); deleteDialog.current?.showModal(); }}
         location={location} onLocationChange={setLocation} areas={areas} onAreasChange={setAreas}
         documents={<EditableDocuments documents={documents} pendingDocuments={pendingDocuments} onDocumentsChange={setDocuments} onPendingDocumentsChange={setPendingDocuments} />}
-        error={validationError} progress={saveProgress} saveBlocked={!!failure?.requiresReview}
+        error={validationError} progress={saveProgress} saveBlocked={!!failure?.requiresReview || !!mapFailure?.requiresReview}
         fieldErrors={failure?.fieldErrors}
         reviewUrl={failure?.requiresReview ? "/admin/properties/" + property.propertyId + "/edit" : undefined}
       />

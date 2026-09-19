@@ -1,31 +1,68 @@
-import { MapAddressSearch, type SelectedAddress } from "./MapAddressSearch";
-import { usePropertyMap, type PropertyMapOptions } from "../data/usePropertyMap";
-import { isValidCoordinate } from "../data/areaDraft";
-import "./googleMap.css";
+import type { AddressSearchResult, PropertyMapOptions, MapRuntime } from '../data/types';
+import { MapAddressSearch } from './MapAddressSearch';
+import { usePropertyMap, mapPoints } from '../data/usePropertyMap';
+import { isValidCoordinate } from '../data/areaDraft';
+import { mapRuntime } from '../providers/runtime';
+import { fitProperty, showAddress } from '../features/view';
+import { MapOverlays } from './MapOverlays';
+import { MapControls } from './MapControls';
+import './map.css';
 
-type Props = PropertyMapOptions & { onAddressSelect?: (address: SelectedAddress) => void };
+type Props = PropertyMapOptions & {
+    showSearch?: boolean;
+    onAddressSelect?: (address: AddressSearchResult) => void;
+    runtime?: MapRuntime;
+};
 
 export function PropertyAreaMap(props: Props) {
-  const points = [...props.polygon, ...(props.otherPolygons?.flat() ?? []),
-    ...(props.marker ? [props.marker] : []),
-    ...(props.pois?.map(poi => ({ lat: poi.latitude, lng: poi.longitude })) ?? [])];
-  if (!points.every(isValidCoordinate)) return <p className="form-error" role="alert">Kartdata innehåller ogiltiga koordinater.</p>;
-  return <LoadedPropertyAreaMap {...props} />;
+    if (!mapPoints(props).every(isValidCoordinate)) {
+        return (
+            <p className="form-error" role="alert">
+                Kartdata innehåller ogiltiga koordinater.
+            </p>
+        );
+    }
+
+    return <LoadedPropertyAreaMap {...props} />;
 }
 
 function LoadedPropertyAreaMap(props: Props) {
-  const { elementRef, map, error } = usePropertyMap(props);
-  return (
-    <div className="mock-map-shell">
-      {!props.readOnly && map && <MapAddressSearch onSelect={(address) => {
-        map.panTo(address.position);
-        map.setZoom(15);
-        props.onAddressSelect?.(address);
-      }} />}
-      {error ? <p className="form-error" role="alert">{error}</p> : !map && <p role="status">Kartan laddas…</p>}
-      <div ref={elementRef} className="mock-map google-map" aria-label="Karta över fastigheten" />
-      {props.readOnly && !props.marker && !props.polygon.length && !props.otherPolygons?.length && !props.pois?.length
-        ? <p>Ingen kartdata har sparats för fastigheten.</p> : null}
-    </div>
-  );
+    const runtime = props.runtime ?? mapRuntime;
+    const { elementRef, map, error } = usePropertyMap(props, runtime.createMap);
+
+    return (
+        <div className="map-shell">
+            {map && error?.kind !== 'fatal' && !props.readOnly && props.showSearch !== false && (
+                <MapAddressSearch
+                    createGeocoder={runtime.createGeocoder}
+                    onSelect={(address) => {
+                        if (map) {
+                            showAddress(map, address);
+                        }
+                        props.onAddressSelect?.(address);
+                    }}
+                />
+            )}
+            {error && (
+                <p className="form-error" role="alert">
+                    {error.message}
+                </p>
+            )}
+            {!error && !map && <p role="status">Kartan laddas…</p>}
+            <div className="map-viewport">
+                <div
+                    ref={elementRef}
+                    className={`property-map-canvas${props.readOnly ? ' is-readonly' : ''}`}
+                    aria-label="Karta över fastigheten"
+                />
+                {map && error?.kind !== 'fatal' && <MapOverlays map={map} options={props} />}
+                {map && error?.kind !== 'fatal' && (
+                    <MapControls map={map} onFit={() => fitProperty(map, mapPoints(props))} />
+                )}
+            </div>
+            {props.readOnly && !mapPoints(props).length && (
+                <p>Ingen kartdata att visa med detta urval.</p>
+            )}
+        </div>
+    );
 }

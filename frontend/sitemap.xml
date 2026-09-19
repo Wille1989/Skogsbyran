@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Developer module index, not an SEO sitemap. Paths are relative to this file. -->
+<module-sitemaps scope="frontend" version="1">
+    <module name="Map" sitemap="src/modules/location/map/sitemap.xml">
+        <description>Property maps, address search, drawing, POI and map providers.</description>
+    </module>
+</module-sitemaps>

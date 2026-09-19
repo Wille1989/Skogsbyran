@@ -1,0 +1,685 @@
+.area-page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 32px 0 48px;
+}
+
+.area-page-embedded {
+    padding: 0;
+}
+
+.area-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: start;
+}
+
+.property-area-map-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgb(0 0 0 / 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.property-area-map-modal {
+    width: min(1000px, 92vw);
+    height: min(760px, 88vh);
+    background: #fff;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.property-area-map-modal-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.property-area-map-modal-content {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 16px;
+}
+
+.area-summary {
+    min-width: 180px;
+    padding: 18px;
+    border-radius: 18px;
+    background: rgba(20, 83, 45, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.area-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(280px, 0.9fr);
+    gap: 24px;
+}
+
+.area-editor,
+.area-sidebar,
+.area-form-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.area-form-card {
+    padding: clamp(22px, 4vw, 36px);
+}
+
+.area-coordinate-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.area-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.map-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.area-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    color: var(--muted);
+}
+
+.area-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.area-list-item {
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.area-list-item p {
+    margin: 4px 0 0;
+}
+
+.area-list-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+@media (max-width: 960px) {
+    .area-layout,
+    .area-header {
+        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+.property-map-preview {
+    position: relative;
+}
+
+.property-map-preview .map-viewport {
+    min-height: 240px;
+    height: 240px;
+}
+
+.property-map-preview-open {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 20px;
+}
+
+.property-map-preview-open span {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    border-radius: 999px;
+    background: var(--admin-forest, #14532d);
+    color: white;
+    width: max-content;
+    max-width: 90%;
+}
+
+.property-map-preview-open:focus-visible {
+    outline: 3px solid #14532d;
+    outline-offset: 4px;
+}
+
+.property-map-editor-dialog {
+    width: min(1440px, 98vw);
+    max-width: 98vw;
+    height: 96dvh;
+    max-height: 96dvh;
+    padding: 0;
+    border: 0;
+    border-radius: 16px;
+    color: inherit;
+    background: var(--admin-surface, #fff);
+}
+
+.property-map-editor-dialog::backdrop {
+    background: rgb(0 0 0 / 0.55);
+}
+
+.property-map-editor-dialog[open] {
+    display: flex;
+    flex-direction: column;
+}
+
+.property-map-editor-dialog h2 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.property-map-editor-content {
+    overflow: auto;
+    overscroll-behavior: contain;
+    min-height: 0;
+    padding: 0 16px 16px;
+}
+
+.property-map-tools {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--admin-surface, #fff);
+    padding: 12px 0 8px;
+}
+
+.property-map-tools .area-toolbar {
+    gap: 8px;
+}
+
+.property-map-tools p,
+.map-draft-summary {
+    margin: 8px 0;
+    font-size: 0.875rem;
+}
+
+.property-map-tools button[aria-pressed='true'],
+.map-filter button[aria-pressed='true'] {
+    background: #14532d;
+    color: #fff;
+    border-color: #14532d;
+}
+
+html:has(.property-map-editor-dialog[open]),
+body:has(.property-map-editor-dialog[open]) {
+    overflow: hidden;
+}
+
+.property-map-editor-dialog .map-shell {
+    width: min(800px, 100%);
+    margin-inline: auto;
+}
+
+.property-map-editor-dialog .map-viewport {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 1;
+}
+
+.property-map-editor-dialog .map-address-search {
+    background: #fff;
+    border-radius: 8px;
+}
+
+.map-area-tools label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.map-area-tools select {
+    max-width: 220px;
+    padding: 8px;
+    font: inherit;
+}
+
+.map-metadata {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+}
+
+.map-metadata summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.map-metadata .location-editor {
+    padding: 16px 0;
+}
+
+.map-metadata .location-grid {
+    grid-template-columns: 1fr;
+}
+
+.map-area-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.map-area-metadata label {
+    display: grid;
+    gap: 6px;
+}
+
+.map-area-metadata input {
+    padding: 10px;
+    font: inherit;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.map-filter {
+    margin-bottom: 12px;
+    gap: 8px;
+}
+
+@media (max-width: 600px) {
+    .property-map-editor-dialog {
+        width: 100%;
+        max-width: 100%;
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+    }
+    .property-area-map-modal-header {
+        padding: 12px;
+    }
+    .property-map-editor-content {
+        padding: 0 10px 10px;
+    }
+    .property-map-tools .admin-button {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+    .property-map-editor-dialog .map-viewport {
+        border-radius: 12px;
+    }
+    .map-area-tools select {
+        max-width: 140px;
+    }
+}
+
+.admin-layout .property-map-editor-dialog {
+    .property-map-editor-content {
+        flex: 1;
+    }
+
+    .location-editor {
+        gap: 16px;
+        padding: 16px 0;
+    }
+
+    .location-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .location-fields {
+        grid-column: auto;
+        grid-row: auto;
+        gap: 12px;
+        padding: 14px;
+    }
+
+    .location-field-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .poi-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .poi-card {
+        min-width: 0;
+        gap: 12px;
+        padding: 14px;
+        border-color: var(--admin-border);
+        border-radius: 5px;
+        background: var(--admin-surface, #fff);
+    }
+
+    .poi-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        gap: 10px;
+
+        > .form-field {
+            flex: 1 1 160px;
+            min-width: 0;
+        }
+    }
+
+    .poi-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .map-metadata {
+        input,
+        select {
+            min-height: 36px;
+            padding: 7px 10px;
+            font-size: 13px;
+        }
+
+        label {
+            font-size: 13px;
+        }
+
+        .form-field {
+            gap: 5px;
+        }
+    }
+
+    .map-save-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-shrink: 0;
+        padding: 12px 20px;
+        border-top: 1px solid var(--admin-border);
+        background: var(--admin-surface, #fff);
+
+        > div {
+            min-width: 0;
+            max-height: 25dvh;
+            overflow: auto;
+        }
+
+        p {
+            margin: 0;
+            max-width: none;
+            font-size: 13px;
+        }
+
+        [role='alert'] {
+            color: #b42318;
+        }
+
+        a {
+            text-decoration: underline;
+        }
+    }
+}
+
+@media (max-width: 760px) {
+    .admin-layout .property-map-editor-dialog {
+        .poi-list,
+        .location-field-row {
+            grid-template-columns: 1fr;
+        }
+
+        .map-save-footer {
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+        }
+    }
+}
+
+.map-viewport {
+    min-height: 360px;
+    width: 100%;
+    position: relative;
+    height: 420px;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid #cdd5c9;
+    border-radius: 16px;
+    background: #e7eadf;
+}
+
+.property-map-canvas,
+.map-engine,
+.map-overlays,
+.map-geometries {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.map-overlays {
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.map-polygon {
+    fill: #c5a15a40;
+    stroke: #24352f;
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.map-polygon.is-secondary {
+    fill: #24352f15;
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+}
+
+.map-polygon.is-draft {
+    fill: none;
+}
+
+.map-overlays .map-handle {
+    position: absolute;
+    pointer-events: auto;
+    touch-action: none;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #24352f;
+    border-radius: 50%;
+    background: #f2ebdd;
+    color: #24352f;
+    cursor: grab;
+    box-shadow: 0 1px 4px #0004;
+}
+
+.map-overlays .map-midpoint {
+    width: 12px;
+    height: 12px;
+    background: #c5a15a;
+}
+
+.map-overlays .map-handle.is-moving {
+    cursor: grabbing;
+}
+
+.map-overlays .map-handle:focus-visible {
+    outline: 3px solid #c5a15a;
+    outline-offset: 3px;
+}
+
+.map-overlays .map-main-marker {
+    width: 34px;
+    height: 34px;
+}
+
+.map-overlays .map-poi {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: max-content;
+    max-width: 160px;
+    height: auto;
+    padding: 4px 7px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 1.4;
+    transform: translate(0, -100%);
+}
+
+.map-poi span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.map-poi svg {
+    flex-shrink: 0;
+}
+
+.map-controls {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    gap: 4px;
+    align-items: start;
+    pointer-events: none;
+}
+
+.map-controls button,
+.map-controls label {
+    pointer-events: auto;
+    background: #fcfaf5;
+    color: #24352f;
+    border: 1px solid #cdd5c9;
+    border-radius: 5px;
+    box-shadow: 0 1px 4px #0002;
+}
+
+.map-controls button {
+    display: grid;
+    place-items: center;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.map-controls label {
+    margin-left: auto;
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+.map-controls select {
+    display: block;
+    max-width: 180px;
+    min-height: 24px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+}
+
+.map-controls button:hover {
+    background: #e7eadf;
+}
+
+.map-controls :focus-visible,
+.map-search-results button:focus-visible {
+    outline: 3px solid #c5a15a;
+    outline-offset: 2px;
+}
+
+.map-address-search {
+    padding: 0.75rem;
+    display: grid;
+    gap: 8px;
+}
+
+.map-search-input {
+    display: flex;
+    gap: 8px;
+}
+
+.map-search-input input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 12px;
+    font: inherit;
+    border: 1px solid #cdd5c9;
+    border-radius: 5px;
+}
+
+.map-search-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.map-search-results button {
+    width: 100%;
+    padding: 10px;
+    text-align: left;
+    background: #fcfaf5;
+    color: #24352f;
+    border: 1px solid #cdd5c9;
+    border-radius: 4px;
+    font: inherit;
+    cursor: pointer;
+}
+
+.map-search-attribution {
+    font-size: 11px;
+    justify-self: end;
+}
+
+@media (max-width: 480px) {
+    .map-controls {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+    }
+    .map-controls select {
+        max-width: 130px;
+    }
+}

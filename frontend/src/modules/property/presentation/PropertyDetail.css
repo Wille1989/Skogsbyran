@@ -285,90 +285,6 @@
             }
         }
 
-        address {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding: 22px 18px;
-            background: var(--cream-50);
-            font-style: normal;
-            font-size: .8rem;
-
-            a, span {
-                display: flex;
-                gap: 10px;
-                align-items: center;
-                overflow-wrap: anywhere;
-            }
-
-            svg {
-                flex-shrink: 0;
-            }
-        }
-    }
-
-    .documents {
-        margin-top: 34px;
-
-        .document-item {
-            display: grid;
-            grid-template-columns: 30px minmax(0, 1fr) auto;
-            gap: 14px;
-            padding: 16px 20px;
-            border-radius: 24px;
-
-            > svg {
-                color: #d92424;
-                width: 30px;
-                height: 36px;
-            }
-
-            .form-error {
-                grid-column: 1 / -1;
-            }
-        }
-
-        .document-copy {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-
-        .document-name {
-            min-width: 0;
-            font-size: .925rem;
-            font-weight: 600;
-        }
-
-        .document-size {
-            font-size: .8rem;
-        }
-
-        .document-item-actions {
-            gap: 8px;
-            align-items: center;
-
-            a, button {
-                justify-content: center;
-                min-width: 42px;
-                min-height: 42px;
-                padding: 8px;
-                border-radius: 50%;
-                background: #efeee8;
-
-                &:hover {
-                    background: var(--sage-100);
-                }
-            }
-
-            .document-action-label {
-                position: absolute;
-                width: 1px;
-                height: 1px;
-                overflow: hidden;
-                clip-path: inset(50%);
-            }
-        }
     }
 
     .detail-map-section {
@@ -385,7 +301,7 @@
         border-radius: 14px;
         background: var(--sage-100);
 
-        .google-map {
+        .map-viewport {
             height: clamp(320px, 34vw, 460px);
             min-height: 0;
             border-radius: 0;
@@ -465,15 +381,13 @@
         .detail-facts, .detail-contact-intro {
             padding: 22px;
         }
-
-        .documents .document-item {
-            gap: 10px;
-            padding: 14px 12px;
-            grid-template-columns: 26px minmax(0, 1fr) auto;
-        }
-
-        .documents .document-item-actions {
-            gap: 4px;
-        }
     }
+}
+
+.detail-map-dialog { box-sizing: border-box; }
+.detail-map-dialog > header h2 { min-width: 0; overflow-wrap: anywhere; font-size: clamp(1.2rem, 2.8vw, 2rem); }
+.detail-map-dialog > header button { flex-shrink: 0; }
+@media (max-width: 600px) {
+  .detail-map-dialog { padding: 16px; }
+  .detail-map-dialog > header { gap: 8px; }
 }

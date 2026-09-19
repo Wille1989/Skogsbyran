@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Developer module inventory. Paths are relative to this file, not public website URLs. -->
+<module-sitemap name="Map" scope="frontend" version="1">
+    <description>Property map rendering, address search, drawing and POI editing.</description>
+
+    <group name="domain">
+        <file path="domain/map.ts">
+            <purpose>Default camera view and bounding-box calculation; shared types live in data/types.ts.</purpose>
+        </file>
+    </group>
+
+    <group name="adapters">
+        <file path="adapters/MapAdapter.ts">
+            <purpose>Map engine interface, lifecycle and factory contracts; error data comes from data/types.ts.</purpose>
+        </file>
+        <file path="adapters/GeocoderAdapter.ts">
+            <purpose>Independent geocoder interface and factory; result data comes from data/types.ts.</purpose>
+        </file>
+    </group>
+
+    <group name="features">
+        <file path="features/drawing.ts">
+            <purpose>Immutable polygon operations.</purpose>
+        </file>
+        <file path="features/poi.ts">
+            <purpose>Create, update and remove POI drafts.</purpose>
+        </file>
+        <file path="features/view.ts">
+            <purpose>Fit property geometry and navigate to an address.</purpose>
+        </file>
+        <file path="features/useMapHandle.ts">
+            <purpose>Pointer capture, drag cancellation and keyboard movement.</purpose>
+        </file>
+        <file path="features/usePolygonEditing.ts">
+            <purpose>Apply editing actions to the current polygon draft.</purpose>
+        </file>
+    </group>
+
+    <group name="data">
+        <file path="data/api.ts">
+            <purpose>Existing area HTTP endpoints.</purpose>
+        </file>
+        <file path="data/areaDraft.ts">
+            <purpose>Validate and serialize polygon drafts.</purpose>
+        </file>
+        <file path="data/areaMath.ts">
+            <purpose>Calculate approximate polygon area.</purpose>
+        </file>
+        <file path="data/locationFromAddress.ts">
+            <purpose>Convert provider-neutral address results to the existing location payload.</purpose>
+        </file>
+        <file path="data/mapPresentation.ts">
+            <purpose>Filter visible property geometry and POI.</purpose>
+        </file>
+        <file path="data/mutations.ts">
+            <purpose>Area mutation hooks and cache updates.</purpose>
+        </file>
+        <file path="data/queries.ts">
+            <purpose>Area query hooks.</purpose>
+        </file>
+        <file path="data/types.ts">
+            <purpose>Shared coordinates, areas, view geometry, editing options/actions, address results and map errors.</purpose>
+        </file>
+        <file path="data/usePropertyMap.ts">
+            <purpose>Own map instances, event subscriptions, resize and initial framing.</purpose>
+        </file>
+        <file path="data/validatePropertyMap.ts">
+            <purpose>Validate saved geometry at the API boundary.</purpose>
+        </file>
+    </group>
+
+    <group name="presentation">
+        <file path="presentation/EditableAreas.tsx">
+            <purpose>Existing list-based area editor consumer.</purpose>
+        </file>
+        <file path="presentation/PropertyAreaEditor.tsx">
+            <purpose>Existing individual area editor.</purpose>
+        </file>
+        <file path="presentation/PropertyAreaMap.tsx">
+            <purpose>Compose map, search, overlays and controls.</purpose>
+        </file>
+        <file path="presentation/PropertyMapEditor.tsx">
+            <purpose>Admin modal, selected tool, area selection and save controls.</purpose>
+        </file>
+        <file path="presentation/PropertyMapView.tsx">
+            <purpose>Public read-only map with feature filters.</purpose>
+        </file>
+        <file path="presentation/MapAddressSearch.tsx">
+            <purpose>Accessible search input and result selection.</purpose>
+        </file>
+        <file path="presentation/MapControls.tsx">
+            <purpose>Own zoom, fit-property and basemap controls.</purpose>
+        </file>
+        <file path="presentation/MapHandle.tsx">
+            <purpose>Visual vertex, midpoint, main marker and POI button.</purpose>
+        </file>
+        <file path="presentation/MapOverlays.tsx">
+            <purpose>Project domain geometry into shared SVG and HTML overlays.</purpose>
+        </file>
+        <file path="presentation/map.css">
+            <purpose>Shared map, modal, controls and responsive styling.</purpose>
+        </file>
+    </group>
+
+    <group name="providers/google">
+        <file path="providers/google/GoogleMapAdapter.ts">
+            <purpose>Google camera, projection, basemaps and map events.</purpose>
+        </file>
+        <file path="providers/google/GoogleGeocoderAdapter.ts">
+            <purpose>Google Places suggestions and address resolution.</purpose>
+        </file>
+        <file path="providers/google/loader.ts">
+            <purpose>Load Google libraries and report authentication failures.</purpose>
+        </file>
+    </group>
+
+    <group name="providers/maplibre">
+        <file path="providers/maplibre/MapLibreAdapter.ts">
+            <purpose>MapLibre camera, projection, basemap styles and events.</purpose>
+        </file>
+    </group>
+
+    <group name="providers/lantmateriet">
+        <file path="providers/lantmateriet/basemaps.ts">
+            <purpose>Configured topography styles and orthophoto tile layers.</purpose>
+        </file>
+    </group>
+
+    <group name="providers/nominatim">
+        <file path="providers/nominatim/NominatimGeocoderAdapter.ts">
+            <purpose>Explicit address search, response validation and request throttling.</purpose>
+        </file>
+    </group>
+
+    <group name="providers">
+        <file path="providers/runtime.ts">
+            <purpose>Select map and geocoder implementations from build configuration.</purpose>
+        </file>
+    </group>
+
+    <integration>
+        <file path="../types.ts" role="Location and POI drafts and API payloads" />
+        <file path="../LocationEditor.tsx" role="Address and POI metadata form" />
+        <file path="../LocationEditor.css" role="Metadata form styling" />
+        <file path="../api.ts" role="Location persistence" />
+        <file path="../../property/data/editDrafts.ts" role="Hydration, change detection and map save input" />
+        <file path="../../property/data/editMutations.ts" role="Existing save workflow" />
+        <file path="../../property/presentation/EditPage.tsx" role="Owns edit drafts and invokes map saves" />
+        <file path="../../property/presentation/CreatePage.tsx" role="Owns creation drafts" />
+        <file path="../../property/presentation/ShowPage.tsx" role="Public map consumer" />
+        <file path="../../../../docs/property-map.md" role="Architecture, configuration and verification notes" />
+    </integration>
+</module-sitemap>

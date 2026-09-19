@@ -1,0 +1,12 @@
+{
+    "rewrites": [
+        {
+            "source": "/backend/:path*",
+            "destination": "https://skogsbyran.onrender.com/:path*"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/"
+        }
+    ]
+}
