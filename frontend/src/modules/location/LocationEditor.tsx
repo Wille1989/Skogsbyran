@@ -30,7 +30,7 @@ export function LocationEditor({ value, onChange, onMovePoi }: LocationEditorPro
     <section className="location-editor form">
       <div className="create-section-copy">
         <strong>Fastighetens plats och POI</strong>
-        <p>Komplettera adressen och namnge dina POI. Ändringarna sparas med fastigheten.</p>
+        <p>Komplettera adressen och namnge dina POI. Spara ändringarna med knappen i kartvyn.</p>
       </div>
 
       <div className="location-grid">
@@ -64,7 +64,7 @@ export function LocationEditor({ value, onChange, onMovePoi }: LocationEditorPro
       <div className="poi-list">
         {value.pois.map((poi) => (
           <article className="poi-card" key={poi.uiId}>
-            <div className="location-field-row">
+            <div className="poi-heading">
               <div className="form-field">
                 <label htmlFor={`poi-name-${poi.uiId}`}>Namn</label>
                 <input
@@ -75,10 +75,10 @@ export function LocationEditor({ value, onChange, onMovePoi }: LocationEditorPro
                 />
               </div>
 
-              <button type="button" className="button" onClick={() => onMovePoi(poi.uiId)}>Flytta i kartan</button>
-              <button type="button" className="button button-danger" onClick={() => removePoi(poi.uiId)}>
-                Ta bort POI
-              </button>
+              <div className="poi-actions"><button type="button" className="admin-button" onClick={() => onMovePoi(poi.uiId)}>Flytta i kartan</button>
+              <button type="button" className="admin-button is-danger" onClick={() => removePoi(poi.uiId)}>
+                Radera POI
+              </button></div>
             </div>
 
             <div className="form-field">

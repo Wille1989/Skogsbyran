@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { IconArrowRight } from "@tabler/icons-react";
 import { usePropertiesQuery } from "../data/queries";
 import { PropertyCard } from "./PropertyCard";
+import { LoadingSpinner } from "@/shared/presentation/LoadingSpinner";
 import { groupPropertiesByStatus } from "./propertyListing";
 import "./IndexPage.css";
 
@@ -35,9 +36,9 @@ export function IndexPage() {
           })}
         </div>
         <div id="property-results" className="property-listing-stack" aria-live="polite" aria-busy={isPending}>
-          {isPending ? <p>Fastigheter hämtas...</p> : error ? <p role="alert">Det gick inte att läsa in fastigheterna just nu.</p> : activeSection ? (
+          {isPending ? <div className="property-listing-state"><LoadingSpinner /></div> : !error && activeSection ? (
             activeSection.properties.map(property => <PropertyCard property={property} key={property.propertyId} />)
-          ) : <p>Det finns inga fastigheter publicerade ännu.</p>}
+          ) : <div className="property-listing-state"><p>När vi har en fastighet att förmedla så kommer du hitta den här.</p></div>}
         </div>
       </section>
       <section className="home-about" aria-labelledby="home-about-title">

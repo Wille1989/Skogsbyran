@@ -3,7 +3,6 @@ import './PropertyDetail.css';
 import { lazy, Suspense, useContext } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { IconArrowLeft, IconArrowRight, IconCoins, IconTrees, IconMapPin, IconTag } from '@tabler/icons-react';
-import { useCurrentUserQuery } from '@/modules/auth/data/auth.hooks';
 import { usePropertyByIdQuery } from '../data/queries';
 import { Images } from '@/modules/image/presentation/Images';
 import { Documents } from '@/modules/document/Documents';
@@ -15,8 +14,6 @@ const PropertyMapView = lazy(() => import('@/modules/location/map/presentation/P
 export function ShowPage() {
   const { propertyId = '' } = useParams<{ propertyId: string }>();
   const { data, isPending, error } = usePropertyByIdQuery(propertyId);
-  const { data: currentUser, isError: authError } = useCurrentUserQuery();
-  const isAdmin = !authError && currentUser?.isAdmin === true;
   const openContact = useContext(ContactContext);
   if (isPending) return <LoadingSpinner />;
   if (error || !data?.property) return <section className="property-detail-page"><Link to="/">Tillbaka</Link><h1>Fastigheten kunde inte hämtas</h1><p role="alert">{error instanceof Error ? error.message : "Det gick inte att läsa in fastigheten just nu."}</p></section>;
@@ -30,6 +27,8 @@ export function ShowPage() {
   const facts = [
     ...(details.price ? [{ label: 'Pris', value: formatPrice(details.price), icon: IconCoins }] : []),
     ...(details.size ? [{ label: 'Areal', value: formatHectares(details.size), icon: IconTrees }] : []),
+    ...(location?.address ? [{ label: 'Adress', value: location.address, icon: IconMapPin }] : []),
+    ...(location?.postalCode || location?.city ? [{ label: 'Postort', value: [location.postalCode, location.city].filter(Boolean).join(' '), icon: IconMapPin }] : []),
     ...(location?.municipality ? [{ label: 'Kommun', value: location.municipality, icon: IconMapPin }] : place ? [{ label: 'Ort', value: place, icon: IconMapPin }] : []),
     { label: 'Status', value: listingStatusLabels[details.listingStatus], icon: IconTag },
   ];
@@ -41,7 +40,7 @@ export function ShowPage() {
       </header>
       <div className="detail-gallery">
         <span className="detail-status">{listingStatusLabels[details.listingStatus]}</span>
-        {images.length ? <Images key={property.propertyId} propertyId={property.propertyId} images={images} propertyTitle={details.title} canEdit={isAdmin} /> : <div className="detail-no-image">Det finns inga bilder för fastigheten ännu.</div>}
+        {images.length ? <Images key={property.propertyId} propertyId={property.propertyId} images={images} propertyTitle={details.title} canEdit={false} /> : <div className="detail-no-image">Det finns inga bilder för fastigheten ännu.</div>}
       </div>
       <div className="detail-columns">
         <div className="detail-content">
@@ -57,7 +56,7 @@ export function ShowPage() {
           </section>
         </aside>
       </div>
-      <Documents propertyId={property.propertyId} documents={property.documents} canManage={isAdmin} />
+      <Documents propertyId={property.propertyId} documents={property.documents} />
       <section className="detail-map-section" aria-labelledby="detail-map-title">
         <h2 id="detail-map-title">Läge &amp; karta</h2>
         <p>{address ? address + '. ' : ''}{hasMap ? 'Utforska fastighetens läge och områden i kartan.' : 'Ingen kartdata har sparats för fastigheten.'}</p>

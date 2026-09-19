@@ -52,9 +52,8 @@ export function usePropertyMap(options: PropertyMapOptions) {
         map: instance, paths: new google.maps.MVCArray([path]),
         strokeColor: "#14532d", strokeWeight: 3, fillColor: "#14532d", fillOpacity: 0.18,
       });
-      // setPath creates the MVCArray even for an empty draft. paths: [] means
-      // zero rings in Google Maps, so getPath() can otherwise be undefined.
-      overlay.setPath(latest.current.polygon);
+      // Keep this same MVCArray attached to the overlay, listeners and ref.
+      // setPath with a plain array would replace it and leave edits invisible.
       polygonRef.current = overlay;
       pathRef.current = path;
       const change = (): void => {

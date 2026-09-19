@@ -24,6 +24,13 @@ type Props = {
     areas: EditableAreaDraft[];
     onAreasChange: (areas: EditableAreaDraft[]) => void;
     isSaving: boolean;
+    onSaveMap?: () => Promise<void>;
+    isMapSaving?: boolean;
+    mapSaveStatus?: string;
+    mapSaveError?: boolean;
+    mapSaveBlocked?: boolean;
+    mapDirty?: boolean;
+    mapReviewUrl?: string;
     submitLabel: string;
     error?: string | null;
     progress?: SavePropertyProgress | null;
@@ -51,7 +58,7 @@ export function PropertyForm(props: Props) {
     const cover = primary ? ("file" in primary ? primary.previewUrl : primary.urls.medium) : null;
     return <div className="admin-property-form" aria-busy={props.isSaving}>
         <Link to="/admin/properties" className="admin-back"><IconArrowLeft size={17} />Tillbaka till fastigheter</Link>
-        <header className="admin-page-heading"><div><h1>{props.title}</h1><p>{props.subtitle || "Fyll i informationen nedan för att skapa fastigheten."}</p></div><div className="admin-property-actions">{props.onDelete && <button type="button" className="admin-button is-danger" disabled={props.isSaving} onClick={props.onDelete}>{props.isDeleting ? "Raderar..." : "Radera fastighet"}</button>}<button type="submit" form="property-form" className="admin-button is-primary" disabled={props.isSaving || props.saveBlocked}><IconDeviceFloppy size={18} />{props.isDeleting ? "Raderar..." : props.isSaving ? "Sparar…" : props.submitLabel}</button></div></header>
+        <header className="admin-page-heading"><div><h1>{props.title}</h1><p>{props.subtitle || "Fyll i informationen nedan för att skapa fastigheten."}</p></div><div className="admin-property-actions">{props.onDelete && <button type="button" className="admin-button is-danger" disabled={props.isSaving || props.isMapSaving} onClick={props.onDelete}>{props.isDeleting ? "Raderar..." : "Radera fastighet"}</button>}<button type="submit" form="property-form" className="admin-button is-primary" disabled={props.isSaving || props.isMapSaving || props.saveBlocked}><IconDeviceFloppy size={18} />{props.isDeleting ? "Raderar..." : props.isSaving ? "Sparar…" : props.submitLabel}</button></div></header>
         {props.error && <p className="admin-error" role="alert">{props.error}</p>}
         {props.saved && <p className="admin-notice" role="status">Förändringarna är sparade.</p>}
         {props.progress && <div className={"admin-save-progress" + (props.progress.status === "error" ? " is-error" : "")} role={props.progress.status === "error" ? "alert" : "status"} aria-live="polite" aria-atomic="true">
@@ -65,7 +72,7 @@ export function PropertyForm(props: Props) {
             <div className="admin-two-columns"><section className="admin-card admin-documents">{props.documents}</section><SeoFields key={props.initialDetails?.slug ?? "create"} slug={props.initialDetails?.slug ?? ""} /></div>
             <section className="admin-card admin-images"><ImageDropZone imageFiles={props.imageFiles} onEditExistingImage={props.onEditImage} /></section>
             <section className="admin-card admin-map-section"><div className="admin-card-heading"><div><h2><IconMapPin size={23} />Karta och områden</h2><p>Markera fastighetens gränser och lägg till eventuella delområden.</p></div></div>
-                <PropertyMapEditor location={props.location} onLocationChange={props.onLocationChange} areas={props.areas} onAreasChange={props.onAreasChange} disabled={props.isSaving} />
+                <PropertyMapEditor location={props.location} onLocationChange={props.onLocationChange} areas={props.areas} onAreasChange={props.onAreasChange} disabled={props.isSaving || props.saveBlocked} onSave={props.onSaveMap} saving={props.isMapSaving} saveStatus={props.mapSaveStatus} saveError={props.mapSaveError} saveBlocked={props.mapSaveBlocked} dirty={props.mapDirty} reviewUrl={props.mapReviewUrl} />
             </section>
         </div>
     </div>;

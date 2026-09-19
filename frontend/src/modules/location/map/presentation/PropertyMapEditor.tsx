@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { IconSearch, IconPolygon, IconFlag, IconMapPin, IconX } from "@tabler/icons-react";
+import { IconSearch, IconPolygon, IconFlag, IconMapPin, IconX, IconDeviceFloppy } from "@tabler/icons-react";
 import type { EditableAreaDraft } from "@/modules/property/data/editDrafts";
 import type { LocationPoiDraft, PropertyLocationDraft } from "../../types";
 import { LocationEditor } from "../../LocationEditor";
@@ -12,19 +12,31 @@ type Props = {
   areas: EditableAreaDraft[];
   onAreasChange: (areas: EditableAreaDraft[]) => void;
   disabled?: boolean;
+  onSave?: () => Promise<void>;
+  saving?: boolean;
+  saveStatus?: string;
+  saveError?: boolean;
+  saveBlocked?: boolean;
+  dirty?: boolean;
+  reviewUrl?: string;
 };
 type Tool = "navigate" | "search" | "polygon" | "poi" | "marker";
 
-export function PropertyMapEditor({ location, onLocationChange, areas, onAreasChange, disabled }: Props) {
+export function PropertyMapEditor({ location, onLocationChange, areas, onAreasChange, disabled, onSave, saving = false, saveStatus, saveError, saveBlocked, dirty = true, reviewUrl }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const details = useRef<HTMLDetailsElement>(null);
   const [open, setOpen] = useState(false);
+  const [previewSnapshot, setPreviewSnapshot] = useState<{ location: PropertyLocationDraft; areas: EditableAreaDraft[] } | null>(null);
   const [tool, setTool] = useState<Tool>("navigate");
   const [selectedArea, setSelectedArea] = useState(0);
   const [movingPoi, setMovingPoi] = useState<string | null>(null);
   const area = areas[selectedArea];
   const marker = location.latitude !== null && location.longitude !== null
     ? { lat: location.latitude, lng: location.longitude } : null;
+  const previewLocation = previewSnapshot?.location ?? location;
+  const previewAreas = previewSnapshot?.areas ?? areas;
+  const previewMarker = previewLocation.latitude !== null && previewLocation.longitude !== null
+    ? { lat: previewLocation.latitude, lng: previewLocation.longitude } : null;
   const updateArea = (patch: Partial<EditableAreaDraft>) => onAreasChange(areas.map((current, index) => index === selectedArea ? { ...current, ...patch } : current));
   const updatePoi = (uiId: string, patch: Partial<LocationPoiDraft>) => onLocationChange({ ...location, pois: location.pois.map(poi => poi.uiId === uiId ? { ...poi, ...patch } : poi) });
   const activate = (next: Tool) => {
@@ -42,15 +54,16 @@ export function PropertyMapEditor({ location, onLocationChange, areas, onAreasCh
 
   return <>
     <div className="property-map-preview">
-      <div inert><PropertyAreaMap polygon={areas[0]?.polygon ?? []} otherPolygons={areas.slice(1).map(item => item.polygon)} marker={marker} pois={location.pois} readOnly /></div>
+      <div inert><PropertyAreaMap polygon={previewAreas[0]?.polygon ?? []} otherPolygons={previewAreas.slice(1).map(item => item.polygon)} marker={previewMarker} pois={previewLocation.pois} readOnly /></div>
       <button type="button" className="property-map-preview-open" disabled={disabled} onClick={() => {
+        setPreviewSnapshot({ location, areas });
         setOpen(true); setTool("navigate"); setMovingPoi(null); dialog.current?.showModal();
       }}><span><IconMapPin size={20} />Öppna kartan för redigering</span></button>
     </div>
-    <p>{areas.filter(item => item.polygon.length).length} områden · {location.pois.length} POI. Kartändringar sparas när du sparar fastigheten.</p>
-    <dialog ref={dialog} className="property-map-editor-dialog" aria-labelledby="property-map-editor-title" onClose={() => { setOpen(false); setTool("navigate"); setMovingPoi(null); }}>
-      <header className="property-area-map-modal-header"><h2 id="property-map-editor-title">Redigera karta</h2><button type="button" className="admin-button" autoFocus onClick={() => dialog.current?.close()}><IconX size={18} />Stäng</button></header>
-      {open && <div className="property-map-editor-content">
+    <p>{areas.filter(item => item.polygon.length).length} områden · {location.pois.length} POI. {onSave ? "Spara kartändringar i kartvyn eller tillsammans med fastigheten." : "Kartutkastet sparas när fastigheten skapas."}</p>
+    <dialog ref={dialog} className="property-map-editor-dialog" aria-labelledby="property-map-editor-title" onCancel={event => { if (saving) event.preventDefault(); }} onClose={() => { setOpen(false); setPreviewSnapshot(null); setTool("navigate"); setMovingPoi(null); }}>
+      <header className="property-area-map-modal-header"><h2 id="property-map-editor-title">Redigera karta</h2><button type="button" className="admin-button" disabled={saving} autoFocus onClick={() => dialog.current?.close()}><IconX size={18} />Stäng</button></header>
+      {open && <div className="property-map-editor-content" inert={saving}>
         <div className="property-map-tools">
           <div className="area-toolbar" role="group" aria-label="Kartverktyg">
             {([{ value: "search", label: "Sök adress", icon: IconSearch }, { value: "polygon", label: "Rita område", icon: IconPolygon }, { value: "poi", label: "Sätt ut POI", icon: IconFlag }, { value: "marker", label: "Huvudposition", icon: IconMapPin }] as const).map(({ value, label, icon: Icon }) =>
@@ -66,7 +79,7 @@ export function PropertyMapEditor({ location, onLocationChange, areas, onAreasCh
           </div>}
         </div>
         <PropertyAreaMap polygon={area?.polygon ?? []} otherPolygons={areas.filter((_, index) => index !== selectedArea).map(item => item.polygon)} marker={marker} pois={location.pois}
-          mode={tool === "search" ? "navigate" : tool} showSearch={tool === "search"}
+          readOnly={saving} mode={tool === "search" ? "navigate" : tool} showSearch={tool === "search"}
           onPolygonChange={polygon => updateArea({ polygon })}
           onSetMarker={tool === "marker" ? position => onLocationChange({ ...location, latitude: position.lat, longitude: position.lng }) : undefined}
           onAddressSelect={({ position, ...address }) => onLocationChange({ ...location, ...address, latitude: position.lat, longitude: position.lng })}
@@ -86,8 +99,16 @@ export function PropertyMapEditor({ location, onLocationChange, areas, onAreasCh
           </div>)}
           <p>Kartarean är ungefärlig. Fastighetens angivna areal ändras inte.</p>
         </details>
-        <p>Utkastet behålls när du stänger kartan. Spara med fastighetens sparknapp.</p>
+        <p>{onSave ? "Spara karta sparar adress, huvudposition, POI och områden. Övriga fastighetsuppgifter sparas separat." : "Fastigheten är inte skapad ännu. Kartan behålls som utkast och sparas när du klickar på Skapa fastighet."}</p>
       </div>}
+      {open && <footer className="map-save-footer">
+        <div>
+          <p role={saveError ? "alert" : "status"}>{onSave ? saveStatus : "Kartutkast – ännu inte sparat på servern."}</p>
+          {reviewUrl && <a href={reviewUrl} target="_blank" rel="noopener noreferrer">Granska sparat resultat i en ny flik</a>}
+        </div>
+        {onSave ? <button type="button" className="admin-button is-primary" disabled={saving || saveBlocked || !dirty} onClick={() => { activate("navigate"); void onSave(); }}><IconDeviceFloppy size={18} />{saving ? "Sparar karta…" : "Spara karta"}</button>
+          : <button type="button" className="admin-button is-primary" onClick={() => dialog.current?.close()}>Klart – behåll utkast</button>}
+      </footer>}
     </dialog>
   </>;
 }

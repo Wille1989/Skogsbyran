@@ -110,6 +110,17 @@ export function useSavePropertyChangesMutation() {
       return refreshed!;
     },
     onSuccess: async (property, variables) => {
+      if (variables.scope === "map") {
+        // Preserve the other sections' baseline and unsaved form values.
+        queryClient.setQueryData<ResponseGetProperty>(propertyQueryKeys.byId(variables.propertyId), current => current
+          ? { ...current, property: { ...current.property, location: property.location, areas: property.areas } }
+          : { property });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: propertyQueryKeys.all }),
+          queryClient.invalidateQueries({ queryKey: propertyQueryKeys.areas(variables.propertyId) }),
+        ]);
+        return;
+      }
       queryClient.setQueryData(propertyQueryKeys.byId(variables.propertyId), { property });
 
       await Promise.all([
