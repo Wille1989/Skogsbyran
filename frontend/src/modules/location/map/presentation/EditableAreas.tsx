@@ -1,59 +1,70 @@
-import type { Coordinates } from "../data/types";
-import { createDefaultAreaDraft } from "../data/areaDraft";
-import { PropertyAreaEditor } from "./PropertyAreaEditor";
-import type { EditableAreaDraft } from "@/modules/property/data/editDrafts";
+import type { Coordinates } from '../data/types';
+import { createDefaultAreaDraft } from '../data/areaDraft';
+import { PropertyAreaEditor } from './PropertyAreaEditor';
+import type { EditableAreaDraft } from '@/modules/property/data/editDrafts';
 
 type EditableAreasProps = {
-  areas: EditableAreaDraft[];
-  mainMarker: Coordinates | null;
-  onChange: (areas: EditableAreaDraft[]) => void;
+    areas: EditableAreaDraft[];
+    mainMarker: Coordinates | null;
+    onChange: (areas: EditableAreaDraft[]) => void;
 };
 
 export function EditableAreas({ areas, onChange, mainMarker }: EditableAreasProps) {
-  const visibleAreas = areas;
+    const visibleAreas = areas;
 
-  const updateArea = (index: number, area: EditableAreaDraft): void => {
-    onChange(visibleAreas.map((currentArea, currentIndex) => (currentIndex === index ? area : currentArea)));
-  };
+    const updateArea = (index: number, area: EditableAreaDraft): void => {
+        onChange(
+            visibleAreas.map((currentArea, currentIndex) =>
+                currentIndex === index ? area : currentArea,
+            ),
+        );
+    };
 
-  const removeArea = (index: number): void => {
-    onChange(visibleAreas.filter((_, currentIndex) => currentIndex !== index));
-  };
+    const removeArea = (index: number): void => {
+        onChange(visibleAreas.filter((_, currentIndex) => currentIndex !== index));
+    };
 
-  return (
-    <section className="property-areas area-form-card">
-      <div className="create-section-copy">
-        <strong>Områden</strong>
-        <p>Skapa, ändra eller ta bort områden. Ändringarna skickas område för område när du sparar.</p>
-      </div>
-
-      <div className="create-area-list">
-        {visibleAreas.map((area, index) => (
-          <div className="create-area-card" key={area.id ?? index}>
-            <div className="create-area-card-header">
-              <strong>Område {index + 1}</strong>
-              <button type="button" className="button button-danger" onClick={() => removeArea(index)}>
-                Ta bort område
-              </button>
+    return (
+        <section className="property-areas area-form-card">
+            <div className="create-section-copy">
+                <strong>Områden</strong>
+                <p>
+                    Skapa, ändra eller ta bort områden. Ändringarna skickas område för område när du
+                    sparar.
+                </p>
             </div>
 
-            <PropertyAreaEditor
-              mainMarker={mainMarker}
-              mode="edit"
-              value={area}
-              onChange={(nextArea) => updateArea(index, { ...nextArea, id: area.id })}
-            />
-          </div>
-        ))}
-      </div>
+            <div className="create-area-list">
+                {visibleAreas.map((area, index) => (
+                    <div className="create-area-card" key={area.id ?? index}>
+                        <div className="create-area-card-header">
+                            <strong>Område {index + 1}</strong>
+                            <button
+                                type="button"
+                                className="button button-danger"
+                                onClick={() => removeArea(index)}
+                            >
+                                Ta bort område
+                            </button>
+                        </div>
 
-      <button
-        type="button"
-        className="button"
-        onClick={() => onChange([...visibleAreas, createDefaultAreaDraft()])}
-      >
-        Lägg till område
-      </button>
-    </section>
-  );
+                        <PropertyAreaEditor
+                            mainMarker={mainMarker}
+                            mode="edit"
+                            value={area}
+                            onChange={(nextArea) => updateArea(index, { ...nextArea, id: area.id })}
+                        />
+                    </div>
+                ))}
+            </div>
+
+            <button
+                type="button"
+                className="button"
+                onClick={() => onChange([...visibleAreas, createDefaultAreaDraft()])}
+            >
+                Lägg till område
+            </button>
+        </section>
+    );
 }

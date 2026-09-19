@@ -66,3 +66,68 @@ test('hydrated polygons retain identity; invalid edits fail before writes', () =
   assert.deepEqual(areaChanges(saved, []).removedAreaIds, ['1']);
   assert.equal(areaChanges(saved, [{ ...draft[0], name: 'Ändrat' }]).updatedAreas[0].areaId, '1');
 });
+
+const { editPolygon } = load('modules/location/map/features/drawing');
+const { createPoi, updatePoi, removePoi } = load('modules/location/map/features/poi');
+const { locationFromAddress } = load('modules/location/map/data/locationFromAddress');
+const { fitProperty, showAddress } = load('modules/location/map/features/view');
+const { lantmaterietBasemaps } = load('modules/location/map/providers/lantmateriet/basemaps');
+
+test('own drawing handles empty drafts, insert, move, remove and clear without mutating saved geometry', () => {
+  const saved = structuredClone(polygon);
+  let draft = [];
+  for (const position of polygon) draft = editPolygon(draft, { type: 'add', position });
+  draft = editPolygon(draft, { type: 'insert', index: 1, position: { lat: 59.305, lng: 18.11 } });
+  draft = editPolygon(draft, { type: 'move', index: 1, position: { lat: 59.306, lng: 18.11 } });
+  assert.equal(draft.length, 4);
+  assert.equal(draft[1].lat, 59.306);
+  assert.deepEqual(editPolygon(draft, { type: 'remove', index: 1 }), saved);
+  assert.deepEqual(editPolygon(draft, { type: 'clear' }), []);
+  assert.deepEqual(polygon, saved);
+  assert.throws(() => editPolygon(draft, { type: 'add', position: { lat: 95, lng: 18 } }), /Ogiltig/);
+});
+
+test('own POI operations survive the existing hydration and API payload boundary', () => {
+  const first = createPoi(polygon[0], 1, 'test-1');
+  const second = createPoi(polygon[1], 2, 'test-2');
+  const changed = updatePoi([first, second], first.uiId, { name: 'Brygga', longitude: 18.2 });
+  assert.equal(first.longitude, polygon[0].lng);
+  assert.equal(changed[0].longitude, 18.2);
+  const draft = { ...createDefaultLocationDraft(), pois: removePoi(changed, 'test-2') };
+  const payload = buildLocationPayload(draft);
+  assert.equal(payload.pois.length, 1);
+  assert.equal(payload.pois[0].name, 'Brygga');
+  assert.equal('uiId' in payload.pois[0], false);
+  assert.equal(locationDraftFromProperty({ location: payload }).pois[0].longitude, 18.2);
+});
+
+test('geocoder conversion preserves POI and keeps vendor IDs at the persistence boundary', () => {
+  const original = { ...createDefaultLocationDraft(), googlePlaceId: 'old', pois: [createPoi(polygon[0], 1, 'test')] };
+  const result = { label: 'Plats', coordinates: polygon[1], address: 'Gatan 1', postalCode: '12345', city: 'Ort', municipality: 'Kommun', countryCode: 'SE', source: { provider: 'nominatim', id: 'external' } };
+  const next = locationFromAddress(original, result);
+  assert.equal(next.googlePlaceId, '');
+  assert.equal(next.latitude, polygon[1].lat);
+  assert.equal(next.pois, original.pois);
+  assert.equal(locationFromAddress(original, { ...result, source: { provider: 'google', id: 'place' } }).googlePlaceId, 'place');
+});
+
+test('view commands accept only domain coordinates and handle address bounds or a single point', () => {
+  const commands = [];
+  const map = { setCenter: p => commands.push(['center', p]), setZoom: z => commands.push(['zoom', z]), fitBounds: b => commands.push(['bounds', b]) };
+  fitProperty(map, polygon);
+  assert.deepEqual(commands.pop(), ['bounds', { north: 59.32, south: 59.3, east: 18.12, west: 18.1 }]);
+  showAddress(map, { coordinates: polygon[0] });
+  assert.deepEqual(commands, [['center', polygon[0]], ['zoom', 15]]);
+  commands.length = 0;
+  const bounds = { north: 60, south: 59, east: 19, west: 18 };
+  showAddress(map, { coordinates: polygon[0], bounds });
+  assert.deepEqual(commands, [['bounds', bounds]]);
+});
+
+test('Lantmäteriet layers are only advertised when their authorized URLs are configured', () => {
+  assert.deepEqual(lantmaterietBasemaps({}), []);
+  const layers = lantmaterietBasemaps({ topographyStyle: '/maps/style.json', orthophotoTiles: '/maps/ortho/{z}/{x}/{y}' });
+  assert.equal(layers.length, 2);
+  assert.equal(layers[0].kind, 'style');
+  assert.equal(layers[1].kind, 'raster');
+});

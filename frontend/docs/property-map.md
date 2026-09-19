@@ -1,65 +1,105 @@
-# Kartfunktion för fastigheter
+# Map module — frontend
 
-## Slutstatus 2026-09-17
+## Reading the module
 
-Google Maps används i ett gemensamt redigeringsflöde och ett separat låst visningsläge. Static Maps är inte implementerat. Inga dependencies, miljönycklar eller databasscheman ändrades i denna slutföring. Inga nya tester ingår i den senaste ändringen, enligt användarens instruktion.
+Start at `../sitemap.xml` for the frontend module index, then follow
+`../src/modules/location/map/sitemap.xml` for every Map source file and its purpose.
+These XML files are developer documentation, not public SEO sitemaps. Paths are
+relative to the XML file containing them. Add new module inventories to the root
+index and update the Map inventory whenever files are added, renamed or removed.
 
-## Arkitektur och gränssnitt
+## Responsibilities and data flow
 
-- PropertyForm visar PropertyMapEditor med en kompakt, låst förhandsvisning. Ett klick öppnar en stor dialog med adressökning, polygonritning, POI, huvudposition, avsluta verktyg och stäng. Adress- och POI-metadata finns i dialogen.
-- CreatePage/EditPage äger location- och areas-utkasten. Dialogen äger bara valt verktyg och UI-tillstånd. Stängning bevarar utkastet; formulärets sparknapp persisterar det.
-- PropertyAreaMap och usePropertyMap synkroniserar domändata till Google Map, Polygon och AdvancedMarkerElement och städar overlays/lyssnare. Kartobjekten är inte primär datakälla.
-- MapAddressSearch använder riktig PlaceAutocompleteElement med Sverige som region, gmp-select och fetchFields. Inga mockade adressresultat används.
-- ShowPage öppnar PropertyMapView utan redigeringsverktyg. Den rena funktionen filterMapData väljer Område, POI eller Allt före rendering. Denna separation kan återanvändas av en framtida Static Maps-renderare. POI-läget inkluderar eventuell huvudposition.
-- Visningskartor anpassar utsnittet när geometri, filter eller kartans storlek ändras. Redigeringskartor behåller utsnittet medan man ritar. Mobilens dialogrubrik och stängknapp ryms efter rättningen.
+- `PropertyMapEditor` owns the open dialog, selected area and active tool.
+  CreatePage/EditPage continue to own the editable location and area drafts.
+- `PropertyAreaMap` composes search, controls and overlays. `usePropertyMap`
+  owns the engine lifecycle, event subscriptions, resize and initial framing.
+  Every asynchronous initialization gets an isolated DOM host. Late cleanup
+  cannot remove a newer instance, including during React StrictMode replay.
+- `usePolygonEditing` applies immutable drawing operations to the current draft.
+  `useMapHandle` owns pointer capture, cancellation and keyboard movement.
+  `MapHandle` and `MapOverlays` render shared HTML/SVG from domain coordinates.
+- `MapAdapter` exposes camera, projection, events and basemaps. Google types
+  are confined to `providers/google`; MapLibre types to `providers/maplibre`.
+- `MapAddressSearch` calls `GeocoderAdapter`. A selected neutral result navigates
+  through `features/view` and converts through `locationFromAddress`.
+- `PropertyMapView` is the public read-only consumer. Its filters never change
+  stored geometry. The editor preview remains frozen while its dialog is open.
 
-## Datakontrakt och sparning
+Basemap changes affect only the engine's background. Geometry and POI remain
+React/domain data. Fatal initialization/authentication errors disable map tools;
+layer errors remain visible until the provider confirms a successful new load.
+Selecting a layer does not itself clear an error.
 
-| Data | Källa och kontrakt |
-| --- | --- |
-| Huvudposition | location.latitude/longitude, båda tal eller båda null; sparas i locations. |
-| Polygon | Area med namn och ordnad polygon av lat/lng. Minst tre olika giltiga punkter. Sparas i area_points. Backend accepterar och tar bort en upprepad slutpunkt. |
-| POI | location.pois med name, description, latitude/longitude och valfritt id; sparas i location_pois. uiId skickas inte. |
-| Area.marker | Beräknat polygoncentrum, inte en sparad POI. |
-| Hektar | Angiven details.size är separat från beräknad kartarea. |
+## Existing persistence contract
 
-Create skickar location och areas som JSON i befintlig POST /property och sparar dem i samma backendtransaktion. Edit använder PUT /property/:id/location samt befintliga Area POST/PUT/DELETE. POI-listan ersätts och kan få nya databas-ID:n. Bekräftade nya Area-ID:n behålls vid delvis misslyckad sparning. Hela Edit-formuläret är fortfarande inte en gemensam transaktion.
+Coordinates remain WGS84 `{ lat, lng }`; no GeoJSON migration was introduced.
+Areas contain an ordered polygon with at least three distinct valid points.
+The backend accepts and removes an explicitly repeated closing point. POI retain
+name, description, latitude and longitude. Local `uiId` is never serialized.
+`googlePlaceId` remains an optional compatibility field; non-Google searches clear
+it. Approximate polygon area remains separate from the advertised property area.
 
-validatePropertyMap kontrollerar hämtad geometri innan formulärhydrering eller rendering: ogiltiga koordinater, ofullständiga polygoner och felaktiga POI ger ett synligt fel i stället för tyst korrigering. Google-autentiseringsfel visas tydligt och kartytan döljs vid fel. Befintlig servervalidering och adminbehörighet gäller fortsatt.
+Create uses the existing property creation request. Edit and Save map use the
+existing location PUT and area POST/PUT/DELETE workflow. Save map supplies only
+location/area changes, not other property fields. Multiple writes are not one
+transaction; the existing partial-save review logic remains in place.
 
-## Genomförd kontroll i riktig lokal app
+## Provider configuration
 
-Frontend kördes på localhost:5173 och API på localhost:8020. Både Google-nyckel och map ID finns lokalt; deras värden har inte ändrats.
+Google remains the default. Existing `VITE_GOOGLE_MAPS_API_KEY` is used.
+The custom HTML markers no longer require a Google Map ID.
 
-- Tom förhandsvisning öppnades; karta och verktyg laddades från Google. Ett initialiseringsfel med tom polygon rättades tidigare genom setPath efter konstruktion.
-- En fyrhörnig polygon och två namngivna POI skapades genom kartinteraktion. En POI flyttades via listans flyttverktyg. Dialogen stängdes/öppnades utan förlorat utkast.
-- Dold lokal fastighet 15, ”Kartverifiering 2026-09-17”, skapades: POST 201 och efterföljande GET 200. Polygonens ordning och POI-koordinater överlevde lagring med backendens avrundning till sju decimaler.
-- Efter omladdning visades samma data. Låst visning med Område, POI och Allt visade respektive geometri/textlista utan redigeringsverktyg eller skrivningar.
-- AdvancedMarker använder nu gmp-dragend. En POI flyttades med Googles tangentbordsdragning; longituden ändrades från 18.0681051 till 18.068148. Polygonens sista hörn ersattes och kartarean blev 10,0459 ha.
-- PUT location och PUT area/5/update gav 200. GET 200 och full omladdning visade fyra punkter och två POI med uppdaterade värden. Polygonens sista punkt blev lat 59.3331244, lng 18.0692795.
-- Mobilbredd 390 × 844 kontrollerades i redigeringsdialogen: stängknapp, verktyg, polygon och båda POI synliga.
-- Riktiga svenska Places-förslag för Drottninggatan i Stockholm observerades. Användaren rapporterade att alla verktyg fungerade vid egen körning och att Drottninggatan 14 valts. Verktyget kan inte själv välja i Googles stängda shadow DOM; full adressval–koordinat-kontroll samt småortsadress är därför inte självständigt verifierade. Ingen sådan kontroll påstås vara genomförd.
+To opt into MapLibre at build time:
 
-Den dolda lokala fastigheten 15 finns kvar för granskning; den har inte publicerats. Tidigare befintliga fastigheter 12 och 13 saknade kartdata. Befintliga fastigheters data ändrades inte.
+```text
+VITE_MAP_PROVIDER=maplibre
+VITE_GEOCODER_PROVIDER=nominatim
+```
 
-## Kontroller och begränsningar
+`VITE_MAP_STYLE_URL` optionally supplies a MapLibre-compatible style. Without it,
+MapLibre uses OpenFreeMap Liberty. `VITE_GEOCODER_SEARCH_URL` can point to a
+Nominatim-compatible search service. The public Nominatim service uses explicit
+search rather than autocomplete, with per-browser throttling and caching.
+That is not a global application rate limiter; choose an appropriate hosted or
+self-hosted service before traffic exceeds the public service's usage policy.
+Google Places is not paired with MapLibre by this configuration.
 
-- Slutlig npm run lint: passerar.
-- Slutlig npm run build: TypeScript och Vite-produktionsbygge passerar.
-- Tidigare i uppgiften, före instruktionen att inte skriva tester: fem befintliga frontendtester passerade och backendens fyra berörda featurefiler gav 13 passerande tester, 124 assertions. Backend har inte ändrats i denna slutföring. Inga nya testfall kvarstår i aktuell diff.
-- Tillfällig MAP_HTTP/MAP_DRAFT/Google-resursdiagnostik är borttagen från källkoden.
-- Polygonhörnens dragning har inte självständigt verifierats i sista webbläsarkörningen; ritning, ångra och nytt hörn har verifierats. Google-konfigurationsfel har fått felhantering men inget avsiktligt fel har injicerats i den fungerande nyckeln.
-- Kartarea är approximativ. Självkorsning och överlapp har ingen topologisk kontroll. Edit kan fortfarande delvis sparas vid nätverksfel eftersom flera endpoints används.
+Optional Lantmäteriet configuration:
 
-## Filer i slutföringen
+- `VITE_LANTMATERIET_TOPOGRAPHY_STYLE_URL`: an authorized style endpoint whose
+  sources, sprites and fonts are also accessible to the browser.
+- `VITE_LANTMATERIET_ORTHOPHOTO_TILES_URL`: an authorized raster tile template
+  compatible with the MapLibre raster source. A raw WMS/WMTS service URL is not
+  automatically an XYZ template; adapt the authorized service as required.
 
-Tidigare sparad implementation: PropertyMapEditor.tsx, PropertyMapView.tsx, mapPresentation.ts, PropertyForm.tsx, LocationEditor.tsx, ShowPage.tsx, usePropertyMap.ts och googleMap.css.
+No Lantmäteriet credentials, proxy or subscription was created. Its configured
+layers are not yet verified against a live authorized service. Do not put private
+credentials in Vite variables: they are embedded in the browser bundle.
 
-Senaste ändringarna:
+Official references investigated during the refactor:
 
-- src/modules/location/map/data/validatePropertyMap.ts (ny), googleMapsLoader.ts och usePropertyMap.ts
-- src/modules/location/map/presentation/PropertyAreaMap.tsx, PropertyMapEditor.tsx och googleMap.css
-- src/modules/location/LocationEditor.tsx
-- src/modules/property/data/api.ts
-- src/modules/property/presentation/EditPage.tsx, ShowPage.tsx och PropertyDetail.css
-- docs/property-map.md
+- [Google autocomplete data](https://developers.google.com/maps/documentation/javascript/place-autocomplete-data)
+- [MapLibre API](https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/)
+- [OpenFreeMap setup](https://openfreemap.org/quick_start/)
+- [Nominatim policy](https://operations.osmfoundation.org/policies/nominatim/)
+- [Lantmäteriet topography vector tiles](https://geotorget.lantmateriet.se/geodataprodukter/topografi-visning-vector-tiles-api)
+- [Lantmäteriet orthophoto](https://geotorget.lantmateriet.se/geodataprodukter/ortofoto-visning-api)
+
+## Verification and limits
+
+Use the repository commands `npm run lint` and `npm run build`. The existing
+`node --test tests/propertyMap.test.mjs` checks the domain/payload boundary.
+No automated tests were added or modified during the readability/lifecycle fix.
+
+Manual browser checks use disposable local draft data, not published properties.
+Google address search and selection, zoom to the result, and rendering under
+StrictMode were checked on localhost:5173. Polygon corner movement, midpoint insertion,
+basemap switching with unchanged geometry, POI creation/keyboard movement and
+the custom zoom control were also checked with Google. Temporary browser-check
+files were removed afterwards. Earlier MapLibre checks covered
+polygon drawing, corner/midpoint dragging, deletion and POI movement.
+A new live backend save/reload was not performed during this correction.
+Lantmäteriet authentication, real mobile touch gestures and complex polygon
+edge cases remain outside those checks. There is no new topology validation for
+self-intersection or overlap.

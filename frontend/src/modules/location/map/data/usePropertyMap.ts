@@ -1,200 +1,161 @@
-import { useEffect, useRef, useState } from "react";
-import { googleMapsMapId, loadGoogleMaps, mapsAuthErrorEvent, mapsAuthErrorMessage } from "./googleMapsLoader";
-import type { Coordinates } from "./types";
-import type { PropertyLocationPayload } from "../../types";
+import { useEffect, useRef, useState } from 'react';
+import type { MapAdapter, MapFactory, MapIssue } from '../adapters/MapAdapter';
+import { mapRuntime } from '../providers/runtime';
+import { fitProperty } from '../features/view';
+import { editPolygon } from '../features/drawing';
+import type { Coordinates } from './types';
+import type { PropertyLocationPayload } from '../../types';
 
 export type PropertyMapOptions = {
-  polygon: Coordinates[];
-  otherPolygons?: Coordinates[][];
-  marker: Coordinates | null;
-  pois?: PropertyLocationPayload["pois"];
-  mode?: "polygon" | "marker" | "poi" | "navigate";
-  readOnly?: boolean;
-  onPolygonChange?: (polygon: Coordinates[]) => void;
-  onSetMarker?: (marker: Coordinates) => void;
-  onAddPoi?: (position: Coordinates) => void;
-  onMovePoi?: (index: number, position: Coordinates) => void;
+    polygon: Coordinates[];
+    otherPolygons?: Coordinates[][];
+    marker: Coordinates | null;
+    pois?: PropertyLocationPayload['pois'];
+    mode?: 'polygon' | 'marker' | 'poi' | 'navigate';
+    readOnly?: boolean;
+    onPolygonChange?: (polygon: Coordinates[]) => void;
+    onSetMarker?: (marker: Coordinates) => void;
+    onAddPoi?: (position: Coordinates) => void;
+    onMovePoi?: (index: number, position: Coordinates) => void;
 };
 
-const DEFAULT_CENTER: Coordinates = { lat: 59.3293, lng: 18.0686 };
-
-export function usePropertyMap(options: PropertyMapOptions) {
-  const elementRef = useRef<HTMLDivElement>(null);
-  const latest = useRef(options);
-  const polygonRef = useRef<google.maps.Polygon | null>(null);
-  const pathRef = useRef<google.maps.MVCArray<google.maps.LatLng> | null>(null);
-  const syncing = useRef(false);
-  const fitted = useRef<string | null>(null);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [mapSize, setMapSize] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => { latest.current = options; }, [options]);
-
-  useEffect(() => {
-    let disposed = false;
-    const authError = () => setError(mapsAuthErrorMessage);
-    window.addEventListener(mapsAuthErrorEvent, authError);
-    let overlay: google.maps.Polygon | null = null;
-    const listeners: google.maps.MapsEventListener[] = [];
-    void loadGoogleMaps().then(() => {
-      if (disposed || !elementRef.current) return;
-      const instance = new google.maps.Map(elementRef.current, {
-        center: DEFAULT_CENTER, zoom: 6, mapId: googleMapsMapId,
-        streetViewControl: false, mapTypeControl: true, fullscreenControl: false,
-        clickableIcons: false, gestureHandling: "cooperative",
-      });
-      // Keep one explicit ring even when it has no vertices. An empty paths array
-      // can leave Polygon.getPath() undefined.
-      const path = new google.maps.MVCArray<google.maps.LatLng>(
-        latest.current.polygon.map(point => new google.maps.LatLng(point)),
-      );
-      overlay = new google.maps.Polygon({
-        map: instance, paths: new google.maps.MVCArray([path]),
-        strokeColor: "#14532d", strokeWeight: 3, fillColor: "#14532d", fillOpacity: 0.18,
-      });
-      // Keep this same MVCArray attached to the overlay, listeners and ref.
-      // setPath with a plain array would replace it and leave edits invisible.
-      polygonRef.current = overlay;
-      pathRef.current = path;
-      const change = (): void => {
-        if (!syncing.current && !latest.current.readOnly) latest.current.onPolygonChange?.(path.getArray().map(point => point.toJSON()));
-      };
-      for (const event of ["set_at", "insert_at", "remove_at"]) listeners.push(path.addListener(event, change));
-      const click = (event: google.maps.MapMouseEvent): void => {
-        const current = latest.current;
-        if (current.readOnly || !event.latLng) return;
-        const point = event.latLng.toJSON();
-        if (current.mode === "polygon") current.onPolygonChange?.([...current.polygon, point]);
-        if (current.mode === "marker") current.onSetMarker?.(point);
-        if (current.mode === "poi") current.onAddPoi?.(point);
-      };
-      listeners.push(instance.addListener("click", click));
-      listeners.push(overlay.addListener("click", (event: google.maps.PolyMouseEvent) => {
-        if (event.vertex === undefined && event.edge === undefined) click(event);
-      }));
-      listeners.push(overlay.addListener("contextmenu", (event: google.maps.PolyMouseEvent) => {
-        if (!latest.current.readOnly && latest.current.mode === "polygon" && event.vertex !== undefined) path.removeAt(event.vertex);
-      }));
-      fitted.current = null;
-      setMap(instance);
-    }).catch((reason: unknown) => {
-      console.error("Google Maps kunde inte initieras.", reason);
-      if (!disposed) setError(reason instanceof Error ? reason.message : "Google Maps kunde inte laddas.");
-    });
-    return () => {
-      disposed = true;
-      window.removeEventListener(mapsAuthErrorEvent, authError);
-      listeners.forEach(listener => listener.remove());
-      overlay?.setMap(null);
-      polygonRef.current = null;
-      pathRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!map || !elementRef.current) return;
-    const observer = new ResizeObserver(([entry]) => {
-      if (entry.contentRect.width && entry.contentRect.height) setMapSize(entry.contentRect.width + "," + entry.contentRect.height);
-    });
-    observer.observe(elementRef.current);
-    return () => observer.disconnect();
-  }, [map]);
-
-  useEffect(() => {
-    const overlay = polygonRef.current;
-    const path = pathRef.current;
-    if (!map || !overlay || !path) return;
-    overlay.setEditable(!options.readOnly && options.mode === "polygon");
-    overlay.setOptions({ clickable: !options.readOnly && options.mode === "polygon" });
-    // Google can invalidate Maps objects after an asynchronous authorization failure.
-    const vertices = path.getArray();
-    if (!Array.isArray(vertices)) {
-      setError("Kartan är inte tillgänglig. Kontrollera Google Maps-konfigurationen. Övriga fastighetsuppgifter kan fortfarande sparas.");
-      setMap(null);
-      return;
-    }
-    const current = vertices.map(point => point.toJSON());
-    if (JSON.stringify(current) === JSON.stringify(options.polygon)) return;
-    syncing.current = true;
-    try {
-      path.clear();
-      options.polygon.forEach(point => path.push(new google.maps.LatLng(point)));
-    } finally {
-      syncing.current = false;
-    }
-  }, [map, options.polygon, options.mode, options.readOnly]);
-
-  useEffect(() => {
-    if (!map) return;
-    const overlays = options.otherPolygons?.map(paths => new google.maps.Polygon({
-      map, paths, clickable: false, strokeColor: "#14532d", fillColor: "#14532d", fillOpacity: 0.18,
-    })) ?? [];
-    return () => overlays.forEach(overlay => overlay.setMap(null));
-  }, [map, options.otherPolygons]);
-
-  useEffect(() => {
-    if (!map) return;
-    const markers: google.maps.marker.AdvancedMarkerElement[] = [];
-    const removeListeners: Array<() => void> = [];
-    const createMarker = (position: Coordinates, title: string, label: string | null, move?: (point: Coordinates) => void): void => {
-      const marker = new google.maps.marker.AdvancedMarkerElement({
-        map, position, title, gmpDraggable: !options.readOnly && !!move,
-        collisionBehavior: google.maps.CollisionBehavior.REQUIRED,
-      });
-      if (label !== null) {
-        const flag = document.createElement("span");
-        flag.className = "map-poi-flag";
-        flag.textContent = `⚑ ${label}`;
-        marker.append(flag);
-      }
-      if (!options.readOnly && move) {
-        const dragEnd = () => {
-          const position = marker.position;
-          if (position) move({
-            lat: typeof position.lat === "function" ? position.lat() : position.lat,
-            lng: typeof position.lng === "function" ? position.lng() : position.lng,
-          });
-        };
-        marker.addEventListener("gmp-dragend", dragEnd);
-        removeListeners.push(() => marker.removeEventListener("gmp-dragend", dragEnd));
-      }
-      markers.push(marker);
-    };
-    if (options.marker) createMarker(options.marker, "Fastighetens huvudposition", null,
-      options.onSetMarker ? point => latest.current.onSetMarker?.(point) : undefined);
-    options.pois?.forEach((poi, index) => createMarker(
-      { lat: poi.latitude, lng: poi.longitude }, `${poi.name}: ${poi.description}`, poi.name,
-      options.onMovePoi ? point => latest.current.onMovePoi?.(index, point) : undefined,
-    ));
-    return () => {
-      removeListeners.forEach(remove => remove());
-      markers.forEach(marker => { marker.map = null; });
-    };
-  }, [map, options.marker, options.pois, options.readOnly, options.onSetMarker, options.onMovePoi]);
-
-  useEffect(() => {
-    if (!map) return;
-    const points = [
-      ...options.polygon, ...(options.otherPolygons?.flat() ?? []),
-      ...(options.marker ? [options.marker] : []),
-      ...(options.pois?.map(poi => ({ lat: poi.latitude, lng: poi.longitude })) ?? []),
+export function mapPoints(options: PropertyMapOptions): Coordinates[] {
+    return [
+        ...options.polygon,
+        ...(options.otherPolygons?.flat() ?? []),
+        ...(options.marker ? [options.marker] : []),
+        ...(options.pois?.map((poi) => ({ lat: poi.latitude, lng: poi.longitude })) ?? []),
     ];
-    const signature = JSON.stringify(points) + (options.readOnly ? mapSize : "");
-    if (options.readOnly ? fitted.current === signature : fitted.current !== null) return;
-    if (!points.length) {
-      fitted.current = signature;
-      if (options.readOnly) { map.setCenter(DEFAULT_CENTER); map.setZoom(6); }
-      return;
-    }
-    fitted.current = signature;
-    const bounds = new google.maps.LatLngBounds();
-    points.forEach(point => bounds.extend(point));
-    if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
-      map.setCenter(points[0]);
-      map.setZoom(15);
-    } else {
-      map.fitBounds(bounds, { top: 48, right: 80, bottom: 40, left: 80 });
-    }
-  }, [map, options.polygon, options.otherPolygons, options.marker, options.pois, options.readOnly, mapSize]);
-  return { elementRef, map, error };
+}
+
+export function usePropertyMap(
+    options: PropertyMapOptions,
+    createMap: MapFactory = mapRuntime.createMap,
+) {
+    const elementRef = useRef<HTMLDivElement>(null);
+    const latest = useRef(options);
+    const fitted = useRef<string | null>(null);
+    const [map, setMap] = useState<MapAdapter | null>(null);
+    const [mapSize, setMapSize] = useState('');
+    const [revision, setRevision] = useState(0);
+    const [error, setError] = useState<MapIssue | null>(null);
+
+    useEffect(() => {
+        latest.current = options;
+    }, [options]);
+
+    useEffect(() => {
+        let disposed = false;
+        let instance: MapAdapter | undefined;
+        let frame = 0;
+        const cleanups: Array<() => void> = [];
+        const element = elementRef.current;
+        if (!element) {
+            return;
+        }
+        setError(null);
+        setMap(null);
+
+        // Each asynchronous initialization owns its own DOM host.
+        const host = document.createElement('div');
+        host.className = 'map-engine';
+        element.append(host);
+        void createMap(host, (issue) => {
+            if (disposed) {
+                return;
+            }
+            setError((current) => (current?.kind === 'fatal' ? current : issue));
+        })
+            .then((adapter) => {
+                if (disposed) {
+                    adapter.destroy();
+
+                    return;
+                }
+                instance = adapter;
+                cleanups.push(
+                    adapter.onViewChange(() => {
+                        if (frame) {
+                            return;
+                        }
+                        frame = requestAnimationFrame(() => {
+                            frame = 0;
+                            if (!disposed) {
+                                setRevision((value) => value + 1);
+                            }
+                        });
+                    }),
+                );
+                cleanups.push(
+                    adapter.onClick((point) => {
+                        const current = latest.current;
+                        if (current.readOnly) {
+                            return;
+                        }
+                        if (current.mode === 'polygon') {
+                            const polygon = editPolygon(current.polygon, { type: 'add', position: point });
+                            // Consecutive input events may arrive before React commits props.
+                            latest.current = { ...current, polygon };
+                            current.onPolygonChange?.(polygon);
+                        }
+                        if (current.mode === 'marker') {
+                            current.onSetMarker?.(point);
+                        }
+                        if (current.mode === 'poi') {
+                            current.onAddPoi?.(point);
+                        }
+                    }),
+                );
+                fitted.current = null;
+                setMap(adapter);
+            })
+            .catch(() => {
+                if (!disposed) {
+                    setError({
+                        kind: 'fatal',
+                        message:
+                            'Kartan kunde inte startas. Kontrollera kartkonfigurationen och anslutningen.',
+                    });
+                }
+            });
+
+        return () => {
+            disposed = true;
+            host.remove();
+            cancelAnimationFrame(frame);
+            cleanups.forEach((cleanup) => cleanup());
+            instance?.destroy();
+        };
+    }, [createMap]);
+
+    useEffect(() => {
+        if (!map || !elementRef.current) {
+            return;
+        }
+        const observer = new ResizeObserver(([entry]) => {
+            if (!entry.contentRect.width || !entry.contentRect.height) {
+                return;
+            }
+            map.resize();
+            setMapSize(`${entry.contentRect.width},${entry.contentRect.height}`);
+        });
+        observer.observe(elementRef.current);
+
+        return () => observer.disconnect();
+    }, [map]);
+
+    useEffect(() => {
+        if (!map) {
+            return;
+        }
+        const points = mapPoints(options);
+        const signature = JSON.stringify(points) + (options.readOnly ? mapSize : '');
+        if (options.readOnly ? fitted.current === signature : fitted.current !== null) {
+            return;
+        }
+        fitted.current = signature;
+        fitProperty(map, points);
+    }, [map, options, mapSize]);
+
+    return { elementRef, map, error, revision };
 }

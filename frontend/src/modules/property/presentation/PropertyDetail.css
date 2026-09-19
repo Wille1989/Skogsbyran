@@ -301,7 +301,7 @@
         border-radius: 14px;
         background: var(--sage-100);
 
-        .google-map {
+        .map-viewport {
             height: clamp(320px, 34vw, 460px);
             min-height: 0;
             border-radius: 0;
