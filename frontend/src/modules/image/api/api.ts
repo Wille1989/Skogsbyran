@@ -45,12 +45,14 @@ export function buildUploadFormData(images: NewImageFile[]): FormData {
 
 export async function uploadImages({propertyId, images, onProgress, onBatchSaved}: UploadImagesInput): Promise<ImageFile[]> {
       onProgress?.({ fraction: 0, title: "Förbereder " + images.length + " bilder", detail: "Delar upp bilderna i bildserier." });
+      
       const batches = batchImages(images);
       const totalBytes = images.reduce((sum, image) => sum + image.file.size, 0);
       let confirmedBytes = 0;
       let confirmedImages = 0;
       let uploaded: ImageFile[] = [];
       const megabytes = (bytes: number) => (bytes / (1024 * 1024)).toLocaleString("sv-SE", { maximumFractionDigits: 1 });
+      
       for (const [index, batch] of batches.entries()) {
             const batchBytes = batch.reduce((sum, image) => sum + image.file.size, 0);
             const series = "Bildserie " + (index + 1) + " av " + batches.length + " · " + batch.length + " bilder";

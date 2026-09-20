@@ -11,7 +11,7 @@ function Navbar() {
       <div className="inner-header">
         <div className="header-logo">
           <NavLink to="/" end className="site-brand" aria-label="Gå till startsidan">
-            {isHome ? <h1 id="site-header-title">Skogsbyrån</h1> : <span className="site-wordmark">Skogsbyrån</span>}
+            {isHome ? <h1 id="site-header-title">Skogsbyrån Jönköping</h1> : <span className="site-wordmark">Skogsbyrån</span>}
           </NavLink>
         </div>
 
