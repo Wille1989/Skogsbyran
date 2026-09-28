@@ -6,11 +6,6 @@ export const plannedEvents = [
     { day: "22", month: "okt", title: "Värdering", property: "Granliden 3, Hudiksvall", time: "13:00–15:00", category: "Värdering", tone: "amber" },
     { day: "25", month: "okt", title: "Uppföljning med kund", property: "Tallheden 7, Härnösand", time: "11:00", category: "Möte", tone: "green" },
 ];
-export const quickStatus = [
-    { title: "Saknar pris", count: 3, tone: "red" },
-    { title: "Saknar bilder", count: 5, tone: "amber" },
-    { title: "Ej publicerade", count: 2, tone: "neutral" },
-];
 
 export type CompletenessPreview = { percent: number; warnings: string[] };
 export const completenessExamples: CompletenessPreview[] = [

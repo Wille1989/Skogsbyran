@@ -2,8 +2,8 @@ import { RecentActivity } from "@/modules/activity/components/RecentActivity";
 import { useAnalyticsStatistics } from "@/modules/analytics/hooks/queries";
 import type { StatisticsPeriod } from "@/modules/analytics/types/types";
 import { useState } from "react";
-import { IconPointer, IconUsers, IconCalendar, IconChartPie, IconFileDescription, IconPhoto, IconAlertTriangle } from "@tabler/icons-react";
-import { plannedEvents, quickStatus } from "../fixtures/overviewFixtures";
+import { IconPointer, IconUsers, IconCalendar, IconPhoto } from "@tabler/icons-react";
+import { plannedEvents } from "../fixtures/overviewFixtures";
 
 const periods: { value: StatisticsPeriod; label: string; days: number }[] = [
     { value: "week", label: "Vecka", days: 7 }, { value: "month", label: "Månad", days: 30 },
@@ -22,7 +22,7 @@ export function OverviewPage() {
     ];
     return <div className="admin-overview">
         <header className="admin-page-heading"><div><span className="admin-eyebrow">ADMIN / ÖVERSIKT</span><h1>Översikt</h1><p>Här kan du se aktivitet, besöksstatistik och planering för dina fastigheter.</p></div></header>
-        <p className="admin-notice"><strong>Delvis exempeldata.</strong> Planerade händelser och snabbstatus visar fortfarande exempel.</p>
+        <p className="admin-notice"><strong>Delvis exempeldata.</strong> Planerade händelser visar fortfarande exempel.</p>
         <section className="admin-card admin-statistics" aria-labelledby="statistics-title">
             <div className="admin-card-heading"><h2 id="statistics-title">Statistik</h2><div className="admin-tabs" aria-label="Statistikperiod">{periods.map(item => <button type="button" key={item.value} aria-pressed={period === item.value} onClick={() => setPeriod(item.value)}>{item.label}</button>)}</div></div>
             <p>Senaste {days} dagarna. Besök räknas per sidladdning, inte som unika personer.</p>
@@ -40,12 +40,7 @@ export function OverviewPage() {
                     <div className="admin-event-copy"><strong>{event.title}</strong><span>{event.property}</span><small>Kl. {event.time}</small></div><span className={`admin-badge tone-${event.tone}`}>{event.category}</span>
                 </li>)}</ul>
             </section>
-            <div className="admin-overview-side">
-                <RecentActivity />
-                <section className="admin-card"><div className="admin-card-heading"><h2><IconChartPie />Snabbstatus</h2><span className="admin-example-label">Exempel</span></div>
-                    <ul className="admin-quick-list">{quickStatus.map((item, index) => { const Icon = [IconAlertTriangle, IconPhoto, IconFileDescription][index]; return <li key={item.title}><span className={`admin-round-icon tone-${item.tone}`}><Icon size={24} /></span><div><strong>{item.title}</strong><span>{item.count} fastigheter</span></div></li>; })}</ul>
-                </section>
-            </div>
+            <RecentActivity />
         </div>
     </div>;
 }
