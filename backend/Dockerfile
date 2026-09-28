@@ -38,7 +38,8 @@ RUN composer install \
     --optimize-autoloader \
     --no-scripts
 
-RUN chown -R www-data:www-data storage bootstrap/cache
+RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
 # Apache ska serva Laravel från /public
 RUN sed -ri \

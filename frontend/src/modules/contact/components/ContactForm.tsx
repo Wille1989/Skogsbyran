@@ -5,6 +5,7 @@ import { ApiError } from '@/shared/api/apiFetch';
 import { sendContact, type ContactValues } from '../api/api';
 
 export function ContactForm() {
+    const confirmation = useRef<HTMLDialogElement>(null);
     const [feedback, setFeedback] = useState<{ message: string; failed: boolean } | null>(null);
     const sending = useRef(false);
     const { register, handleSubmit, reset, setError, formState: { errors, isSubmitting } } = useForm<ContactValues>({
@@ -20,6 +21,7 @@ export function ContactForm() {
             const response = await sendContact(values);
             reset();
             setFeedback({ message: response.message, failed: false });
+            confirmation.current?.showModal();
         } catch (error) {
             if (error instanceof ApiError && error.status === 422) {
                 const details = error.details;
@@ -90,6 +92,12 @@ export function ContactForm() {
             </div>
             <div className="form-actions"><button type="submit" className="form-submit" disabled={isSubmitting}>{isSubmitting ? 'Skickar…' : 'Skicka meddelande'}</button></div>
             {feedback && <p className={feedback.failed ? 'form-error' : undefined} role={feedback.failed ? 'alert' : 'status'}>{feedback.message}</p>}
+            <dialog ref={confirmation} className="contact-confirmation" aria-labelledby="contact-confirmation-title" aria-describedby="contact-confirmation-description" onClose={event => event.stopPropagation()}>
+                <span className="contact-confirmation-icon" aria-hidden="true">✓</span>
+                <h2 id="contact-confirmation-title">Tack för ditt meddelande!</h2>
+                <p id="contact-confirmation-description">Ditt meddelande har skickats. Vi återkommer så snart vi kan.</p>
+                <button type="button" className="contact-close" autoFocus onClick={() => confirmation.current?.close()}>Stäng</button>
+            </dialog>
         </form>
     );
 }
