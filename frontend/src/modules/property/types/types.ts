@@ -24,7 +24,7 @@ export type ResponseGetProperties = {
 };
 
 export type PropertyListingImage = Pick<ImageFile, "imageId"> & {
-    urls: Pick<ImageFile["urls"], "large">;
+    urls: Pick<ImageFile["urls"], "large"> & Partial<Pick<ImageFile["urls"], "medium">>;
 };
 
 export type PropertyListingItem = {

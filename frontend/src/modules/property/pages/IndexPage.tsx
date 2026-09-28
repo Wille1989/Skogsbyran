@@ -52,8 +52,8 @@ export function IndexPage() {
             <Link className="home-about-link" to="/om-oss">Läs mer om Skogsbyrån <IconArrowRight size={20} aria-hidden="true" /></Link>
           </div>
           <div className="home-about-images" aria-hidden="true">
-            <div className="home-about-landscape"><img src="/images/landscape.png" alt="" loading="lazy" /></div>
-            <img className="home-about-detail" src="/images/woodland.webp" alt="" loading="lazy" />
+            <div className="home-about-landscape"><img src="/images/landscape.webp" alt="" loading="lazy" decoding="async" /></div>
+            <img className="home-about-detail" src="/images/woodland-1280.webp" alt="" loading="lazy" decoding="async" />
             <p className="home-about-note">Skog, mark<br />och möjligheter.</p>
           </div>
         </div>

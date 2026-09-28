@@ -17,7 +17,12 @@ export function PropertyCard({ property }: PropertyCardProps) {
         <div className="image-frame">
           <span className="status">{listingStatusLabels[property.details.listingStatus]}</span>
           {primaryImage ? (
-            <img src={primaryImage.urls.large} alt={property.details.title} loading="lazy" decoding="async" />
+            <img
+                src={primaryImage.urls.medium || primaryImage.urls.large}
+                srcSet={primaryImage.urls.medium ? `${primaryImage.urls.medium} 800w, ${primaryImage.urls.large} 1600w` : undefined}
+                sizes="(max-width: 760px) calc(100vw - 58px), (max-width: 1368px) calc(54.5vw - 40px), 705px"
+                alt={property.details.title} loading="lazy" decoding="async"
+            />
           ) : <span className="image-placeholder">Bild saknas</span>}
         </div>
         <div className="body">

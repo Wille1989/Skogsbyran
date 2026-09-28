@@ -224,6 +224,7 @@ final class PropertyPresenter
             'imageId' => (string) $image->id,
             'urls' => [
 
+                'medium' => $urls[ImageVariantName::Medium->value] ?? $urls[ImageVariantName::Large->value],
                 'large' => $urls[ImageVariantName::Large->value],
             ],
         ];
