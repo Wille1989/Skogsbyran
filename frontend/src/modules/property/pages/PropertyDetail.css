@@ -302,7 +302,8 @@
         background: var(--sage-100);
 
         .map-viewport {
-            height: clamp(320px, 34vw, 460px);
+            height: auto;
+            aspect-ratio: 1 / 1;
             min-height: 0;
             border-radius: 0;
         }
