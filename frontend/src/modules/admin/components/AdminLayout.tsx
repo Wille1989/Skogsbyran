@@ -1,6 +1,6 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { IconHome, IconBuildingEstate, IconExternalLink, IconLogout, IconMenu2, IconX, IconCircleCheck } from "@tabler/icons-react";
+import { IconHome, IconExternalLink, IconLogout, IconMenu2, IconX, IconCircleCheck } from "@tabler/icons-react";
 import { useAuth } from "@/modules/auth/hooks/auth.hooks.ts";
 import "./AdminLayout.css";
 
@@ -23,8 +23,7 @@ export function AdminLayout() {
         <aside id="admin-sidebar" className={`admin-sidebar${menuOpen ? " is-open" : ""}`}>
             <Link to="/admin" className="admin-brand" onClick={() => setMenuOpen(false)}>Skogsbyrån<span>ADMIN</span></Link>
             <nav aria-label="Administration" onClick={() => setMenuOpen(false)}>
-                <NavLink to="/admin" end><IconHome size={23} />Översikt</NavLink>
-                <NavLink to="/admin/properties"><IconBuildingEstate size={23} />Fastigheter</NavLink>
+                <NavLink to="/admin"><IconHome size={23} />Översikt</NavLink>
                 <Link to="/"><IconExternalLink size={23} />Visa webbplatsen</Link>
             </nav>
             <div className="admin-sidebar-footer">

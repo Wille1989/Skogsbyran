@@ -57,7 +57,7 @@ export function PropertyForm(props: Props) {
     const primary = props.imageFiles.images.find(image => image.isPrimary);
     const cover = primary ? ("file" in primary ? primary.previewUrl : primary.urls.medium) : null;
     return <div className="admin-property-form" aria-busy={props.isSaving}>
-        <Link to="/admin/properties" className="admin-back"><IconArrowLeft size={17} />Tillbaka till fastigheter</Link>
+        <Link to="/admin" className="admin-back"><IconArrowLeft size={17} />Tillbaka till översikten</Link>
         <header className="admin-page-heading"><div><h1>{props.title}</h1><p>{props.subtitle || "Fyll i informationen nedan för att skapa fastigheten."}</p></div><div className="admin-property-actions">{props.onDelete && <button type="button" className="admin-button is-danger" disabled={props.isSaving || props.isMapSaving} onClick={props.onDelete}>{props.isDeleting ? "Raderar..." : "Radera fastighet"}</button>}<button type="submit" form="property-form" className="admin-button is-primary" disabled={props.isSaving || props.isMapSaving || props.saveBlocked}><IconDeviceFloppy size={18} />{props.isDeleting ? "Raderar..." : props.isSaving ? "Sparar…" : props.submitLabel}</button></div></header>
         {props.error && <p className="admin-error" role="alert">{props.error}</p>}
         {props.saved && <p className="admin-notice" role="status">Förändringarna är sparade.</p>}

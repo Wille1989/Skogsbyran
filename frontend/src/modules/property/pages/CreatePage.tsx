@@ -55,6 +55,6 @@ export function CreatePage() {
     documents={<PendingDocuments documents={documents} onChange={setDocuments} />}
     error={validationError} progress={saveProgress}
     fieldErrors={failure?.fieldErrors}
-    reviewUrl={createdId ? "/admin/properties/" + createdId + "/edit" : failure?.requiresReview ? failure.propertyId ? "/admin/properties/" + failure.propertyId + "/edit" : "/admin/properties" : undefined}
+    reviewUrl={createdId ? "/admin/properties/" + createdId + "/edit" : failure?.requiresReview ? failure.propertyId ? "/admin/properties/" + failure.propertyId + "/edit" : "/admin" : undefined}
   />;
 }

@@ -144,7 +144,7 @@ export function EditPage() {
     deleteProperty.mutate(property.propertyId, {
       onSuccess: () => {
         notify(`Fastigheten ”${property.details.title}” har raderats.`);
-        navigate("/admin/properties", { replace: true });
+        navigate("/admin", { replace: true });
       },
       onError: () => { deleting.current = false; },
     });

@@ -8,7 +8,7 @@ import { LoadingSpinner } from "@/shared/components/LoadingSpinner.tsx";
  * REACT SPECIFIK
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Routes, Route, Outlet, Link } from 'react-router-dom';
+import { Routes, Route, Outlet, Link, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 /**
  * TSX
@@ -25,7 +25,6 @@ const EditPage = lazy(() => import("@/modules/property/pages/EditPage.tsx").then
 
 const AdminLayout = lazy(() => import("@/modules/admin/components/AdminLayout").then(module => ({ default: module.AdminLayout })));
 const OverviewPage = lazy(() => import("@/modules/admin/pages/OverviewPage").then(module => ({ default: module.OverviewPage })));
-const PropertiesPage = lazy(() => import("@/modules/admin/pages/PropertiesPage").then(module => ({ default: module.PropertiesPage })));
 
 const clientQuery = new QueryClient();
 
@@ -37,7 +36,7 @@ function App() {
             <Routes>
               <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
                 <Route index element={<OverviewPage />} />
-                <Route path="properties" element={<PropertiesPage />} />
+                <Route path="properties" element={<Navigate to="/admin" replace />} />
                 <Route path="properties/create" element={<CreatePage />} />
                 <Route path="properties/:propertyId/edit" element={<EditPage />} />
               </Route>
