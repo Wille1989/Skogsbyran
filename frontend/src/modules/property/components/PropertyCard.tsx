@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { recordEvent } from "@/modules/analytics/api/api";
 import { type PropertyListingItem } from "@/modules/property/types/types";
-import { formatHectares, formatPrice, listingStatusLabels } from "../helpers/propertyListing";
+import { formatHectares, formatPrice, listingStatusLabels, locationLabel } from "../helpers/propertyListing";
 import { IconArrowRight, IconMapPin, IconTrees } from "@tabler/icons-react";
 import "./PropertyCard.css";
 
@@ -9,7 +9,7 @@ type PropertyCardProps = { property: PropertyListingItem };
 
 export function PropertyCard({ property }: PropertyCardProps) {
   const primaryImage = property.primaryImage;
-  const location = property.location?.municipality;
+  const location = locationLabel(property);
 
   return (
     <article className="property-card">
