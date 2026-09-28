@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import type { MapMode } from '../types/types';
+import type { MapMode, PropertyMapOptions } from '../types/types';
 import {
     IconSearch,
     IconPolygon,
@@ -58,6 +58,7 @@ export function PropertyMapEditor({
     const [tool, setTool] = useState<Tool>('navigate');
     const [selectedArea, setSelectedArea] = useState(0);
     const [movingPoi, setMovingPoi] = useState<string | null>(null);
+    const [nameFocus, setNameFocus] = useState<PropertyMapOptions['nameFocus']>(null);
     const area = areas[selectedArea];
     const marker =
         location.latitude !== null && location.longitude !== null
@@ -78,6 +79,7 @@ export function PropertyMapEditor({
     const updatePoi = (uiId: string, patch: Partial<LocationPoiDraft>) =>
         onLocationChange({ ...location, pois: updatePoiDraft(location.pois, uiId, patch) });
     const activate = (next: Tool) => {
+        setNameFocus(null);
         setMovingPoi(null);
         if (next === 'polygon' && !area) {
             onAreasChange([...areas, { name: `Område ${areas.length + 1}`, polygon: [] }]);
@@ -89,14 +91,14 @@ export function PropertyMapEditor({
         tool === 'search'
             ? 'Sök och välj en adress för att sätta huvudpositionen.'
             : tool === 'polygon'
-              ? 'Klicka för hörn. Dra hörn eller mittpunkter. Högerklicka på ett hörn för att ta bort det.'
+              ? 'Klicka för hörn. Dra hörn eller mittpunkter. Avsluta verktyget för att namnge området på kartan.'
               : tool === 'poi'
                 ? movingPoi
                     ? 'Klicka för att flytta vald POI.'
-                    : 'Klicka för att sätta ut en POI.'
+                    : 'Klicka för att sätta ut en POI och skriv namnet direkt i flaggan. Dra flaggikonen för att flytta den.'
                 : tool === 'marker'
                   ? 'Klicka för att sätta huvudpositionen.'
-                  : 'Inget verktyg aktivt. Flytta och zooma kartan.';
+                  : 'Flytta och zooma kartan. Klicka på ett namn för att ändra det direkt.';
 
     return (
         <>
@@ -119,6 +121,7 @@ export function PropertyMapEditor({
                         setOpen(true);
                         setTool('navigate');
                         setMovingPoi(null);
+                        setNameFocus(null);
                         dialog.current?.showModal();
                     }}
                 >
@@ -149,6 +152,7 @@ export function PropertyMapEditor({
                     setPreviewSnapshot(null);
                     setTool('navigate');
                     setMovingPoi(null);
+                    setNameFocus(null);
                 }}
             >
                 <header className="property-area-map-modal-header">
@@ -199,7 +203,12 @@ export function PropertyMapEditor({
                                     type="button"
                                     className="admin-button"
                                     disabled={tool === 'navigate'}
-                                    onClick={() => activate('navigate')}
+                                    onClick={() => {
+                                        activate('navigate');
+                                        if (tool === 'polygon' && area?.polygon.length >= 3) {
+                                            setNameFocus({ kind: 'area', index: selectedArea });
+                                        }
+                                    }}
                                 >
                                     Avsluta verktyg
                                 </button>
@@ -268,6 +277,12 @@ export function PropertyMapEditor({
                             )}
                         </div>
                         <PropertyAreaMap
+                            areas={areas}
+                            nameFocus={nameFocus}
+                            onAreaNameChange={(index, name) => onAreasChange(
+                                areas.map((item, i) => i === index ? { ...item, name } : item)
+                            )}
+                            onPoiNameChange={(index, name) => updatePoi(location.pois[index].uiId, { name })}
                             polygon={area?.polygon ?? []}
                             otherPolygons={areas
                                 .filter((_, index) => index !== selectedArea)
@@ -317,6 +332,7 @@ export function PropertyMapEditor({
                                         createPoi(position, location.pois.length + 1),
                                     ],
                                 });
+                                setNameFocus({ kind: 'poi', index: location.pois.length });
                             }}
                         />
                         <p className="map-draft-summary">

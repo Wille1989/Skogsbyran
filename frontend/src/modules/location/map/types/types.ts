@@ -62,7 +62,7 @@ export type MapViewState = {
 export type MapMode = 'polygon' | 'marker' | 'poi' | 'navigate';
 
 export type PropertyMapOptions = {
-    areas?: Pick<PropertyArea, 'id' | 'name' | 'polygon'>[];
+    areas?: (Pick<PropertyArea, 'name' | 'polygon'> & { id?: string })[];
     polygon: Coordinates[];
     otherPolygons?: Coordinates[][];
     marker: Coordinates | null;
@@ -73,6 +73,9 @@ export type PropertyMapOptions = {
     onSetMarker?: (marker: Coordinates) => void;
     onAddPoi?: (position: Coordinates) => void;
     onMovePoi?: (index: number, position: Coordinates) => void;
+    onAreaNameChange?: (index: number, name: string) => void;
+    onPoiNameChange?: (index: number, name: string) => void;
+    nameFocus?: { kind: 'area' | 'poi'; index: number } | null;
 };
 
 export type MapFilter = 'all' | 'area' | 'poi';

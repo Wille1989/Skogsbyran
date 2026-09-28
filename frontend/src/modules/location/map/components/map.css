@@ -602,6 +602,28 @@ body:has(.property-map-editor-dialog[open]) {
     flex-shrink: 0;
 }
 
+.admin-layout .map-overlays .map-name-input {
+    position: absolute;
+    transform: translateY(-100%);
+    width: 180px;
+    max-width: 45vw;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 2px solid #245b46;
+    border-radius: 5px;
+    background: #fcfaf5;
+    color: #24352f;
+    font: 600 13px/1.4 var(--body-font, sans-serif);
+    box-shadow: 0 2px 8px #0003;
+    pointer-events: auto;
+}
+
+.admin-layout .map-overlays .map-name-input:focus {
+    z-index: 5;
+    outline: 3px solid #c5a15a;
+    outline-offset: 2px;
+}
+
 .map-controls {
     position: absolute;
     top: 12px;

@@ -6,6 +6,8 @@ import { MapHandle } from './MapHandle';
 import { boundsFor } from '../helpers/map';
 import { fitProperty } from '../helpers/view';
 import { IconFlag } from '@tabler/icons-react';
+import { Fragment } from 'react';
+import { MapNameInput } from './MapNameInput';
 
 export function MapOverlays({ map, options }: { map: MapAdapter; options: PropertyMapOptions }) {
     const { editing, change } = usePolygonEditing(options);
@@ -33,7 +35,7 @@ export function MapOverlays({ map, options }: { map: MapAdapter; options: Proper
                     <polyline points={asPoints(primary)} className="map-polygon is-draft" />
                 )}
             </svg>
-            {options.readOnly && options.areas?.map((area, index) => {
+            {(options.readOnly || options.onAreaNameChange) && options.areas?.map((area, index) => {
                 const bounds = boundsFor(area.polygon);
                 if (!bounds || area.polygon.length < 3) return null;
                 const screen = map.project({
@@ -42,9 +44,19 @@ export function MapOverlays({ map, options }: { map: MapAdapter; options: Proper
                 });
                 if (!screen) return null;
                 const name = area.name.trim() || `Område ${index + 1}`;
+                if (!options.readOnly && options.onAreaNameChange) {
+                    return <MapNameInput
+                        key={area.id ?? index}
+                        screen={screen}
+                        name={area.name}
+                        label={`Namn på område ${index + 1}`}
+                        focus={options.nameFocus?.kind === 'area' && options.nameFocus.index === index}
+                        onChange={name => options.onAreaNameChange?.(index, name)}
+                    />;
+                }
                 return (
                     <button
-                        key={area.id}
+                        key={area.id ?? index}
                         type="button"
                         className="map-area-flag"
                         style={{ left: screen.x, top: screen.y }}
@@ -149,20 +161,28 @@ export function MapOverlays({ map, options }: { map: MapAdapter; options: Proper
 
                 return (
                     screen && (
-                        <MapHandle
-                            key={poi.id ?? index}
-                            map={map}
-                            position={position}
-                            screen={screen}
-                            kind="map-poi"
-                            text={poi.name}
-                            label={`${poi.name}${poi.description ? ': ' + poi.description : ''}`}
-                            onMove={
-                                !options.readOnly && options.mode === 'poi' && options.onMovePoi
-                                    ? (position) => options.onMovePoi?.(index, position)
-                                    : undefined
-                            }
-                        />
+                        <Fragment key={poi.id ?? index}>
+                            <MapHandle
+                                map={map}
+                                position={position}
+                                screen={screen}
+                                kind="map-poi"
+                                text={!options.readOnly && options.onPoiNameChange ? undefined : poi.name}
+                                label={`${poi.name}${poi.description ? ': ' + poi.description : ''}`}
+                                onMove={
+                                    !options.readOnly && options.mode === 'poi' && options.onMovePoi
+                                        ? (position) => options.onMovePoi?.(index, position)
+                                        : undefined
+                                }
+                            />
+                            {!options.readOnly && options.onPoiNameChange && <MapNameInput
+                                screen={{ x: screen.x + 32, y: screen.y }}
+                                name={poi.name}
+                                label={`Namn på POI ${index + 1}`}
+                                focus={options.nameFocus?.kind === 'poi' && options.nameFocus.index === index}
+                                onChange={name => options.onPoiNameChange?.(index, name)}
+                            />}
+                        </Fragment>
                     )
                 );
             })}
