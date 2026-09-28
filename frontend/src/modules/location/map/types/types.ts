@@ -62,6 +62,7 @@ export type MapViewState = {
 export type MapMode = 'polygon' | 'marker' | 'poi' | 'navigate';
 
 export type PropertyMapOptions = {
+    areas?: Pick<PropertyArea, 'id' | 'name' | 'polygon'>[];
     polygon: Coordinates[];
     otherPolygons?: Coordinates[][];
     marker: Coordinates | null;

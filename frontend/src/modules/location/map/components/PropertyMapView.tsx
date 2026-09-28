@@ -1,9 +1,9 @@
-import type { MapData, MapFilter } from '../types/types';
+import type { MapData, MapFilter, PropertyArea } from '../types/types';
 import { useState } from 'react';
 import { filterMapData } from '../helpers/mapPresentation';
 import { PropertyAreaMap } from './PropertyAreaMap';
 
-export function PropertyMapView({ data }: { data: MapData }) {
+export function PropertyMapView({ data, areas }: { data: MapData; areas: PropertyArea[] }) {
     const [filter, setFilter] = useState<MapFilter>('all');
     const visible = filterMapData(data, filter);
 
@@ -29,6 +29,7 @@ export function PropertyMapView({ data }: { data: MapData }) {
                 ))}
             </div>
             <PropertyAreaMap
+                areas={filter === 'poi' ? [] : areas}
                 polygon={visible.polygons[0] ?? []}
                 otherPolygons={visible.polygons.slice(1)}
                 marker={visible.marker}

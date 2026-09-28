@@ -99,6 +99,36 @@
     gap: 12px;
 }
 
+.map-area-flag {
+    position: absolute;
+    z-index: 3;
+    transform: translate(-50%, -100%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: min(240px, 65vw);
+    min-height: 44px;
+    padding: 10px 14px;
+    border: 2px solid #fcfaf5;
+    border-radius: 8px 8px 8px 0;
+    background: #143c2e;
+    color: #fff;
+    box-shadow: 0 3px 10px #0004;
+    font: 600 16px/1.3 var(--body-font, sans-serif);
+    text-align: left;
+    overflow-wrap: anywhere;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.map-area-flag svg { flex-shrink: 0; }
+.map-area-flag:hover { background: #24583f; }
+.map-area-flag:focus-visible {
+    outline: 3px solid #c5a15a;
+    outline-offset: 3px;
+    z-index: 4;
+}
+
 .area-stats {
     display: flex;
     flex-wrap: wrap;

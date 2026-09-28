@@ -60,8 +60,7 @@ export function ShowPage() {
       <section className="detail-map-section" aria-labelledby="detail-map-title">
         <h2 id="detail-map-title">Läge &amp; karta</h2>
         <p>{address ? address + '. ' : ''}{hasMap ? 'Utforska fastighetens läge och områden i kartan.' : 'Ingen kartdata har sparats för fastigheten.'}</p>
-        {hasMap && <div className="detail-map-frame"><Suspense fallback={<p role="status">Kartan hämtas…</p>}><PropertyMapView key={property.propertyId} data={{ polygons: areas.map(area => area.polygon), marker, pois: location?.pois ?? [] }} /></Suspense></div>}
-        {location?.pois.length ? <ul className="detail-map-pois">{location.pois.map((poi, index) => <li key={poi.id ?? index}><strong>{poi.name}</strong>{poi.description && <span> – {poi.description}</span>}</li>)}</ul> : null}
+        {hasMap && <div className="detail-map-frame"><Suspense fallback={<p role="status">Kartan hämtas…</p>}><PropertyMapView key={property.propertyId} areas={areas} data={{ polygons: areas.map(area => area.polygon), marker, pois: location?.pois ?? [] }} /></Suspense></div>}
       </section>
     </article>
   );

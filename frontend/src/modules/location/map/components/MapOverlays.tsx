@@ -3,6 +3,9 @@ import type { MapAdapter } from '../adapters/MapAdapter';
 
 import { usePolygonEditing } from '../hooks/usePolygonEditing';
 import { MapHandle } from './MapHandle';
+import { boundsFor } from '../helpers/map';
+import { fitProperty } from '../helpers/view';
+import { IconFlag } from '@tabler/icons-react';
 
 export function MapOverlays({ map, options }: { map: MapAdapter; options: PropertyMapOptions }) {
     const { editing, change } = usePolygonEditing(options);
@@ -30,6 +33,35 @@ export function MapOverlays({ map, options }: { map: MapAdapter; options: Proper
                     <polyline points={asPoints(primary)} className="map-polygon is-draft" />
                 )}
             </svg>
+            {options.readOnly && options.areas?.map((area, index) => {
+                const bounds = boundsFor(area.polygon);
+                if (!bounds || area.polygon.length < 3) return null;
+                const screen = map.project({
+                    lat: (bounds.north + bounds.south) / 2,
+                    lng: (bounds.east + bounds.west) / 2,
+                });
+                if (!screen) return null;
+                const name = area.name.trim() || `Område ${index + 1}`;
+                return (
+                    <button
+                        key={area.id}
+                        type="button"
+                        className="map-area-flag"
+                        style={{ left: screen.x, top: screen.y }}
+                        aria-label={`Zooma till ${name}`}
+                        title={`Zooma till ${name}`}
+                        onPointerDown={event => event.stopPropagation()}
+                        onDoubleClick={event => event.stopPropagation()}
+                        onClick={event => {
+                            event.stopPropagation();
+                            fitProperty(map, area.polygon);
+                        }}
+                    >
+                        <IconFlag size={22} aria-hidden="true" />
+                        <span>{name}</span>
+                    </button>
+                );
+            })}
             {editing &&
                 options.polygon.map((position, index) => {
                     const screen = map.project(position);
