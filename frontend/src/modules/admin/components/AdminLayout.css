@@ -8,6 +8,63 @@
     font-size: 14px;
 }
 
+.admin-notification-region {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 3000;
+    width: min(420px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.admin-notification {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--admin-green);
+    border-radius: 12px;
+    background: #f0f8f2;
+    color: #19452f;
+    box-shadow: 0 8px 30px rgb(0 0 0 / 18%);
+    pointer-events: auto;
+}
+
+.admin-notification > svg {
+    flex-shrink: 0;
+}
+
+.admin-notification p {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-weight: 600;
+}
+
+.admin-notification button {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.admin-notification button:hover {
+    background: #dceee1;
+}
+
+.admin-notification button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
 .admin-sidebar {
     position: fixed;
     inset: 0 auto 0 0;

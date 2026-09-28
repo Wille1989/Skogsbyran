@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useAdminNotification } from "@/modules/admin/hooks/useAdminNotification";
 import { createDefaultAreaDraft, buildAreaPayload } from "@/modules/location/map/helpers/areaDraft";
 import { useImageFiles } from "@/modules/image/hooks/useImageFiles";
 import { useCreatePropertyMutation } from "../hooks/mutations";
@@ -12,6 +13,7 @@ import { preparingProgress, PropertySaveError } from "../services/saveProgress";
 import { PropertyForm } from "@/modules/property/components/PropertyForm";
 
 export function CreatePage() {
+  const notify = useAdminNotification();
   const createProperty = useCreatePropertyMutation();
   const saving = useRef(false);
   const imageFiles = useImageFiles();
@@ -34,7 +36,10 @@ export function CreatePage() {
       const areas = areaDrafts.flatMap(draft => { const area = buildAreaPayload(draft); return area ? [area] : []; });
       createProperty.mutate({ details, images: imageChanges.newImages, areas,
         location: buildLocationPayload(location), documents, onProgress: setSaveProgress }, {
-        onSuccess: result => setCreatedId(result.property.propertyId),
+        onSuccess: result => {
+          setCreatedId(result.property.propertyId);
+          notify(`Fastigheten ”${result.property.details.title}” har skapats.`);
+        },
         onSettled: () => { saving.current = false; },
       });
     } catch (error) {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useAdminNotification } from "@/modules/admin/hooks/useAdminNotification";
 import { useNavigate, useParams } from "react-router-dom";
 import { preparingProgress, PropertySaveError } from "../services/saveProgress";
 import type { SavePropertyProgress } from "../types/types";
@@ -30,6 +31,7 @@ function initialDetails(property: ResponseProperty | undefined): FormDetails | n
 }
 
 export function EditPage() {
+  const notify = useAdminNotification();
   const { propertyId = "" } = useParams<{ propertyId: string }>();
   const { data, isPending, error } = usePropertyByIdQuery(propertyId);
   const saveChanges = useSavePropertyChangesMutation();
@@ -125,6 +127,7 @@ export function EditPage() {
             setDocuments(documentDraftsFromProperty(savedProperty));
             setPendingDocuments([]);
             setLoadedPropertyId(savedProperty.propertyId);
+            notify("Ändringarna har sparats.");
           },
         },
       );
@@ -139,7 +142,10 @@ export function EditPage() {
     if (deleting.current || saving.current || saveChanges.isPending) return;
     deleting.current = true;
     deleteProperty.mutate(property.propertyId, {
-      onSuccess: () => navigate("/admin/properties", { replace: true }),
+      onSuccess: () => {
+        notify(`Fastigheten ”${property.details.title}” har raderats.`);
+        navigate("/admin/properties", { replace: true });
+      },
       onError: () => { deleting.current = false; },
     });
   };

@@ -1,12 +1,20 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { useState } from "react";
-import { IconHome, IconBuildingEstate, IconExternalLink, IconLogout, IconMenu2, IconX } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { IconHome, IconBuildingEstate, IconExternalLink, IconLogout, IconMenu2, IconX, IconCircleCheck } from "@tabler/icons-react";
 import { useAuth } from "@/modules/auth/hooks/auth.hooks.ts";
 import "./AdminLayout.css";
 
 export function AdminLayout() {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [notification, setNotification] = useState<{ message: string } | null>(null);
     const { onLogout, loading, errorMessage } = useAuth();
+
+    useEffect(() => {
+        if (!notification) return;
+        const timer = window.setTimeout(() => setNotification(null), 6000);
+        return () => window.clearTimeout(timer);
+    }, [notification]);
+
     return <div className="admin-layout">
         <a className="admin-skip" href="#admin-content">Hoppa till innehåll</a>
         <button className="admin-menu-toggle" type="button" aria-expanded={menuOpen} aria-controls="admin-sidebar" onClick={() => setMenuOpen(!menuOpen)}>
@@ -25,6 +33,17 @@ export function AdminLayout() {
                 {errorMessage && <p role="alert">{errorMessage}</p>}
             </div>
         </aside>
-        <main id="admin-content" className="admin-content" tabIndex={-1}><Outlet /></main>
+        <main id="admin-content" className="admin-content" tabIndex={-1}>
+            <Outlet context={{ notify: (message: string) => setNotification({ message }) }} />
+        </main>
+        <div className="admin-notification-region" role="status" aria-live="polite" aria-atomic="true">
+            {notification && <div className="admin-notification">
+                <IconCircleCheck size={28} aria-hidden="true" />
+                <p>{notification.message}</p>
+                <button type="button" aria-label="Stäng bekräftelsen" onClick={() => setNotification(null)}>
+                    <IconX size={20} aria-hidden="true" />
+                </button>
+            </div>}
+        </div>
     </div>;
 }
