@@ -41,6 +41,9 @@ RUN composer install \
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
+RUN echo "ServerName skogsbyran.onrender.com" > /etc/apache2/conf-available/servername.conf \
+    && a2enconf servername
+
 # Apache ska serva Laravel från /public
 RUN sed -ri \
     's!/var/www/html!/var/www/html/public!g' \
