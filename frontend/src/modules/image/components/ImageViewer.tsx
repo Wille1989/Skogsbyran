@@ -154,6 +154,21 @@ export function ImageViewer({
                   ?.scrollIntoView({ block: "nearest", inline: "nearest" });
       }, [isLightboxOpen, safeActiveIndex]);
 
+      useEffect(() => {
+          if (!isLightboxOpen || images.length < 2) return;
+
+          const adjacentUrls = new Set([1, -1].map(step =>
+              images[calculateImageIndex(safeActiveIndex, step, images.length)].urls.large
+          ));
+
+          for (const url of adjacentUrls) {
+              const image = new Image();
+              image.decoding = "async";
+              image.fetchPriority = "low";
+              image.src = url;
+          }
+      }, [images, isLightboxOpen, safeActiveIndex]);
+
       if (!activeImage) {
             return null;
       }
