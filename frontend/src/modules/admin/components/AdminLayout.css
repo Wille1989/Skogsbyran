@@ -5,7 +5,7 @@
     min-height: 100vh;
     background: #f8f7f3;
     color: #222c29;
-    font-size: 14px;
+    font-size: 1.125rem;
 }
 
 .admin-notification-region {
@@ -88,7 +88,7 @@
     display: block;
     margin-top: 12px;
     color: #b8cfc4;
-    font: 400 12px/1 var(--body-font);
+    font: 400 1rem/1.2 var(--body-font);
     letter-spacing: 0.08em;
 }
 
@@ -140,7 +140,7 @@
     align-items: center;
     gap: 12px;
     margin: 0 12px 10px;
-    font-size: 13px;
+    font-size: 1.0625rem;
 }
 
 .admin-user > span {
@@ -151,7 +151,7 @@
     border-radius: 50%;
     background: #f4f7f4;
     color: var(--forest-950);
-    font-size: 12px;
+    font-size: 1rem;
 }
 
 .admin-content {
@@ -171,7 +171,7 @@
 
 .admin-page-heading h1 {
     margin: 12px 0 8px;
-    font-size: clamp(34px, 3.5vw, 49px);
+    font-size: calc(clamp(34px, 3.5vw, 49px) + 0.25rem);
     color: #172a22;
     line-height: 1.1;
 }
@@ -180,11 +180,11 @@
     margin: 0;
     max-width: none;
     color: var(--admin-muted);
-    font-size: 15px;
+    font-size: 1.1875rem;
 }
 
 .admin-eyebrow {
-    font-size: 11px;
+    font-size: 1rem;
     letter-spacing: 0.07em;
 }
 
@@ -203,7 +203,7 @@
     background: #fff;
     color: #28352f;
     font: inherit;
-    font-size: 13px;
+    font-size: 1.0625rem;
     font-weight: 500;
     cursor: pointer;
 }
@@ -266,13 +266,13 @@
     align-items: center;
     gap: 12px;
     margin: 0;
-    font-size: 23px;
+    font-size: 1.6875rem;
     line-height: 1.2;
 }
 
 .admin-card p {
     color: var(--admin-muted);
-    font-size: 12px;
+    font-size: 1rem;
     margin: 6px 0 16px;
 }
 
@@ -298,7 +298,7 @@
 .admin-list-note {
     max-width: none;
     color: #67716b;
-    font-size: 12px;
+    font-size: 1rem;
     line-height: 1.6;
 }
 
@@ -346,7 +346,7 @@
 
 .admin-metric strong {
     display: block;
-    font-size: 32px;
+    font-size: 2.25rem;
     font-weight: 600;
     line-height: 1.5;
     letter-spacing: -0.04em;
@@ -363,7 +363,7 @@
 
 .admin-metric small {
     color: var(--admin-muted);
-    font-size: 11px;
+    font-size: 1rem;
 }
 
 .admin-overview-grid {
@@ -393,14 +393,14 @@
 }
 
 .admin-activity-list strong {
-    font-size: 13px;
+    font-size: 1.0625rem;
     font-weight: 500;
 }
 
 .admin-activity-list span:not(.admin-round-icon),
 .admin-activity-list small {
     display: block;
-    font-size: 11px;
+    font-size: 1rem;
     color: var(--admin-muted);
 }
 
@@ -408,7 +408,7 @@
     display: inline-block;
     padding: 5px 11px;
     border-radius: 5px;
-    font-size: 11px;
+    font-size: 1rem;
     white-space: nowrap;
 }
 
@@ -484,7 +484,7 @@
     background: #fff;
     color: #28352f;
     font: inherit;
-    font-size: 12px;
+    font-size: 1rem;
     font-weight: 400;
     line-height: 1.5;
     box-shadow: none;
@@ -502,7 +502,7 @@
     border: 0;
     min-height: 38px;
     padding-left: 0;
-    font-size: 14px;
+    font-size: 1.125rem;
 }
 
 .admin-layout input[type="checkbox"] {
@@ -531,7 +531,7 @@
 .admin-property-table th {
     padding: 16px 20px;
     background: #fcfcfa;
-    font-size: 12px;
+    font-size: 1rem;
     font-weight: 500;
 }
 
@@ -544,7 +544,7 @@
 .admin-property-table td {
     padding: 12px 20px;
     border-top: 1px solid #e9eae7;
-    font-size: 12px;
+    font-size: 1rem;
 }
 
 .admin-property-table tr:hover td {
@@ -574,7 +574,7 @@
 
 .admin-property-name strong {
     display: block;
-    font-size: 14px;
+    font-size: 1.125rem;
     font-weight: 500;
 }
 
@@ -618,7 +618,7 @@
 .admin-pagination {
     padding: 22px;
     border-top: 1px solid var(--admin-border);
-    font-size: 12px;
+    font-size: 1rem;
     color: var(--admin-muted);
 }
 
@@ -637,12 +637,12 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-size: 12px;
+    font-size: 1rem;
     color: var(--admin-muted);
 }
 
 .admin-property-form .admin-page-heading h1 {
-    font-size: 36px;
+    font-size: 2.5rem;
 }
 
 .admin-form-sections {
@@ -680,7 +680,7 @@
 }
 
 .admin-layout :is(.form-field label, .form-field > span) {
-    font-size: 12px;
+    font-size: 1rem;
     font-weight: 500;
     color: #36423b;
 }
@@ -705,13 +705,13 @@
     border-radius: 4px;
     background: #edf5fb;
     color: #5b7482;
-    font-size: 11px;
+    font-size: 1rem;
 }
 
 .admin-cover > span {
     display: block;
     margin-bottom: 7px;
-    font-size: 12px;
+    font-size: 1rem;
 }
 
 .admin-cover > div {
@@ -738,7 +738,7 @@
     border: 1px dashed #d7ddd6;
     color: #879087;
     text-align: center;
-    font-size: 11px;
+    font-size: 1rem;
     border-radius: 5px;
 }
 
@@ -754,7 +754,7 @@
     border-radius: 18px;
     background: var(--admin-green);
     color: #fff;
-    font-size: 10px;
+    font-size: 1rem;
 }
 
 .admin-cover-badge svg,
@@ -776,11 +776,11 @@
     background: #fdfefd;
     border-radius: 5px;
     padding: 10px;
-    font-size: 11px;
+    font-size: 1rem;
 }
 
 .admin-documents .form-field > label {
-    font-size: 10px;
+    font-size: 1rem;
 }
 
 .admin-documents .pending-document-card > span {
@@ -799,7 +799,7 @@
     background: #fff;
     color: #33473b;
     font: inherit;
-    font-size: 11px;
+    font-size: 1rem;
     font-weight: 500;
     border-radius: 4px;
     padding: 9px 12px;
@@ -870,7 +870,7 @@
     left: 5px;
     bottom: 6px;
     padding: 3px 6px;
-    font-size: 9px;
+    font-size: 1rem;
 }
 
 .admin-image-menu {
@@ -919,7 +919,7 @@
     width: 100%;
     text-align: left;
     font: inherit;
-    font-size: 11px;
+    font-size: 1rem;
     cursor: pointer;
 }
 
@@ -999,7 +999,7 @@
     align-items: center;
     gap: 16px;
     margin-bottom: 20px;
-    font-size: 12px;
+    font-size: 1rem;
 }
 
 .admin-skip {
@@ -1042,7 +1042,7 @@
     }
 
     .admin-brand {
-        font-size: 28px;
+        font-size: 2rem;
     }
 
     .admin-content {
@@ -1053,7 +1053,7 @@
     .admin-sidebar nav a {
         gap: 10px;
         padding-inline: 10px;
-        font-size: 12px;
+        font-size: 1rem;
     }
 
     .admin-metrics,
@@ -1151,10 +1151,15 @@
     }
 }
 
-.admin-save-progress { display: grid; gap: 6px; align-items: start; font-size: 14px; position: sticky; top: 12px; z-index: 20; padding: 16px; border-radius: 12px; background: #f1f6f2; border: 1px solid #b8cdbd; }
+.admin-save-progress { display: grid; gap: 6px; align-items: start; font-size: 1.125rem; padding: 16px; border-radius: 12px; background: #f1f6f2; border: 1px solid #b8cdbd; }
 .admin-save-progress progress { width: 100%; accent-color: #24553b; }
 .admin-save-progress strong { display: block; margin-top: 8px; }
 .admin-save-progress p { margin: 6px 0 0; overflow-wrap: anywhere; }
 .admin-save-progress.is-error { background: #fff4f0; border-color: #d2a79a; }
 
 .details-form [aria-invalid="true"] { border-color: #ad3b2d; outline-color: #ad3b2d; }
+
+.property-progress-dialog { width: min(560px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; box-sizing: border-box; padding: 24px; border: 0; border-radius: 12px; color: var(--admin-text); background: #fff; }
+.property-progress-dialog::backdrop { background: rgb(0 0 0 / 50%); }
+.property-progress-dialog h2 { margin: 0 0 20px; font-size: 1.75rem; }
+.property-progress-dialog .admin-property-actions { margin-top: 20px; flex-wrap: wrap; }

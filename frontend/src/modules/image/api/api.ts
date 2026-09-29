@@ -1,5 +1,5 @@
 import { baseURL } from "@/shared/config/baseURL.ts";
-import { apiFetch, apiUpload } from "@/shared/api/apiFetch.ts";
+import { ApiError, apiFetch, apiUpload } from "@/shared/api/apiFetch.ts";
 import {
       type DeleteImagesInput,
       type ImageFile,
@@ -44,6 +44,14 @@ export function buildUploadFormData(images: NewImageFile[]): FormData {
 }
 
 export async function uploadImages({propertyId, images, onProgress, onBatchSaved}: UploadImagesInput): Promise<ImageFile[]> {
+      // Matches upload_max_filesize in backend/Dockerfile; check all files before sending a batch.
+      const oversized = images.filter(image => image.file.size > 20 * 1024 * 1024);
+      if (oversized.length) {
+            throw new ApiError("Bilderna är för stora.", 422, { errors: Object.fromEntries(oversized.map(image => [
+                  image.file.name,
+                  [`Bilden är ${(image.file.size / (1024 * 1024)).toLocaleString("sv-SE", { maximumFractionDigits: 1 })} MB. Högst 20 MB per bild tillåts. Minska bildens storlek och välj den igen.`],
+            ])) });
+      }
       onProgress?.({ fraction: 0, title: "Förbereder " + images.length + " bilder", detail: "Delar upp bilderna i bildserier." });
       
       const batches = batchImages(images);
@@ -69,6 +77,24 @@ export async function uploadImages({propertyId, images, onProgress, onBatchSaved
                         onProgress?.({ fraction: fraction(confirmedBytes + batchBytes * ratio * 0.95),
                               title: progress.sent ? "Bearbetar bilder" : "Laddar upp bilder",
                               detail: series + " · " + (progress.sent ? "Filerna är skickade. Väntar på att bilderna sparas." : progress.total ? megabytes(bytes) + " av " + megabytes(totalBytes) + " MB skickade" : megabytes(progress.loaded) + " MB skickade i denna bildserie; total storlek saknas.") });
+                  }).catch((error: unknown) => {
+                        if (!(error instanceof ApiError)) throw error;
+                        const errors: Record<string, string[]> = {};
+                        if (error.status === 422 && typeof error.details === "object" && error.details !== null && "errors" in error.details) {
+                              const validation = error.details.errors;
+                              if (typeof validation === "object" && validation !== null) for (const [key, messages] of Object.entries(validation)) {
+                                    const image = batch[Number(key.split(".")[1])];
+                                    const label = image ? image.file.name : "Bilder";
+                                    const text = (Array.isArray(messages) ? messages : [messages]).filter(message => typeof message === "string").join(" ");
+                                    errors[label + " · " + key] = [key.endsWith(".file")
+                                          ? "Bilden kunde inte godkännas. Välj en fungerande JPG-, PNG- eller WebP-bild på högst 20 MB. Serverns besked: " + text
+                                          : text];
+                              }
+                        }
+                        if (error.status === 413) {
+                              errors["Bildserie " + (index + 1)] = ["Servern avvisade uppladdningen som för stor. Minska filstorleken. Berörda filer: " + batch.map(image => image.file.name).join(", ")];
+                        }
+                        throw new ApiError(error.message, error.status, { errors, files: batch.map(image => ({ name: image.file.name, bytes: image.file.size })) });
                   });
             if (!Array.isArray(uploaded)) throw new Error("Invalid image collection response");
             confirmedBytes += batchBytes;

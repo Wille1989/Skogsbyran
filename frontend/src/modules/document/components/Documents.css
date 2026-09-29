@@ -13,7 +13,7 @@
             margin: 0;
             color: inherit;
             text-align: center;
-            font-size: clamp(1.6rem, 3vw, 2.4rem);
+            font-size: calc(clamp(1.6rem, 3vw, 2.4rem) + 0.25rem);
 
         }
     }
@@ -53,7 +53,7 @@
     }
 
     .document-name {
-        font-size: 0.95rem;
+        font-size: 1.2rem;
         line-height: 1.4;
         overflow-wrap: anywhere;
     }
@@ -75,7 +75,7 @@
             background: transparent;
             color: var(--text-secondary);
             font: inherit;
-            font-size: 0.75rem;
+            font-size: 1rem;
             cursor: pointer;
 
             &:hover {

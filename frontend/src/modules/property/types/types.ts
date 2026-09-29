@@ -43,6 +43,8 @@ export type SavePropertyProgress = {
     percent: number;
     title: string;
     detail: string;
+    issues?: string[];
+    supportReport?: string;
 };
 
 export type CreatePropertyInput = {

@@ -1,7 +1,7 @@
 import { PublicationFields } from "./PublicationFields";
-import { listingStatusOptions, localDateTime, publicationPayload } from "../helpers/publication";
+import { localDateTime, publicationPayload } from "../helpers/publication";
 import { useEffect, type ReactNode } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { type FormDetails } from '../types/types';
 import './DetailsForm.css';
 
@@ -42,16 +42,18 @@ export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false, 
                 }
         }, [serverErrors, setError]);
 
-        const isVisible = useWatch({ control, name: "isVisible" });
 
         return (
-        <form id="property-form" onSubmit={handleSubmit((values, event) => {
+        <form id="property-form" onSubmit={handleSubmit(values => {
                 clearErrors("root");
-                const submitter = (event?.nativeEvent as SubmitEvent | undefined)?.submitter;
-                const publishNow = submitter instanceof HTMLButtonElement && submitter.value === "publish";
-                try { onSubmit(publicationPayload(values, publishNow)); }
+                try { onSubmit(publicationPayload(values, false)); }
                 catch (error) { setError("root", { message: error instanceof Error ? error.message : "Kontrollera schemaläggningen." }); }
         })} className="form details-form">
+                {Object.keys(errors).length > 0 && <div className="form-error" role="alert">
+                        <strong>Fastigheten kunde inte sparas. Rätta följande:</strong>
+                        <ul>{Object.entries(errors).map(([field, error]) => <li key={field}>{error.message}</li>)}</ul>
+                        <p>Dina uppgifter finns kvar i formuläret.</p>
+                </div>}
                 <div className="form-grid">
                         <div className="form-column">
                                 <div className="form-field">
@@ -61,7 +63,7 @@ export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false, 
                                                 placeholder="Ex. Skogsgård i Dalarna"
                                                 aria-invalid={errors.title ? "true" : "false"}
                                                 aria-describedby={errors.title ? "details-title-error" : undefined}
-                                                {...register("title", { required: "Titel krävs"})}
+                                                {...register("title", { required: "Skriv en titel för fastigheten.", maxLength: { value: 150, message: "Titeln får vara högst 150 tecken." }})}
                                         />
                                         {errors.title ? (
                                                 <p id="details-title-error" className="form-error" role="alert">
@@ -75,9 +77,12 @@ export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false, 
                                         <input
                                                 id="price"
                                                 aria-invalid={!!errors.price}
+                                                aria-describedby={errors.price ? "price-error" : undefined}
+                                                inputMode="numeric"
                                                 placeholder="Ex. 3 500 000"
-                                                {...register("price")}
+                                                {...register("price", { validate: value => !value || /^\d[\d\s]*$/.test(value.trim()) || "Pris: skriv hela kronor, till exempel 3 500 000. Använd inte bokstäver, minus eller decimaler." })}
                                         />
+                                        {errors.price && <p id="price-error" className="form-error">{errors.price.message}</p>}
                                 </div>
 
                                 <div className="form-field">
@@ -85,9 +90,12 @@ export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false, 
                                         <input
                                                 id="size"
                                                 aria-invalid={!!errors.size}
+                                                aria-describedby={errors.size ? "size-error" : undefined}
+                                                inputMode="decimal"
                                                 placeholder="Ex. 135"
-                                                {...register("size")}
+                                                {...register("size", { validate: value => !value || /^\d+(?:[,.]\d+)?$/.test(value.replace(/\s/g, "")) || "Areal: skriv antal hektar, till exempel 135 eller 12,5. Använd inte bokstäver eller minus." })}
                                         />
+                                        {errors.size && <p id="size-error" className="form-error">{errors.size.message}</p>}
                                 </div>
 
                                 <div className="form-field">
@@ -102,27 +110,11 @@ export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false, 
                                         {errors.caption && <p className="form-error" role="alert">{errors.caption.message}</p>}
                                 </div>
                         </div>
-                        <aside className="admin-details-side">                                <div className="form-field">
-                                        <label htmlFor="listingStatus">Status</label>
-                                        <select
-                                                id="listingStatus"
-                                                {...register("listingStatus", { required: "Status krävs" })}
-                                        >
-                                                {listingStatusOptions.map((option) => (
-                                                        <option key={option.value} value={option.value}>
-                                                                {option.label}
-                                                        </option>
-                                                ))}
-                                        </select>
-                                </div>
-
-                                <p className="admin-status-hint">Status, publicering och schemaläggning sparas med fastigheten.</p>
-                                <PublicationFields control={control} setValue={setValue} cover={cover} /></aside>
+                        <aside className="admin-details-side"><PublicationFields control={control} setValue={setValue} cover={cover} /></aside>
                 </div>
                 {errors.root && <p className="form-error" role="alert">{errors.root.message}</p>}
                 <div className="publication-save-actions">
-                    <button className="admin-button" type="submit" disabled={isSaving}>Spara</button>
-                    {!isVisible && <button className="admin-button is-primary" type="submit" name="intent" value="publish" disabled={isSaving}>Spara och publicera</button>}
+                    <button className="admin-button" type="submit" disabled={isSaving}>Spara fastigheten</button>
                 </div>
         </form>
         );

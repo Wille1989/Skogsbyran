@@ -114,7 +114,7 @@
     background: #143c2e;
     color: #fff;
     box-shadow: 0 3px 10px #0004;
-    font: 600 16px/1.3 var(--body-font, sans-serif);
+    font: 600 1.25rem/1.3 var(--body-font, sans-serif);
     text-align: left;
     overflow-wrap: anywhere;
     pointer-events: auto;
@@ -234,7 +234,7 @@
 
 .property-map-editor-dialog h2 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: 1.5rem;
 }
 
 .property-map-editor-content {
@@ -259,7 +259,7 @@
 .property-map-tools p,
 .map-draft-summary {
     margin: 8px 0;
-    font-size: 0.875rem;
+    font-size: 1.125rem;
 }
 
 .property-map-tools button[aria-pressed='true'],
@@ -363,7 +363,7 @@ body:has(.property-map-editor-dialog[open]) {
     }
     .property-map-tools .admin-button {
         padding: 8px 10px;
-        font-size: 0.8rem;
+        font-size: 1.05rem;
     }
     .property-map-editor-dialog .map-viewport {
         border-radius: 12px;
@@ -436,11 +436,11 @@ body:has(.property-map-editor-dialog[open]) {
         select {
             min-height: 36px;
             padding: 7px 10px;
-            font-size: 13px;
+            font-size: 1.0625rem;
         }
 
         label {
-            font-size: 13px;
+            font-size: 1.0625rem;
         }
 
         .form-field {
@@ -467,7 +467,7 @@ body:has(.property-map-editor-dialog[open]) {
         p {
             margin: 0;
             max-width: none;
-            font-size: 13px;
+            font-size: 1.0625rem;
         }
 
         [role='alert'] {
@@ -587,7 +587,7 @@ body:has(.property-map-editor-dialog[open]) {
     padding: 4px 7px;
     border-radius: 4px;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 1rem;
     line-height: 1.4;
     transform: translate(0, -100%);
 }
@@ -613,7 +613,7 @@ body:has(.property-map-editor-dialog[open]) {
     border-radius: 5px;
     background: #fcfaf5;
     color: #24352f;
-    font: 600 13px/1.4 var(--body-font, sans-serif);
+    font: 600 1.0625rem/1.4 var(--body-font, sans-serif);
     box-shadow: 0 2px 8px #0003;
     pointer-events: auto;
 }
@@ -659,7 +659,7 @@ body:has(.property-map-editor-dialog[open]) {
 .map-controls label {
     margin-left: auto;
     padding: 4px 8px;
-    font-size: 11px;
+    font-size: 1rem;
 }
 
 .map-controls select {
@@ -721,7 +721,7 @@ body:has(.property-map-editor-dialog[open]) {
 }
 
 .map-search-attribution {
-    font-size: 11px;
+    font-size: 1rem;
     justify-self: end;
 }
 

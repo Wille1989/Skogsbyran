@@ -1,3 +1,15 @@
+.public-layout {
+  --bg: var(--cream-100);
+  --surface: var(--cream-50);
+  --surface-strong: var(--sage-100);
+  --forest: var(--forest-900);
+  --forest-deep: var(--forest-950);
+  --text: var(--text-primary);
+  --muted: var(--text-secondary);
+  background: var(--bg);
+  color: var(--text);
+}
+
 html, body {
   height: 100%;
 }
@@ -46,7 +58,7 @@ body {
     background: var(--cream-50);
     color: var(--forest-950);
     box-shadow: 0 2px 8px #123c2d18;
-    font-size: 12px;
+    font-size: 1rem;
 }
 
 .admin-return-control:hover {

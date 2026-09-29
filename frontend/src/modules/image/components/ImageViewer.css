@@ -43,7 +43,7 @@
         h2 {
             margin: 0;
             font-family: var(--body-font);
-            font-size: clamp(1rem, 2vw, 1.3rem);
+            font-size: calc(clamp(1rem, 2vw, 1.3rem) + 0.25rem);
             line-height: 1.3;
             font-weight: 600;
         }
@@ -51,7 +51,7 @@
 
     .property-gallery-counter {
         color: var(--text-secondary);
-        font-size: .9rem;
+        font-size: 1.15rem;
         font-variant-numeric: tabular-nums;
     }
 
@@ -208,7 +208,7 @@
         white-space: pre-wrap;
         overflow-wrap: anywhere;
         color: var(--text-primary);
-        font-size: .925rem;
+        font-size: 1.175rem;
         line-height: 1.6;
     }
 }

@@ -48,21 +48,30 @@ export async function runSaveSteps(steps: SaveStep[], onProgress: ((progress: Sa
       const requiresReview = completed.length > 0 || uncertain;
       const fieldErrors: Record<string, string> = {};
       const labels: Record<string, string> = { title: "Titel", price: "Pris", size: "Areal", caption: "Beskrivning", slug: "Webbadress", publishAt: "Publiceringstid", scheduledStatusAt: "Schemalagd tid", scheduledListingStatus: "Schemalagd status", listingStatus: "Status" };
-      const fields: string[] = [];
-      if (status === 422 && error instanceof ApiError && typeof error.details === "object" && error.details !== null && "errors" in error.details) {
+      const issues: string[] = [];
+      const serverMessages: string[] = [];
+      const aliases: Record<string, string> = { price_whole_units: "price", size_hectares: "size", publish_at: "publishAt", scheduled_status_at: "scheduledStatusAt", scheduled_listing_status: "scheduledListingStatus", listing_status: "listingStatus", is_visible: "isVisible" };
+      if ((status === 422 || status === 413) && error instanceof ApiError && typeof error.details === "object" && error.details !== null && "errors" in error.details) {
         const errors = error.details.errors;
-        if (typeof errors === "object" && errors !== null) for (const key of Object.keys(errors)) {
-          const name = key.replace(/^details\./, "");
-          if (labels[name]) { fields.push(labels[name]); fieldErrors[name] = "Kontrollera värdet i detta fält."; }
-          else if (key.startsWith("images.")) {
-            const imageIndex = key.split(".")[1];
-            fields.push(/^\d+$/.test(imageIndex) ? "Bild " + (Number(imageIndex) + 1) + " i bildserien" : "Bilder");
-          } else if (key.startsWith("location")) fields.push("Adress och kartpunkter");
-          else if (key.startsWith("areas") || key.startsWith("polygon")) fields.push("Kartområden");
-          else if (key.startsWith("document")) fields.push("Dokument");
+        if (typeof errors === "object" && errors !== null) for (const [key, messages] of Object.entries(errors)) {
+          const rawName = key.replace(/^details\./, "");
+          const name = aliases[rawName] ?? rawName;
+          const text = (Array.isArray(messages) ? messages : [messages]).filter((message): message is string => typeof message === "string").join(" ");
+          serverMessages.push(key + ": " + text);
+          if (labels[name]) {
+            const guidance: Record<string, string> = {
+              price: "Skriv ett pris i hela kronor, till exempel 3 500 000.",
+              size: "Skriv arealen i hektar, till exempel 12,5.",
+              title: "Skriv en titel med högst 150 tecken.",
+              caption: "Beskrivningen får innehålla högst 700 tecken.",
+            };
+            fieldErrors[name] = labels[name] + ": " + (guidance[name] ?? (text || "Kontrollera värdet."));
+            issues.push(fieldErrors[name]);
+          } else {
+            issues.push(key + ": " + (text || "Värdet godkändes inte."));
+          }
         }
       }
-      const fieldDetail = fields.length ? "Kontrollera: " + [...new Set(fields)].join(", ") + "." : "";
       const reason = status === 422 ? "Uppgifterna godkändes inte. Kontrollera uppgifterna för detta steg."
         : status === 413 ? "Bildserien eller filen är för stor. Välj mindre filer."
         : status === 401 || status === 419 ? "Din inloggning har gått ut. Logga in igen."
@@ -73,9 +82,9 @@ export async function runSaveSteps(steps: SaveStep[], onProgress: ((progress: Sa
       const guidance = requiresReview
         ? "Öppna det sparade resultatet och kontrollera vad som finns kvar innan du skickar något igen. Ditt utkast finns kvar på denna sida."
         : "Rätta uppgifterna och spara igen.";
-      const message = [step.title + ".", detail, reason, fieldDetail, saved, uncertain ? "Det senaste steget kan ha sparats trots att bekräftelsen saknas." : "", guidance].filter(Boolean).join(" ");
+      const message = [step.title + ".", detail, reason, saved, uncertain ? "Det senaste steget kan ha sparats trots att bekräftelsen saknas." : "", guidance].filter(Boolean).join(" ");
       onProgress?.({ status: "error", phase: step.phase, percent,
-        title: step.phase === "images" ? "Bildändringarna kunde inte slutföras" : title + " – misslyckades", detail: message });
+        title: step.phase === "images" ? "Bildändringarna kunde inte slutföras" : title + " – misslyckades", detail: message, issues, supportReport: ["Tid: " + new Date().toISOString(), "Fastighet: " + (propertyId() ?? "Ny fastighet"), "Steg: " + step.title, "HTTP-status: " + (status ?? "Inget läsbart serversvar"), message, ...issues, "Serverns valideringsbesked:", ...serverMessages].join("\n") });
       throw new PropertySaveError(message, requiresReview, propertyId(), fieldErrors);
     }
   }

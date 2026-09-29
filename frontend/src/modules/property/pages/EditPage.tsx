@@ -201,6 +201,7 @@ export function EditPage() {
         <h2 id="property-delete-title">Radera fastigheten?</h2>
         <p>Fastigheten samt tillhörande bilder, dokument och sparad data raderas permanent.</p>
         <p>Åtgärden kan inte ångras.</p>
+        {deleteProperty.isPending && <div role="status"><progress aria-label="Raderar fastigheten" /><p>Raderar fastigheten och tillhörande filer…</p></div>}
         {deleteProperty.error && <p className="admin-error" role="alert">{deleteProperty.error.message}</p>}
         <div className="admin-property-actions">
           <button type="button" className="admin-button" autoFocus disabled={deleteProperty.isPending} onClick={() => deleteDialog.current?.close()}>Avbryt</button>

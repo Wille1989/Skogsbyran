@@ -15,7 +15,7 @@ function Layout({ children }: { children: React.ReactNode }) {
   const isPublicPage = pathname === '/' || pathname === '/om-oss' || Boolean(matchPath('/property/:propertyId', pathname));
   return (
     <ContactContext.Provider value={() => contactPanel.current?.open()}>
-    <div className={`wrapper${pathname === '/' ? ' home-layout' : ''}${matchPath('/property/:propertyId', pathname) ? ' detail-layout' : ''}`}>
+    <div className={`wrapper${isPublicPage ? ' public-layout' : ''}${pathname === '/' ? ' home-layout' : ''}${matchPath('/property/:propertyId', pathname) ? ' detail-layout' : ''}`}>
       {isPublicPage && currentUser?.isAdmin === true && (
         <Link to="/admin" className="admin-return-control">
           <IconArrowLeft size={17} aria-hidden="true" />Tillbaka till admin
