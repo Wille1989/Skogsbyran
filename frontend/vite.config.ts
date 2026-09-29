@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs'
 export default defineConfig({
   plugins: [react(), {
     name: 'skogsbyran-pwa',
-    apply: 'build',
+    apply: (_config, environment) => environment.command === 'build' && !environment.isSsrBuild,
     generateBundle(_options, bundle) {
       const icons = ['skogsbyranIcon.png', 'pwa-192.png', 'pwa-512.png', 'pwa-maskable-512.png', 'apple-touch-icon.png'];
       const assets = Object.keys(bundle).filter(path => path.startsWith('assets/')).sort();

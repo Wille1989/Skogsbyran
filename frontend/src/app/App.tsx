@@ -18,6 +18,7 @@ import { AdminRoute } from "@/modules/auth/components/AdminRoute.tsx";
 import { IndexPage }  from "@/modules/property/pages/IndexPage.tsx";
 import { ShowPage }   from "@/modules/property/pages/ShowPage.tsx";
 import { AboutPage } from "@/modules/about/pages/AboutPage.tsx";
+import { Seo } from '@/shared/components/Seo';
 
 const AuthPage = lazy(() => import("@/modules/auth/pages/AuthPage.tsx").then((module) => ({ default: module.AuthPage })));
 const CreatePage = lazy(() => import("@/modules/property/pages/CreatePage.tsx").then((module) => ({ default: module.CreatePage })));
@@ -28,10 +29,11 @@ const OverviewPage = lazy(() => import("@/modules/admin/pages/OverviewPage").the
 
 const clientQuery = new QueryClient();
 
-function App() {
+function App({ queryClient = clientQuery }: { queryClient?: QueryClient }) {
   return (
     <>
-      <QueryClientProvider client={clientQuery}>
+      <QueryClientProvider client={queryClient}>
+          <Seo />
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>

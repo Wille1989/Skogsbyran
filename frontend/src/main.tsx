@@ -4,6 +4,14 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './app/App.tsx'
 import { recordEvent } from '@/modules/analytics/api/api'
+import { QueryClient, hydrate } from '@tanstack/react-query'
+
+const queryClient = new QueryClient();
+const pageData = document.getElementById('page-data');
+if (pageData?.textContent) {
+  hydrate(queryClient, JSON.parse(pageData.textContent));
+  pageData.remove();
+}
 
 // Bootstrap once, outside React effects. Development never installs a worker.
 if (import.meta.env.PROD && window.isSecureContext && 'serviceWorker' in navigator) {
@@ -23,7 +31,7 @@ if (!/^\/admin(?:\/|$)/i.test(window.location.pathname)) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <App queryClient={queryClient} />
     </BrowserRouter>
   </StrictMode>,
 )

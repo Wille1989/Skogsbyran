@@ -20,6 +20,14 @@ export function AboutPage() {
         Skogsbyrån är oberoende av organisationer, banker och andra aktörer. Det innebär att vårt fokus ligger på kundens intressen och på den lösning som passar fastigheten och situationen bäst.
       </p>
       <p>Välkommen till Skogsbyrån i Jönköping.</p>
+      <section aria-labelledby="about-contact-title">
+        <h2 id="about-contact-title">Kontakta Skogsbyrån</h2>
+        <address>
+          Tranhult 11, 562 91 Månsarp<br />
+          <a href="tel:+46761354649">0761-35 46 49</a><br />
+          <a href="mailto:skogsbyran.jonkoping@telia.com">skogsbyran.jonkoping@telia.com</a>
+        </address>
+      </section>
     </article>
   );
 }

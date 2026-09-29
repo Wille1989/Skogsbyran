@@ -1,12 +1,11 @@
 {
-    "rewrites": [
-        {
-            "source": "/backend/:path*",
-            "destination": "https://skogsbyran.onrender.com/:path*"
-        },
-        {
-            "source": "/(.*)",
-            "destination": "/"
-        }
-    ]
+  "functions": { "api/page.js": { "includeFiles": "{dist/index.html,dist-ssr/**}", "maxDuration": 30 } },
+  "routes": [
+    { "src": "/index.html", "status": 308, "headers": { "Location": "/" } },
+    { "src": "/backend/(.*)", "dest": "https://skogsbyran.onrender.com/$1" },
+    { "src": "/admin(?:/.*)?", "dest": "/index.html", "headers": { "X-Robots-Tag": "noindex, nofollow" } },
+    { "src": "/", "dest": "/api/page?path=" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/api/page?path=$1" }
+  ]
 }
