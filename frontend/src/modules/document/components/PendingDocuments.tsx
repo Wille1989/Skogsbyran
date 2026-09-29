@@ -62,7 +62,7 @@ export function PendingDocuments({ documents, onChange, showHeading = true }: Pe
       <div className="admin-card-heading"><div>
         {showHeading && <h2>Dokument</h2>}
         <p>Lägg till en eller flera PDF:er. De laddas upp först när fastigheten sparas.</p>
-      </div><button type="button" className="admin-button" onClick={() => fileInputRef.current?.click()}><IconPlus size={18} />Lägg till dokument</button></div>
+      </div><button type="button" className="admin-button is-primary" onClick={() => fileInputRef.current?.click()}><IconPlus size={18} />Lägg till dokument</button></div>
 
       <div>
         <input
@@ -91,7 +91,7 @@ export function PendingDocuments({ documents, onChange, showHeading = true }: Pe
                 />
               </div>
 
-              <span>{document.file.name}</span>
+              <div className="document-file-info"><span>{document.file.name}</span><span className="document-save-state">Inte sparat ännu</span></div>
 
               <button type="button" className="button button-danger" onClick={() => removeDocument(document.uiId)}>
                 Ta bort

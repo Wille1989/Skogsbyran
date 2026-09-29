@@ -769,13 +769,13 @@
 
 .admin-documents :is(.pending-document-card, .editable-document-card) {
     display: grid;
-    grid-template-columns: auto minmax(80px, 1fr) minmax(70px, 0.8fr) auto;
+    grid-template-columns: auto minmax(160px, 1fr) minmax(120px, 1fr) auto;
     align-items: center;
-    gap: 10px;
+    gap: 20px;
     border: 1px solid #e4e7e1;
     background: #fdfefd;
-    border-radius: 5px;
-    padding: 10px;
+    border-radius: 10px;
+    padding: 20px;
     font-size: 1rem;
 }
 
@@ -1163,3 +1163,14 @@
 .property-progress-dialog::backdrop { background: rgb(0 0 0 / 50%); }
 .property-progress-dialog h2 { margin: 0 0 20px; font-size: 1.75rem; }
 .property-progress-dialog .admin-property-actions { margin-top: 20px; flex-wrap: wrap; }
+
+.admin-documents .document-file-info { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; overflow-wrap: anywhere; font-size: 1rem; }
+.admin-documents .document-save-state { display: inline-block; padding: 4px 10px; border-radius: 6px; background: var(--sage-100); color: var(--forest-950); font-weight: 600; }
+.admin-documents .pending-document-card .document-save-state { background: #fff1d6; color: #694500; }
+.admin-documents .pending-document-card span { white-space: normal; overflow: visible; }
+.admin-documents .editable-document-link { font-weight: 500; text-decoration: underline; }
+.admin-documents .pending-documents .admin-card-heading { flex-wrap: wrap; gap: 16px; }
+@media (max-width: 1100px) {
+    .admin-documents :is(.pending-document-card, .editable-document-card) { grid-template-columns: auto minmax(0, 1fr); }
+    .admin-documents :is(.document-file-info, .button-danger) { grid-column: 2; }
+}

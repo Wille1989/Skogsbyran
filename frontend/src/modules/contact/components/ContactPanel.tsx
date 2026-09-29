@@ -1,10 +1,8 @@
-import { useImperativeHandle, useRef, useState, type Ref } from 'react';
+import { useRef, useState } from 'react';
 import { ContactForm } from './ContactForm';
 import './ContactPanel.css';
 
-export type ContactPanelHandle = { open: () => void };
-
-export function ContactPanel({ ref }: { ref?: Ref<ContactPanelHandle> }) {
+export function ContactPanel() {
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -16,21 +14,25 @@ export function ContactPanel({ ref }: { ref?: Ref<ContactPanelHandle> }) {
     setOpen(true);
   }
 
-  useImperativeHandle(ref, () => ({ open: openPanel }));
-
   function close() {
     dialog.current?.close();
   }
 
   return (
     <aside className="sticky-contact" aria-label="Kontakt">
+      <div className="contact-sticky-bar">
+      <div className="contact-sticky-copy">
+        <h2>Vill du veta mer?</h2>
+        <p>Vi hjälper dig med frågor, underlag och nästa steg.</p>
+      </div>
       <button
         ref={trigger} type="button" className="contact-trigger"
         aria-expanded={open} aria-controls="contact-panel" aria-haspopup="dialog"
         onClick={openPanel}
       >
-        Kontakta oss <span aria-hidden="true">＋</span>
+        Kontakta oss <span aria-hidden="true">→</span>
       </button>
+      </div>
       <dialog
         ref={dialog} id="contact-panel" className="contact-panel"
         aria-labelledby="contact-panel-title"

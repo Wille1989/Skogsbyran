@@ -32,11 +32,13 @@ export function DocumentItem({ document, canManage = false }: DocumentItemProps)
   }
   return (
     <article className="document-item">
-      <a className="document-link" href={document.url} target="_blank" rel="noopener noreferrer" aria-label={`Öppna ${document.title || label} (PDF, ny flik)`}>
-        <Icon size={56} stroke={1.35} aria-hidden="true" />
-        <span className="document-name">{label}</span>
-      </a>
+      <Icon className="document-icon" size={32} stroke={1.5} aria-hidden="true" />
+      <div className="document-copy">
+        <h3 className="document-name">{document.title || label}</h3>
+        <p>PDF{canManage ? " · Sparat" : ""}</p>
+      </div>
       <div className="document-item-actions">
+        <a className="document-link" href={document.url} target="_blank" rel="noopener noreferrer" aria-label={"Öppna " + (document.title || label) + " (PDF, ny flik)"}>Öppna PDF</a>
         <button type="button" onClick={handleDownload} disabled={downloading} aria-label={`Ladda ner ${document.title || document.originalName}`}><span className="document-action-label">{downloading ? 'Hämtar…' : 'Ladda ner'}</span> <IconDownload size={17} aria-hidden="true" /></button>
         {canManage && <button type="button" onClick={() => deleteDocument.mutate({propertyId: document.propertyId, documentId: document.documentId})} disabled={deleteDocument.isPending}>{deleteDocument.isPending ? 'Tar bort…' : 'Ta bort'}</button>}
       </div>

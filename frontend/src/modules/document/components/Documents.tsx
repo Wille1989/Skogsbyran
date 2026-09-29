@@ -11,10 +11,13 @@ type DocumentsProps = {
 };
 
 export function Documents({propertyId, documents, canManage = false}: DocumentsProps) {
+    if (!canManage && documents.length === 0) return null;
+
     return (
         <section className="documents" aria-label="Dokument">
             <header className="documents-header">
                 <h2>Dokument</h2>
+                <p>Underlag för fastigheten. Öppna en PDF i en ny flik eller ladda ner den.</p>
             </header>
 
             {canManage && <DocumentUploadForm propertyId={propertyId} />}

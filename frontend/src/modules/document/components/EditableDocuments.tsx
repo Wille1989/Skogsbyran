@@ -42,6 +42,8 @@ export function EditableDocuments({
         <p>Ändra dokumenttitlar och hantera PDF:er. Ändringarna sparas med fastigheten.</p>
       </div>
 
+      <PendingDocuments showHeading={false} documents={pendingDocuments} onChange={onPendingDocumentsChange} />
+
       {visibleDocuments.length > 0 ? (
         <div className="editable-document-list">
           {visibleDocuments.map((document) => (
@@ -56,9 +58,9 @@ export function EditableDocuments({
                 />
               </div>
 
-              <a href={document.url} target="_blank" rel="noopener noreferrer" className="editable-document-link">
-                {document.originalName || "Öppna PDF"}
-              </a>
+              <div className="document-file-info"><span className="document-save-state">{document.title.trim() === document.originalTitle ? "Sparat" : "Namnändring inte sparad"}</span><a href={document.url} target="_blank" rel="noopener noreferrer" className="editable-document-link">
+                Öppna PDF · {document.originalName}
+              </a></div>
 
               <button type="button" className="button button-danger" onClick={() => markRemoved(document.documentId)}>
                 Ta bort
@@ -70,7 +72,7 @@ export function EditableDocuments({
         <p>Det finns inga dokument uppladdade ännu.</p>
       )}
 
-      <PendingDocuments showHeading={false} documents={pendingDocuments} onChange={onPendingDocumentsChange} />
+
     </section>
   );
 }

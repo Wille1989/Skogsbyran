@@ -1,26 +1,36 @@
-.sticky-contact {
-  height: 0;
-}
-
-.contact-trigger {
+.sticky-contact { min-height: calc(150px + env(safe-area-inset-bottom)); }
+.contact-sticky-bar {
   position: fixed;
-  right: max(24px, env(safe-area-inset-right));
-  bottom: max(20px, env(safe-area-inset-bottom));
+  inset: auto 0 0;
   z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px max(24px, calc((100vw - 1272px) / 2)) calc(20px + env(safe-area-inset-bottom));
+  background: var(--forest-950);
+  color: var(--white-warm);
+  box-shadow: 0 -4px 20px #123c2d18;
+}
+.contact-sticky-copy h2 { margin: 0 0 8px; font-size: 2rem; line-height: 1.1; }
+.contact-sticky-copy p { margin: 0; color: inherit; font-size: 1.125rem; }
+.contact-trigger {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 52px;
   border: 1px solid var(--border-soft);
   border-radius: 999px;
-  padding: 12px 20px;
-  background: var(--forest-900);
-  color: var(--white-warm);
-  font: inherit;
-  font-weight: 700;
-  font-size: 1.1rem;
+  padding: 12px 24px;
+  background: var(--cream-50);
+  color: var(--forest-950);
+  font: 700 1.25rem/1.4 var(--body-font);
   cursor: pointer;
 }
-
-.contact-trigger:hover {
-  background: var(--forest-950);
-}
+.contact-trigger:hover { background: var(--sage-200); }
+.contact-trigger:focus-visible { outline: 3px solid var(--white-warm); outline-offset: 4px; }
 
 .contact-panel {
   position: fixed;
@@ -111,10 +121,11 @@
 }
 
 @media (max-width: 640px) {
-  .contact-trigger {
-    right: 16px;
-    bottom: max(16px, env(safe-area-inset-bottom));
-  }
+  .sticky-contact { min-height: calc(140px + env(safe-area-inset-bottom)); }
+  .contact-sticky-bar { flex-direction: column; gap: 12px; padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); }
+  .contact-sticky-copy h2 { margin: 0; font-size: 1.75rem; }
+  .contact-sticky-copy p { display: none; }
+  .contact-trigger { width: 100%; }
 
   .contact-panel {
     inset: auto 0 0;

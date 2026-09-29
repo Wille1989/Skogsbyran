@@ -1,12 +1,11 @@
 import './ShowPage.css';
 import './PropertyDetail.css';
-import { lazy, Suspense, useContext } from 'react';
+import { lazy, Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { IconArrowLeft, IconArrowRight, IconCoins, IconTrees, IconMapPin, IconTag } from '@tabler/icons-react';
+import { IconArrowLeft, IconCoins, IconTrees, IconMapPin, IconTag } from '@tabler/icons-react';
 import { usePropertyByIdQuery } from '../hooks/queries';
 import { Images } from '@/modules/image/components/Images';
 import { Documents } from '@/modules/document/components/Documents';
-import { ContactContext } from '@/modules/contact/context/ContactContext';
 import { formatHectares, formatPrice, listingStatusLabels, locationLabel } from '../helpers/propertyListing';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 const PropertyMapView = lazy(() => import('@/modules/location/map/components/PropertyMapView').then(module => ({ default: module.PropertyMapView })));
@@ -14,13 +13,12 @@ const PropertyMapView = lazy(() => import('@/modules/location/map/components/Pro
 export function ShowPage() {
   const { propertyId = '' } = useParams<{ propertyId: string }>();
   const { data, isPending, error } = usePropertyByIdQuery(propertyId);
-  const openContact = useContext(ContactContext);
   if (isPending) return <LoadingSpinner />;
   if (error || !data?.property) return <section className="property-detail-page"><Link to="/">Tillbaka</Link><h1>Fastigheten kunde inte hämtas</h1><p role="alert">{error instanceof Error ? error.message : "Det gick inte att läsa in fastigheten just nu."}</p></section>;
   const property = data.property;
   const { details, location, areas } = property;
   const place = locationLabel(property);
-  const address = [location?.address, location?.postalCode, place].filter(Boolean).join(', ');
+  const mapLocation = [location?.postalCode, location?.municipality, location?.city].filter(Boolean).join(' · ');
   const marker = (location?.latitude != null && location.longitude != null ? { lat: location.latitude, lng: location.longitude } : null);
   const hasMap = Boolean(areas.length || marker || location?.pois.length);
   const images = [...property.images].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.position - b.position);
@@ -42,25 +40,18 @@ export function ShowPage() {
         <span className="detail-status">{listingStatusLabels[details.listingStatus]}</span>
         {images.length ? <Images key={property.propertyId} propertyId={property.propertyId} images={images} propertyTitle={details.title} canEdit={false} /> : <div className="detail-no-image">Det finns inga bilder för fastigheten ännu.</div>}
       </div>
-      <div className="detail-columns">
-        <div className="detail-content">
-          <section className="detail-description"><h2>Beskrivning</h2><p>{details.caption || "Det finns ingen beskrivning av fastigheten ännu."}</p></section>
-        </div>
-        <aside className="detail-sidebar" aria-label="Fastighetsfakta och kontakt">
-          <section className="detail-facts">
-            <h2>Fastighetsfakta</h2>
-            <dl>{facts.map(({ label, value, icon: Icon }) => <div key={label}><dt><Icon size={26} stroke={1.3} aria-hidden="true" />{label}</dt><dd>{value}</dd></div>)}</dl>
-          </section>
-          <section className="detail-contact">
-            <div className="detail-contact-intro"><h2>Har du frågor<br />om fastigheten?</h2><p>Kontakta Skogsbyrån för mer information om fastigheten.</p>{openContact && <button type="button" className="detail-pill" onClick={openContact}>Kontakta oss <IconArrowRight size={20} aria-hidden="true" /></button>}</div>
-          </section>
-        </aside>
+      <section className="detail-facts" aria-label="Fastighetsfakta">
+        <h2>Fastighetsfakta</h2>
+        <dl>{facts.map(({ label, value, icon: Icon }) => <div key={label}><dt><Icon size={26} stroke={1.3} aria-hidden="true" />{label}</dt><dd>{value}</dd></div>)}</dl>
+      </section>
+      <div className="detail-description-documents">
+        <section className="detail-description"><h2>Om fastigheten</h2><p>{details.caption || "Det finns ingen beskrivning av fastigheten ännu."}</p></section>
+        <Documents propertyId={property.propertyId} documents={property.documents} />
       </div>
-      <Documents propertyId={property.propertyId} documents={property.documents} />
       <section className="detail-map-section" aria-labelledby="detail-map-title">
         <h2 id="detail-map-title">Läge &amp; karta</h2>
-        <p>{address ? address + '. ' : ''}{hasMap ? 'Utforska fastighetens läge och områden i kartan.' : 'Ingen kartdata har sparats för fastigheten.'}</p>
-        {hasMap && <div className="detail-map-frame"><Suspense fallback={<p role="status">Kartan hämtas…</p>}><PropertyMapView key={property.propertyId} areas={areas} data={{ polygons: areas.map(area => area.polygon), marker, pois: location?.pois ?? [] }} /></Suspense></div>}
+        {!hasMap && <p>Ingen kartdata har sparats för fastigheten.</p>}
+        {hasMap && <div className="detail-map-frame"><Suspense fallback={<p role="status">Kartan hämtas…</p>}><PropertyMapView key={property.propertyId} areas={areas} locationLabel={mapLocation} data={{ polygons: areas.map(area => area.polygon), marker, pois: location?.pois ?? [] }} /></Suspense></div>}
       </section>
     </article>
   );

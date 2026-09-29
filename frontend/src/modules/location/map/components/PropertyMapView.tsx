@@ -1,15 +1,17 @@
 import type { MapData, MapFilter, PropertyArea } from '../types/types';
 import { useState } from 'react';
+import { IconMapPin } from '@tabler/icons-react';
 import { filterMapData } from '../helpers/mapPresentation';
 import { PropertyAreaMap } from './PropertyAreaMap';
 
-export function PropertyMapView({ data, areas }: { data: MapData; areas: PropertyArea[] }) {
+export function PropertyMapView({ data, areas, locationLabel }: { data: MapData; areas: PropertyArea[]; locationLabel?: string }) {
     const [filter, setFilter] = useState<MapFilter>('all');
     const visible = filterMapData(data, filter);
 
     return (
         <section className="property-map-view">
-            <div className="area-toolbar map-filter" role="group" aria-label="Visa i kartan">
+            <div className="property-map-toolbar">
+              <div className="area-toolbar map-filter" role="group" aria-label="Visa i kartan">
                 {(
                     [
                         ['area', 'Område'],
@@ -27,6 +29,8 @@ export function PropertyMapView({ data, areas }: { data: MapData; areas: Propert
                         {label}
                     </button>
                 ))}
+              </div>
+              {locationLabel && <p className="property-map-location"><IconMapPin size={24} stroke={1.5} aria-hidden="true" /><span>{locationLabel}</span></p>}
             </div>
             <PropertyAreaMap
                 areas={filter === 'poi' ? [] : areas}
