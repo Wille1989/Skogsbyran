@@ -119,9 +119,73 @@
   .contact-panel {
     inset: auto 0 0;
     width: 100%;
-    max-height: 90dvh;
-    padding: 20px 16px max(20px, env(safe-area-inset-bottom));
+    max-width: 100%;
+    max-height: 85dvh;
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom));
     border-radius: 16px 16px 0 0;
+  }
+
+  .contact-panel-heading {
+    position: sticky;
+    top: -12px;
+    z-index: 1;
+    margin-bottom: 12px;
+    padding-block: 4px;
+    background: var(--surface);
+  }
+
+  .contact-panel h2 {
+    font-size: 1.75rem;
+  }
+
+  .contact-form {
+    gap: 10px;
+    padding: 12px;
+    box-shadow: none;
+  }
+
+  .contact-form .form-field {
+    gap: 4px;
+  }
+
+  .contact-form label,
+  .contact-form p {
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .contact-form input,
+  .contact-form textarea {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 16px;
+    line-height: 1.25;
+    border-radius: 12px;
+  }
+
+  .contact-form textarea {
+    height: 88px;
+    min-height: 88px;
+  }
+
+  .contact-form .form-submit {
+    width: 100%;
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+
+  .contact-details {
+    margin-top: 16px;
+    font-size: 0.875rem;
+  }
+
+  .contact-details h3 {
+    margin-bottom: 8px;
+    font-size: 1.125rem;
+  }
+
+  .contact-details a {
+    margin-top: 6px;
   }
 }
 

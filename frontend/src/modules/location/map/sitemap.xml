@@ -10,12 +10,6 @@
     </group>
 
     <group name="components">
-        <file path="components/EditableAreas.tsx">
-            <purpose>Existing list-based area editor consumer.</purpose>
-        </file>
-        <file path="components/PropertyAreaEditor.tsx">
-            <purpose>Existing individual area editor.</purpose>
-        </file>
         <file path="components/PropertyAreaMap.tsx">
             <purpose>Compose map, search, overlays and controls.</purpose>
         </file>
@@ -78,12 +72,6 @@
         </file>
         <file path="hooks/usePolygonEditing.ts">
             <purpose>Apply editing actions to the current polygon draft.</purpose>
-        </file>
-        <file path="hooks/mutations.ts">
-            <purpose>Area mutation hooks and cache updates.</purpose>
-        </file>
-        <file path="hooks/queries.ts">
-            <purpose>Area query hooks.</purpose>
         </file>
         <file path="hooks/usePropertyMap.ts">
             <purpose>Own map instances, event subscriptions, resize and initial framing.</purpose>

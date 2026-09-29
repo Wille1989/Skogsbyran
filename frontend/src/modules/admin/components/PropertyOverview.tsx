@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { IconPlus, IconSearch, IconArrowRight, IconPhoto, IconAlertTriangle, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { IconPlus, IconSearch, IconArrowRight, IconPhoto, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useAdminPropertiesQuery } from "@/modules/property/hooks/queries";
 import { listingStatusLabels, locationLabel } from "@/modules/property/helpers/propertyListing";
-import { completenessExamples, type CompletenessPreview } from "../fixtures/overviewFixtures";
 import type { PropertyListingItem } from "@/modules/property/types/types";
 
 const filters = ["Alla", "Till salu", "Kommande", "Sålda", "Avpublicerade"] as const;
@@ -18,19 +17,14 @@ function matchesFilter(property: PropertyListingItem, filter: Filter): boolean {
     return property.details.isVisible && ["available", "bidding", "reserved"].includes(property.details.listingStatus);
 }
 
-function PropertyCompleteness({ preview }: { preview: CompletenessPreview }) {
-    return <div className="admin-completeness"><div><progress max={100} value={preview.percent} aria-label="Kompletthet, exempeldata" /><span>{preview.percent}%</span></div>{preview.warnings.map(warning => <small key={warning}><IconAlertTriangle size={15} />Exempel: {warning}</small>)}</div>;
-}
-
 export function PropertyOverview() {
     const { data, isPending, error, refetch } = useAdminPropertiesQuery();
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState<Filter>("Alla");
-    const [incomplete, setIncomplete] = useState(false);
     const [page, setPage] = useState(1);
-    const rows = (data?.properties ?? []).map((property, index) => ({ property, preview: completenessExamples[index % completenessExamples.length] }));
-    const matching = rows.filter(({ property, preview }) =>
-        matchesFilter(property, filter) && (!incomplete || preview.percent < 100)
+    const rows = data?.properties ?? [];
+    const matching = rows.filter(property =>
+        matchesFilter(property, filter)
         && `${property.details.title} ${locationLabel(property)}`.toLocaleLowerCase("sv-SE").includes(search.trim().toLocaleLowerCase("sv-SE")));
     const pages = Math.max(1, Math.ceil(matching.length / pageSize));
     const currentPage = Math.min(page, pages);
@@ -40,15 +34,13 @@ export function PropertyOverview() {
         <div className="admin-property-toolbar">
             <label className="admin-search"><IconSearch size={21} /><input type="search" aria-label="Sök fastighet" placeholder="Sök fastighet…" value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} /></label>
             <div className="admin-tabs" aria-label="Filtrera fastigheter">{filters.map(item => <button key={item} type="button" aria-pressed={filter === item} onClick={() => { setFilter(item); setPage(1); }}>{item}</button>)}</div>
-            <label className="admin-checkbox"><input type="checkbox" checked={incomplete} onChange={event => { setIncomplete(event.target.checked); setPage(1); }} />Endast ofullständiga <small>(exempel)</small></label>
         </div>
-        <p className="admin-list-note">Listan visar publicerade och avpublicerade fastigheter. Status är verklig; kompletthet och dess filter använder exempeldata. Ändringsdatum saknas i API-svaret.</p>
+        <p className="admin-list-note">Listan visar publicerade och avpublicerade fastigheter.</p>
         {isPending ? <div className="admin-card" role="status">Hämtar fastigheter…</div> : error ? <div className="admin-card" role="alert"><p>Fastigheterna kunde inte hämtas.</p><button type="button" className="admin-button" onClick={() => void refetch()}>Försök igen</button></div> : <section className="admin-card admin-table-card" aria-label="Fastigheter">
-            <div className="admin-table-scroll"><table className="admin-property-table"><thead><tr><th scope="col">Fastighet</th><th scope="col">Status</th><th scope="col">Kompletthet <small>Exempel</small></th><th scope="col">Senast ändrad</th><th scope="col">Åtgärd</th></tr></thead>
-                <tbody>{visible.map(({ property, preview }) => <tr key={property.propertyId}>
+            <div className="admin-table-scroll"><table className="admin-property-table"><thead><tr><th scope="col">Fastighet</th><th scope="col">Status</th><th scope="col">Åtgärd</th></tr></thead>
+                <tbody>{visible.map(property => <tr key={property.propertyId}>
                     <td><Link to={`/admin/properties/${property.propertyId}/edit`} className="admin-property-name">{property.primaryImage ? <img src={property.primaryImage.urls.large} alt="" loading="lazy" /> : <span className="admin-property-thumbnail"><IconPhoto /></span>}<span><strong>{property.details.title}</strong><small>{locationLabel(property) || "Ort saknas"}</small></span></Link></td>
                     <td><span className={`admin-badge tone-${!property.details.isVisible ? "amber" : property.details.listingStatus === "upcoming" ? "blue" : property.details.listingStatus === "sold" ? "neutral" : "green"}`}>{listingStatusLabels[property.details.listingStatus]}</span><small className="admin-muted">{property.details.isVisible ? "Publicerad" : "Avpublicerad"}</small></td>
-                    <td><PropertyCompleteness preview={preview} /></td><td className="admin-muted">Ej tillgängligt</td>
                     <td><Link className="admin-button" to={`/admin/properties/${property.propertyId}/edit`} aria-label={`Redigera ${property.details.title}`}>Redigera<IconArrowRight size={18} /></Link></td>
                 </tr>)}</tbody>
             </table></div>
