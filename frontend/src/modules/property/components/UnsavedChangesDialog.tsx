@@ -33,7 +33,7 @@ export function UnsavedChangesDialog({ fields, mapDirty, imageDirty, documentDir
         onCancel={event => { if (savingDraft) { event.preventDefault(); return; } if (blocker.state === "blocked") blocker.reset(); }}>
         <h2 id="unsaved-title">Du har osparade ändringar</h2>
         <p>Du har ändrat följande:</p>
-        <ul>{changes.map(change => <li key={change}>{change}</li>)}</ul>
+        <ul className="unsaved-changes-list">{changes.map(change => <li key={change}>{change}</li>)}</ul>
         <p>{onSaveDraft ? "Spara som en dold fastighet och fortsätt senare, eller kasta utkastet." : "Om du lämnar sidan försvinner ändringarna som inte har sparats."}</p>
         {saveDraftError && <p role="alert" className="admin-error">{saveDraftError}</p>}
         {savingDraft && <p role="status">Sparar utkast… Vänta tills sparningen är klar.</p>}

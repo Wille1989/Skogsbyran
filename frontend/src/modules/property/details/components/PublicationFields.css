@@ -1,5 +1,5 @@
 .publication-fields { display: grid; gap: 16px; }
-.publication-panel { min-width: 0; padding: 14px; border: 1px solid #dce4df; border-radius: 6px; background: #fff; }
+.publication-panel { min-width: 0; padding: 20px; border: 1px solid #cbd9cf; border-radius: 12px; background: #f0f5ef; }
 .publication-panel h3 { margin: 0 0 12px; font-size: 1.25rem; }
 .publication-panel label { display: grid; gap: 6px; margin-top: 12px; }
 .publication-panel input, .publication-panel select { min-width: 0; width: 100%; box-sizing: border-box; }
@@ -8,3 +8,20 @@
 .publication-info { margin: 10px 0 0; color: #52665a; font-size: 1.0625rem; line-height: 1.5; }
 .publication-timezone { color: #6b7c73; font-size: 1rem; }
 .publication-save-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+.publication-panel + .publication-panel { background: #f1f4f7; border-color: #ccd7df; }
+.admin-layout .publication-panel select {
+    appearance: none;
+    min-height: 48px;
+    padding: 11px 48px 11px 14px;
+    border: 1px solid #91aa9a;
+    border-radius: 8px;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23245b46' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center;
+    color: #213e30;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgb(24 54 36 / 5%);
+}
+.admin-layout .publication-panel select:hover { border-color: #245b46; }
+.admin-layout .publication-panel select:focus-visible { outline: 3px solid #88b19b; outline-offset: 2px; }
+.publication-panel .publication-checkbox { padding-top: 14px; border-top: 1px solid #ccd7df; }

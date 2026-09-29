@@ -1222,7 +1222,7 @@
 }
 .admin-images .admin-cover > span { font-weight: 600; }
 .admin-details-side { min-width: 0; }
-.admin-details-side .admin-documents { min-height: 250px; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--admin-border); }
+.admin-details-side .admin-documents { min-height: 250px; margin-top: 28px; padding: 20px; border: 1px solid #dfd8c9; border-radius: 12px; background: #f7f4ec; }
 .admin-documents { container-type: inline-size; }
 
 .admin-documents :is(.pending-documents-list, .editable-document-list) {
@@ -1359,3 +1359,54 @@
 .admin-images .drop-zone:has(.image-preview-container:empty) { display: flex; align-items: center; justify-content: center; }
 .admin-images .drop-zone:has(.image-preview-container:empty) .drop-zone-placeholder { margin: 0; }
 .admin-images .image-preview-container:empty { display: none; }
+
+.admin-basic .details-form .form-column {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid #cbd9cf;
+    border-radius: 12px;
+    background: #f0f5ef;
+}
+.admin-basic .details-form .form-field { min-width: 0; }
+.admin-basic .details-form textarea {
+    box-sizing: border-box;
+    padding: 14px 16px;
+    border: 1px solid #a9bcae;
+    border-radius: 8px;
+    background: #fff;
+    color: #28352f;
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1.6;
+    resize: vertical;
+}
+.admin-basic .details-form textarea:focus-visible {
+    outline: 2px solid #88b19b;
+    outline-offset: 2px;
+    border-color: #245b46;
+}
+
+.admin-layout .admin-documents .document-heading .admin-button,
+.admin-layout .admin-images .admin-card-heading .admin-button {
+    min-height: 36px;
+    padding: 7px 12px;
+    gap: 7px;
+    font-size: 0.875rem;
+}
+.admin-documents .document-heading .admin-button svg,
+.admin-images .admin-card-heading .admin-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+.property-delete-dialog .unsaved-changes-list {
+    display: grid;
+    gap: 8px;
+    margin: 16px 0 28px;
+    padding: 14px 18px;
+    list-style: none;
+    border-radius: 8px;
+    background: #fff4f0;
+    color: #94382c;
+    font-weight: 600;
+}
