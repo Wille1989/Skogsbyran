@@ -1,235 +1,92 @@
-.image-edit-overlay {
-      .image-edit-dialog {
-            .image-edit-header {
-                  .image-edit-close {
-                  
-                  }
-            }
-            .form-error {
-
-            }
-
-            .form-actions {
-
-            }
-
-            .form-submit {
-                  
-            }
-      }
+.image-edit-dialog {
+    width: min(1300px, calc(100% - 48px));
+    height: min(900px, calc(100dvh - 48px));
+    max-width: none;
+    max-height: none;
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    background: var(--cream-50);
+    color: var(--text-primary);
+    overflow: hidden;
+    box-shadow: 0 16px 48px rgb(0 0 0 / 18%);
+}
+.image-edit-dialog::backdrop { background: rgb(15 25 20 / 68%); }
+.image-edit-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--cream-50);
+    border-bottom: 1px solid var(--border-soft);
+}
+.image-edit-header h2 { margin: 0; font-size: 2rem; }
+.image-edit-close { width: 44px; height: 44px; border: 0; background: transparent; color: inherit; font-size: 2rem; cursor: pointer; }
+.image-edit-dialog .form-actions { position: sticky; bottom: 0; padding: 16px 24px; background: var(--cream-50); border-top: 1px solid var(--border-soft); display: flex; justify-content: flex-end; }
+.image-edit-dialog .form-error { margin: 16px 24px; }
+.image-edit-dialog button:focus-visible { outline: 3px solid var(--forest-950); outline-offset: 3px; }
+@media (max-width: 600px) {
+    .image-edit-dialog { width: calc(100% - 16px); height: calc(100dvh - 16px); }
 }
 
-
-
-
-/*
-
-NEDAN ÄR GAMLA KODEN FÖR IMAGEFORM, KANSKE KAN ANVÄNDA DELAR AV DETTA IGEN
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 24px;
+.image-edit-dialog[open] { display: flex; flex-direction: column; }
+.image-edit-header, .image-edit-dialog .form-actions { flex-shrink: 0; position: static; }
+.image-edit-dialog .image-form {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 20px;
+    gap: 16px 24px;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: auto;
+    box-shadow: none;
+    border: 0;
+}
+.image-edit-dialog .image-form-preview {
+    position: relative;
+    min-height: 0;
+    min-width: 0;
+    grid-row: 1 / 3;
+    border-radius: 12px;
+}
+.image-edit-dialog .image-preview-canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.image-edit-dialog :is(.image-form-details, .image-form-adjustments) { gap: 10px; }
+.image-edit-dialog .form-field { margin: 0; gap: 4px; }
+.image-edit-dialog .form-field label { margin: 0; }
+.image-edit-dialog .form-field input { padding: 8px 10px; }
+.image-edit-dialog .form-field input[type="range"] { padding: 0; min-height: 24px; }
+@media (max-width: 700px) {
+    .image-edit-dialog .image-form { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(140px, 1fr) auto auto; padding: 12px; gap: 10px; }
+    .image-edit-dialog .image-form-preview { grid-row: auto; }
+    .image-edit-dialog :is(.image-form-details, .image-form-adjustments) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-.form-field label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 8px;
-  color: var(--text);
+.image-edit-dialog .form-actions { gap: 12px; flex-wrap: wrap; }
+.image-edit-dialog .form-actions button {
+    min-height: 44px;
+    padding: 10px 17px;
+    border: 1px solid #d8ddd9;
+    border-radius: 5px;
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
 }
-
-.form-field input,
-.form-field textarea {
-  font-family: inherit;
-  font-size: 1rem;
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  background: var(--surface);
-  color: var(--text);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.form-field input:hover,
-.form-field textarea:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
-}
-
-.form-field textarea {
-  resize: vertical;
-  min-height: 120px;
-}
-
-.form-field input::placeholder,
-.form-field textarea::placeholder {
-  color: #94a3b8;
-}
-
-.form-field input:focus,
-.form-field textarea:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(122, 167, 199, 0.25);
-}
-
-.drop-zone {
-  min-width: 765px;
-  min-height: 600px;
-  padding: 32px;
-  border: 2px dashed rgba(15, 23, 42, 0.15);
-  border-radius: 16px;
- background: var(--surface);
-  transition: border-color 0.2s ease, background 0.2s ease;
-  display: flex;
-  flex-direction: column;
-}
-
-.drop-zone:hover {
-  border-color: var(--accent);
-  background: rgba(122, 167, 199, 0.05);
-}
-
-.drop-zone-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.drop-zone-helper {
-  margin: 0;
-  color: var(--muted);
-}
-
-.drop-zone-placeholder {
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.95rem;
-}
-
-.image-preview-container {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
-  margin-bottom: 16px;
-}
-
-.image-preview-item {
-  position: relative;
-  border-radius: 5px;
-  overflow: hidden;
-  background: #f1f5f9;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  cursor: grab;
-}
-
-.image-preview-item:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 0 0 2px rgba(122, 167, 199, 0.4),
-    0 8px 24px rgba(15, 23, 42, 0.12);
-}
-
-.image-preview-item:active {
-  cursor: grabbing;
-}
-
-.image-preview-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.image-preview-controls {
-  position: absolute;
-  left: 8px;
-  bottom: 8px;
-  display: flex;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.92);
-}
-
-.image-action {
-  all: unset;
-  position: absolute;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(15, 23, 42, 0.75);
-  color: white;
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease;
-}
-
-.image-action:hover {
-  background: rgba(15, 23, 42, 0.9);
-  transform: scale(1.05);
-}
-
-.image-order-badge {
-  position: absolute;
-  left: 8px;
-  bottom: 8px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #0f172a;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.image-primary-toggle {
-  all: unset;
-  position: absolute;
-  left: 8px;
-  top: 8px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #0f172a;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.1s ease, background-color 0.15s ease, color 0.15s ease;
-}
-
-.image-primary-toggle:hover {
-  transform: scale(1.03);
-}
-
-.image-primary-toggle.is-active {
-  background: rgba(20, 83, 45, 0.92);
-  color: #fff;
-}
-
-.image-edit {
-  top: 40px;
-  left: 3px;
-}
-
-.image-remove {
-  top: 3px;
-  right: 3px;
-}
-
-@media (max-width: 960px) {
-  .drop-zone {
-    min-width: 100%;
-    min-height: auto;
-  }
-
-  .image-preview-container {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  }
-}
-*/
+.image-edit-dialog .form-submit { background: #245b46; border-color: #245b46; color: #fff; }
+.image-edit-dialog .form-submit:hover { background: #194532; }
+.image-edit-dialog .image-edit-reset { background: #fff; color: #28352f; }
+.image-edit-dialog .form-actions button:disabled { opacity: 0.5; cursor: not-allowed; }

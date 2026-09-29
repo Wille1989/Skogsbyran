@@ -1,0 +1,44 @@
+import assert from 'node:assert/strict';
+import { build } from 'esbuild';
+import { createElement } from 'react';
+import { renderToString } from 'react-dom/server';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
+import { pathToFileURL } from 'node:url';
+import { unlink } from 'node:fs/promises';
+
+const outfile = 'node_modules/.unsaved-check.mjs';
+await build({ entryPoints: ['src/modules/property/components/UnsavedChangesDialog.tsx'], outfile, bundle: true, platform: 'node', format: 'esm', packages: 'external', jsx: 'automatic' });
+try {
+    const { UnsavedChangesDialog } = await import(pathToFileURL(`${process.cwd()}/${outfile}`));
+    const router = createMemoryRouter([{ path: '*', element: createElement(UnsavedChangesDialog, { fields: ['price', 'isVisible'], mapDirty: true, imageDirty: true, documentDirty: true, disabled: false }) }], { initialEntries: ['/admin/properties/1/edit'] });
+    const html = renderToString(createElement(RouterProvider, { router }));
+    for (const label of ['Pris', 'Publicering', 'Adress, kartpunkter', 'Bilder, bildordning', 'Dokument', 'Stanna kvar', 'Lämna utan att spara']) assert.ok(html.includes(label), label);
+    const draftRouter = createMemoryRouter([{ path: '*', element: createElement(UnsavedChangesDialog, { fields: ['title'], mapDirty: false, imageDirty: false, documentDirty: false, disabled: false, onSaveDraft: async () => true }) }]);
+    const draftHtml = renderToString(createElement(RouterProvider, { router: draftRouter }));
+    for (const label of ['Spara utkast', 'Fortsätt skapa', 'Kasta utkast']) assert.ok(draftHtml.includes(label), label);
+    draftRouter.dispose();
+    const publication = await build({ entryPoints: ['src/modules/property/details/helpers/publication.ts'], bundle: true, platform: 'node', format: 'esm', write: false });
+    const { draftDetails } = await import('data:text/javascript;base64,' + Buffer.from(publication.outputFiles[0].text).toString('base64'));
+    const original = { title: ' ', caption: 'Beskrivning', isVisible: true, publishAt: '2027-01-01', scheduledListingStatus: 'sold', scheduledStatusAt: '2027-01-02' };
+    const draft = draftDetails(original);
+    assert.equal(draft.title, 'Namnlöst utkast');
+    assert.equal(draft.caption, original.caption);
+    assert.equal(draft.isVisible, false);
+    assert.equal(draft.publishAt, null);
+    assert.equal(draft.scheduledListingStatus, null);
+    assert.equal(draft.scheduledStatusAt, null);
+    assert.equal(original.isVisible, true);
+    router.getBlocker('check', () => true);
+    await router.navigate('/admin');
+    assert.equal(router.state.location.pathname, '/admin/properties/1/edit');
+    router.state.blockers.get('check').reset();
+    assert.equal(router.state.location.pathname, '/admin/properties/1/edit');
+    await router.navigate('/admin');
+    router.state.blockers.get('check').proceed();
+    assert.equal(router.state.location.pathname, '/admin');
+    router.deleteBlocker('check');
+    await router.navigate('/');
+    assert.equal(router.state.location.pathname, '/');
+    router.dispose();
+    console.log('Unsaved changes: labels, stay, leave and unblocked navigation passed.');
+} finally { await unlink(outfile); }

@@ -39,3 +39,8 @@ export function scheduleSummary(local: string | null): string {
     if (!local || !Number.isFinite(new Date(local).getTime())) return "Välj datum och tid";
     return new Date(local).toLocaleString("sv-SE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
+
+export function draftDetails(values: FormDetails): FormDetails {
+    return { ...values, title: values.title.trim() || "Namnlöst utkast", isVisible: false,
+        publishAt: null, scheduledListingStatus: null, scheduledStatusAt: null };
+}

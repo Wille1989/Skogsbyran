@@ -24,6 +24,7 @@ import { useImageFiles } from "@/modules/image/hooks/useImageFiles";
 import { type ImageFile } from "@/modules/image/types/types";
 import { ImageEditDialog } from "@/modules/image/components/ImageEditDialog.tsx";
 import { createDefaultLocationDraft, type PropertyLocationDraft } from "@/modules/location/types/types";
+import { UnsavedChangesDialog } from "../components/UnsavedChangesDialog";
 import { PropertyForm } from "@/modules/property/components/PropertyForm";
 
 function initialDetails(property: ResponseProperty | undefined): FormDetails | null {
@@ -31,6 +32,7 @@ function initialDetails(property: ResponseProperty | undefined): FormDetails | n
 }
 
 export function EditPage() {
+  const [dirtyFields, setDirtyFields] = useState<string[]>([]);
   const notify = useAdminNotification();
   const { propertyId = "" } = useParams<{ propertyId: string }>();
   const { data, isPending, error } = usePropertyByIdQuery(propertyId);
@@ -178,7 +180,9 @@ export function EditPage() {
 
   return (
     <>
+      <UnsavedChangesDialog fields={dirtyFields} mapDirty={mapDirty} imageDirty={Object.values(imageFiles.buildChanges()).some(changes => changes.length > 0)} documentDirty={pendingDocuments.length > 0 || documents.some(document => document.isRemoved || document.title !== document.originalTitle)} disabled={deleteProperty.isSuccess} />
       <PropertyForm
+        onDirtyFieldsChange={setDirtyFields}
         title="Redigera fastighet" subtitle={property.details.title} submitLabel="Spara ändringar"
         initialDetails={initialDetails(property) ?? undefined} onSubmit={handleSave}
         imageFiles={imageFiles} onEditImage={setEditingImageId} isSaving={saveChanges.isPending || deleteProperty.isPending}

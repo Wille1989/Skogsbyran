@@ -1,14 +1,15 @@
 import { PublicationFields } from "./PublicationFields";
 import { localDateTime, publicationPayload } from "../helpers/publication";
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useImperativeHandle, type Ref, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { type FormDetails } from '../types/types';
 import './DetailsForm.css';
 
 type FormProps = {
         initialValues?: FormDetails;
-        cover?: ReactNode;
-        isSaving?: boolean;
+        valuesRef?: Ref<() => FormDetails>;
+        documents?: ReactNode;
+        onDirtyFieldsChange?: (fields: string[]) => void;
         serverErrors?: Record<string, string>;
         onSubmit: (data: FormDetails) => void;
 };
@@ -26,8 +27,12 @@ const defaultValues: FormDetails = {
         scheduledStatusAt: null,
 };
 
-export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false, serverErrors }: FormProps) {
-        const {register, handleSubmit, reset, control, setValue, setError, clearErrors, formState: { errors }, } = useForm<FormDetails>({defaultValues});
+export function DetailsForm({ initialValues, onSubmit, documents, serverErrors, onDirtyFieldsChange, valuesRef }: FormProps) {
+        const {getValues, register, handleSubmit, reset, control, setValue, setError, clearErrors, formState: { errors, dirtyFields }, } = useForm<FormDetails>({defaultValues});
+
+        useImperativeHandle(valuesRef, () => getValues, [getValues]);
+        const dirtyKeys = JSON.stringify(Object.keys(dirtyFields));
+        useEffect(() => { onDirtyFieldsChange?.(JSON.parse(dirtyKeys)); }, [dirtyKeys, onDirtyFieldsChange]);
 
         useEffect(() => {
                 if (initialValues) {
@@ -110,12 +115,9 @@ export function DetailsForm({ initialValues, onSubmit, cover, isSaving = false, 
                                         {errors.caption && <p className="form-error" role="alert">{errors.caption.message}</p>}
                                 </div>
                         </div>
-                        <aside className="admin-details-side"><PublicationFields control={control} setValue={setValue} cover={cover} /></aside>
+                        <aside className="admin-details-side"><PublicationFields control={control} setValue={setValue} />{documents}</aside>
                 </div>
                 {errors.root && <p className="form-error" role="alert">{errors.root.message}</p>}
-                <div className="publication-save-actions">
-                    <button className="admin-button" type="submit" disabled={isSaving}>Spara fastigheten</button>
-                </div>
         </form>
         );
 }

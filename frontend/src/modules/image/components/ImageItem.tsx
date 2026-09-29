@@ -1,5 +1,5 @@
 import type { DragEvent } from "react";
-import { IconCrown, IconDotsVertical, IconGripVertical, IconPencil, IconTrash } from "@tabler/icons-react";
+import { IconCrown, IconPencil, IconTrash } from "@tabler/icons-react";
 import type { EditableImage } from "../types/types";
 
 type ImageItemProps = {
@@ -14,18 +14,15 @@ type ImageItemProps = {
 };
 
 export function ImageItem({ image, index, onRemove, onSetPrimary, onEdit, onDragStart, onDragOver, onDrop }: ImageItemProps) {
-    const source = "file" in image ? image.previewUrl : image.urls.thumbnail;
-    return <div className="image-preview-item" draggable onDragStart={event => onDragStart(event, index)} onDragOver={onDragOver} onDrop={event => onDrop(event, index)}>
-        <img src={source} alt={image.details.altText || `Förhandsvisning av bild ${index + 1}`} loading="lazy" decoding="async" draggable={false} />
-        <span className="image-order-badge" title={`Bild ${index + 1}, dra för att ändra ordning`}><IconGripVertical size={17} /></span>
-        {image.isPrimary && <span className="admin-image-primary"><IconCrown size={13} />Omslagsbild</span>}
-        <details className="admin-image-menu" onClick={event => event.stopPropagation()} onDragStart={event => event.stopPropagation()}>
-            <summary aria-label={`Alternativ för bild ${index + 1}`}><IconDotsVertical size={18} /></summary>
-            <div>
-                <button type="button" disabled={image.isPrimary} onClick={event => { onSetPrimary(index); event.currentTarget.closest("details")?.removeAttribute("open"); }}><IconCrown size={16} />Gör till omslagsbild</button>
-                {!("file" in image) && onEdit && <button type="button" onClick={event => { onEdit(image.imageId); event.currentTarget.closest("details")?.removeAttribute("open"); }}><IconPencil size={16} />Redigera</button>}
-                <button type="button" onClick={() => onRemove(index)}><IconTrash size={16} />Ta bort</button>
-            </div>
-        </details>
+    const source = "file" in image ? image.previewUrl : image.urls.medium;
+    return <div className={`image-preview-item${image.isPrimary ? " is-primary" : ""}`} draggable onDragStart={event => onDragStart(event, index)} onDragOver={onDragOver} onDrop={event => onDrop(event, index)}>
+        <div className="admin-image-preview"><img src={source} alt={image.details.altText || `Förhandsvisning av bild ${index + 1}`} loading="lazy" decoding="async" draggable={false} />
+        {image.isPrimary && <span className="admin-image-primary"><IconCrown size={18} />Omslagsbild</span>}
+        </div>
+        <div className="admin-image-actions" draggable={false} onDragStart={event => { event.preventDefault(); event.stopPropagation(); }}>
+                <button type="button" className="image-action-cover" title="Gör till omslagsbild" disabled={image.isPrimary} onClick={() => onSetPrimary(index)}><IconCrown size={16} />Omslagsbild</button>
+                {!("file" in image) && onEdit && <button type="button" className="image-action-edit" onClick={() => onEdit(image.imageId)}><IconPencil size={16} />Redigera</button>}
+                <button type="button" className="image-action-remove" onClick={() => onRemove(index)}><IconTrash size={16} />Ta bort</button>
+        </div>
     </div>;
 }

@@ -37,12 +37,7 @@ export function EditableDocuments({
 
   return (
     <section className="editable-documents document-form">
-      <div className="create-section-copy">
-        <h2>Dokument</h2>
-        <p>Ändra dokumenttitlar och hantera PDF:er. Ändringarna sparas med fastigheten.</p>
-      </div>
-
-      <PendingDocuments showHeading={false} documents={pendingDocuments} onChange={onPendingDocumentsChange} />
+      <PendingDocuments documents={pendingDocuments} onChange={onPendingDocumentsChange} />
 
       {visibleDocuments.length > 0 ? (
         <div className="editable-document-list">
@@ -58,8 +53,8 @@ export function EditableDocuments({
                 />
               </div>
 
-              <div className="document-file-info"><span className="document-save-state">{document.title.trim() === document.originalTitle ? "Sparat" : "Namnändring inte sparad"}</span><a href={document.url} target="_blank" rel="noopener noreferrer" className="editable-document-link">
-                Öppna PDF · {document.originalName}
+              <div className="document-file-info"><span className="document-save-state">{document.title.trim() === document.originalTitle ? "Sparat" : "Namnändring inte sparad"}</span><a href={document.url} target="_blank" rel="noopener noreferrer" className="editable-document-link" aria-label={`Öppna PDF: ${document.title}`}>
+                Öppna PDF
               </a></div>
 
               <button type="button" className="button button-danger" onClick={() => markRemoved(document.documentId)}>

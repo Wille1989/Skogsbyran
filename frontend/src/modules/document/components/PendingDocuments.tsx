@@ -5,7 +5,6 @@ import "./PendingDocuments.css";
 
 type PendingDocumentsProps = {
   documents: PendingDocument[];
-  showHeading?: boolean;
   onChange: (documents: PendingDocument[]) => void;
 };
 
@@ -21,7 +20,7 @@ function titleFromFile(file: File): string {
   return file.name.replace(/\.pdf$/i, "");
 }
 
-export function PendingDocuments({ documents, onChange, showHeading = true }: PendingDocumentsProps) {
+export function PendingDocuments({ documents, onChange }: PendingDocumentsProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,10 +58,11 @@ export function PendingDocuments({ documents, onChange, showHeading = true }: Pe
 
   return (
     <section className="pending-documents document-form">
-      <div className="admin-card-heading"><div>
-        {showHeading && <h2>Dokument</h2>}
-        <p>Lägg till en eller flera PDF:er. De laddas upp först när fastigheten sparas.</p>
-      </div><button type="button" className="admin-button is-primary" onClick={() => fileInputRef.current?.click()}><IconPlus size={18} />Lägg till dokument</button></div>
+      <div className="admin-card-heading document-heading">
+        <h2>Dokument</h2>
+        <button type="button" className="admin-button is-primary" onClick={() => fileInputRef.current?.click()}><IconPlus size={18} />Lägg till dokument</button>
+      </div>
+      <p>Lägg till PDF-dokument eller ändra deras namn. Ändringarna sparas med fastigheten.</p>
 
       <div>
         <input
@@ -91,7 +91,7 @@ export function PendingDocuments({ documents, onChange, showHeading = true }: Pe
                 />
               </div>
 
-              <div className="document-file-info"><span>{document.file.name}</span><span className="document-save-state">Inte sparat ännu</span></div>
+              <div className="document-file-info"><span className="document-save-state">Inte sparat ännu</span></div>
 
               <button type="button" className="button button-danger" onClick={() => removeDocument(document.uiId)}>
                 Ta bort

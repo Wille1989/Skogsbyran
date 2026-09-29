@@ -1,12 +1,11 @@
-import type { ReactNode } from "react";
 import { useWatch, type Control, type UseFormSetValue } from "react-hook-form";
 import type { FormDetails, ListingStatus } from "../types/types";
 import { listingStatusOptions, scheduleSummary } from "../helpers/publication";
 import "./PublicationFields.css";
 
-type Props = { control: Control<FormDetails>; setValue: UseFormSetValue<FormDetails>; cover?: ReactNode };
+type Props = { control: Control<FormDetails>; setValue: UseFormSetValue<FormDetails> };
 
-export function PublicationFields({ control, setValue, cover }: Props) {
+export function PublicationFields({ control, setValue }: Props) {
     const [isVisible, publishAt, scheduledListingStatus, scheduledStatusAt, listingStatus] = useWatch({
         control, name: ["isVisible", "publishAt", "scheduledListingStatus", "scheduledStatusAt", "listingStatus"],
     });
@@ -48,6 +47,5 @@ export function PublicationFields({ control, setValue, cover }: Props) {
         </section>
         {(publishAt !== null || scheduledStatusAt !== null) && <small className="publication-timezone">Tider anges i {Intl.DateTimeFormat().resolvedOptions().timeZone}.</small>}
         <p className="publication-info">Alla ändringar ovan börjar gälla när du sparar fastigheten.</p>
-        {cover}
     </div>;
 }

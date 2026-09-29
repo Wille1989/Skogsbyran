@@ -24,7 +24,7 @@ export function ImageForm({ onSubmit, initialValues, imageUrl }: FormProps) {
       const saturation = watch("saturation");
 
     return (
-      <form id="image-form" className="form image-form" onSubmit={handleSubmit(onSubmit)}>
+      <form id="image-form" className="form image-form" onReset={event => { event.preventDefault(); reset(initialValues); }} onSubmit={handleSubmit(onSubmit)}>
             <div className="image-form-preview">
                 <img ref={imageRef} src={imageUrl} alt="" hidden />
 
