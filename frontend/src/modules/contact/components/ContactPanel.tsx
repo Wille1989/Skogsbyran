@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { IconArrowRight, IconTrees, IconFileDescription, IconPlant, IconCalculator } from '@tabler/icons-react';
 import { ContactForm } from './ContactForm';
 import './ContactPanel.css';
 
@@ -22,15 +23,20 @@ export function ContactPanel() {
     <aside className="sticky-contact" aria-label="Kontakt">
       <div className="contact-sticky-bar">
       <div className="contact-sticky-copy">
-        <h2>Vill du veta mer?</h2>
-        <p>Vi hjälper dig med frågor, underlag och nästa steg.</p>
+        <h2>Fastigheter &amp; rådgivning</h2>
+        <ul className="contact-sticky-services" aria-label="Våra tjänster">
+          <li><IconTrees aria-hidden="true" />Fastighetsförmedling</li>
+          <li><IconFileDescription aria-hidden="true" />Bouppteckning</li>
+          <li><IconPlant aria-hidden="true" />Generationsskifte</li>
+          <li><IconCalculator aria-hidden="true" />Bokföring</li>
+        </ul>
       </div>
       <button
         ref={trigger} type="button" className="contact-trigger"
         aria-expanded={open} aria-controls="contact-panel" aria-haspopup="dialog"
         onClick={openPanel}
       >
-        Kontakta oss <span aria-hidden="true">→</span>
+        Kontakta oss <IconArrowRight size={22} aria-hidden="true" />
       </button>
       </div>
       <dialog

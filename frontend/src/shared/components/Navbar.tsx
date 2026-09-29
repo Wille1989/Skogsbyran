@@ -19,7 +19,7 @@ function Navbar() {
           <div className="hero-copy">
             <p className="hero-eyebrow">Skog · Jord · Människor · Framtid</p>
             <p className="hero-statement">Din partner för skogs- och<br className="hero-line-break" /> lantbruksfastigheter</p>
-            <p className="hero-intro">Rådgivning och fastighetsförmedling i Jönköping.<br /> För dig som äger, köper eller säljer skog, mark och lantbruksfastigheter.</p>
+            <p className="hero-intro">Rådgivning och fastighetsförmedling i södra sverige.<br /> För dig som äger, köper eller säljer skog, mark och lantbruksfastigheter.</p>
             <a href="#fastigheter" className="hero-cta">Fastigheter till salu <IconChevronDown size={22} aria-hidden="true" /></a>
           </div>
         )}

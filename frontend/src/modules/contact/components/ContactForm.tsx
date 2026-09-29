@@ -8,9 +8,10 @@ export function ContactForm() {
     const confirmation = useRef<HTMLDialogElement>(null);
     const [feedback, setFeedback] = useState<{ message: string; failed: boolean } | null>(null);
     const sending = useRef(false);
-    const { register, handleSubmit, reset, setError, formState: { errors, isSubmitting } } = useForm<ContactValues>({
+    const { register, handleSubmit, reset, setError, watch, formState: { errors, isSubmitting } } = useForm<ContactValues>({
         defaultValues: { name: '', email: '', phone: '', message: '', website: '' },
     });
+    const lettersRemaining = Math.max(0, 10 - (watch('message').match(/\p{L}/gu)?.length ?? 0));
 
     async function submit(values: ContactValues) {
         if (sending.current) return;
@@ -82,8 +83,12 @@ export function ContactForm() {
             </div>
             {errors.phone && <p id="contact-phone-error" className="form-error" role="alert">{errors.phone.message}</p>}
             <div className="form-field">
-                <label htmlFor="contact-message">Meddelande (valfritt)</label>
-                <textarea id="contact-message" rows={4} maxLength={5000} readOnly={isSubmitting} aria-invalid={Boolean(errors.message)} aria-describedby={errors.message ? 'contact-message-error' : undefined} {...register('message')} />
+                <label htmlFor="contact-message">Meddelande (obligatoriskt)</label>
+                <textarea id="contact-message" rows={4} maxLength={5000} required readOnly={isSubmitting} aria-invalid={Boolean(errors.message)} aria-describedby={`contact-message-count${errors.message ? ' contact-message-error' : ''}`} {...register('message', {
+                    validate: value => (value.match(/\p{L}/gu)?.length ?? 0) >= 10 || 'Skriv ett meddelande med minst 10 bokstäver.',
+                    maxLength: { value: 5000, message: 'Meddelandet får innehålla högst 5000 tecken.' },
+                })} />
+                <small id="contact-message-count" className="contact-message-count" role="status">{lettersRemaining > 0 ? `${lettersRemaining} bokstäver kvar innan du kan skicka` : 'Minst 10 bokstäver – klart att skicka'}</small>
             </div>
             {errors.message && <p id="contact-message-error" className="form-error" role="alert">{errors.message.message}</p>}
             <div className="contact-honeypot" aria-hidden="true">

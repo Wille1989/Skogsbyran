@@ -20,7 +20,7 @@ class StoreContactRequest extends FormRequest
             'name' => ['required', 'string', 'max:120', 'not_regex:/[\r\n]/'],
             'email' => ['nullable', 'required_without:phone', 'string', 'email:rfc', 'max:254', 'not_regex:/[\r\n]/'],
             'phone' => ['nullable', 'required_without:email', 'string', 'max:50', 'regex:/^[0-9+() .\-]{5,50}$/'],
-            'message' => ['nullable', 'string', 'max:5000'],
+            'message' => ['bail', 'required', 'string', 'max:5000', 'regex:/(?:[^\p{L}]*\p{L}){10}/u'],
             'website' => ['nullable', 'string', 'max:0'],
         ];
     }
@@ -30,6 +30,8 @@ class StoreContactRequest extends FormRequest
     {
         return [
             'name.required' => 'Ange ditt namn.',
+            'message.required' => 'Skriv ett meddelande med minst 10 bokstäver.',
+            'message.regex' => 'Skriv ett meddelande med minst 10 bokstäver.',
             'email.required_without' => 'Ange e-postadress eller telefonnummer.',
             'phone.required_without' => 'Ange e-postadress eller telefonnummer.',
             'email.email' => 'Ange en giltig e-postadress.',
