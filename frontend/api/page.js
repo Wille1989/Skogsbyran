@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { renderPage } from '../dist-ssr/entry-server.js';
 
-const template = readFileSync(join(process.cwd(), 'dist/index.html'), 'utf8');
+const template = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
 
 export default async function handler(request, response) {
   const path = '/' + String(request.query.path || '').replace(/^\/+|\/+$/g, '');
